@@ -1,3 +1,6 @@
+# General rules for the whole repo.
+# Technology-specific rules live in backend/.gitignore and frontend/.gitignore.
+
 # VS Code
 .vscode/*
 !.vscode/settings.json
@@ -44,29 +47,11 @@ $RECYCLE.BIN/
 # Logs
 *.log
 
-# Python
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-*.egg-info/
-.pytest_cache/
-.mypy_cache/
+# Ruff (ruff.toml is at the root, so its cache appears here)
 .ruff_cache/
-.coverage
-htmlcov/
-.ipynb_checkpoints/
 
-# Node / frontend
-node_modules/
-dist/
-.vite/
-*.tsbuildinfo
-.eslintcache
-
-# SPHEREx data and caches (each cutout is ~4 MB)
+# SPHEREx data and caches (each cutout is ~4 MB); scripts run from the root
 cache/
 *.fits
 *.fits.gz
 *.fz
-!backend/tests/fixtures/**/*.fits
