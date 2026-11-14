@@ -42,7 +42,7 @@ TARGETS = [
         "test": "motion",
         "doc_coords": ("22h04m10.5s", "-56d46m58s"),
         "notes": "Unresolved T1+T6 pair (0.6-0.7 arcsec). Not saturated: best target for measured proper motion. "
-        "eps Ind A (V 4.7) is ~24 arcmin away.",
+        "eps Ind A (V 4.7) is only 6.7 arcmin to the west: its halo enters a 10 arcmin field.",
     },
     {
         "id": "wise0855",
@@ -58,6 +58,7 @@ TARGETS = [
         "name": "RW Aurigae",
         "simbad_query": "RW Aur",
         "test": "brightness",
+        "prebake_cap": 10,
         "doc_coords": ("05h07m49.46s", "+30d24m04.8s"),
         "notes": "T Tauri star with irregular dimming events: light-curve test.",
     },
@@ -66,6 +67,7 @@ TARGETS = [
         "name": "R Draconis",
         "simbad_query": "R Dra",
         "test": "brightness",
+        "prebake_cap": 3,
         "doc_coords": ("16h32m40.3s", "+66d45m18s"),
         "notes": "Mira variable (~246 d). In the SPHEREx deep field near the NEP (dense time sampling). "
         "Likely saturated: mark, don't measure.",
@@ -129,6 +131,7 @@ def main() -> None:
                 "id": t["id"],
                 "name": t["name"],
                 "test": t["test"],
+                "prebake_cap": t.get("prebake_cap", 20),
                 "simbad_query": t["simbad_query"],
                 "simbad_main_id": str(row["main_id"]),
                 "ra": round(ra, 7),
@@ -149,7 +152,8 @@ def main() -> None:
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "source": f"SIMBAD ({server}) via astroquery {astroquery.__version__}",
         "conventions": "ra/dec: ICRS degrees at ref_epoch (Julian year). pmra includes cos(dec). "
-        "pm in mas/yr, parallax in mas. doc_epoch_estimate = epoch at which doc_coords match the PM track.",
+        "pm in mas/yr, parallax in mas. doc_epoch_estimate = epoch at which doc_coords match the PM track. "
+        "prebake_cap: exposures per detector and visit (or 30-day bin) used by prebake and validation.",
         "targets": out,
     }
     path = ROOT / "science" / "targets.json"

@@ -157,6 +157,19 @@ Shared: `domain.py` (A and C agree on every change), `CLAUDE.md`, `docs/spec.md`
   with the IRSA Spectrophotometry Tool on one unsaturated star.
 - C5 (P1, FR-20) proper-motion measurement with errors vs catalog.
 
+**Track C status (2026-11-14, 17:30)** — branch `track-c-science`, draft PR #1; `main` (incl. Track A's PR #2) is
+merged into it.
+- Done: C0; C1 (`pipeline/exposure.py`, `stack.py`, `sequence.py`, `measure.py`); C2 (5 bundles with
+  `spectrum.json` + `blink.gif` in `frontend/public/prebaked/`, S3 fetcher, depth = `prebake_cap` in
+  `science/targets.json`); C3 (`science/VALIDATION.md` at full depth: T-1 ✓, T-2 ✓, FR-16 vs 2MASS ✓, T-3 motion ✓ /
+  flux blended, T-4 and T-5 saturated); C5 (ε Indi B PM within 1.3σ). C4 partly: `pipeline/photometry.py`
+  (`measure_spectrum`) and the bundled spectra.
+- Next: (1) wire `measure_spectrum` into `/api/spectrum` and `/api/lightcurve` with Track A; (2) FR-16 acceptance
+  proper — compare one unsaturated star with IRSA's Spectrophotometry Tool (ratio 0.8–1.25); (3) optional: SAPM pixel
+  areas, an aperture correction, deblending WISE 0855 from its field star (e.g. difference of D5–D6 visit stacks or a
+  two-source PSF fit), photometry of saturated stars from their wings.
+- Tools: `scripts/prebake.py`, `science/validate.py`, `science/preview.py` (commands in `CLAUDE.md`).
+
 ### Track D — P1 features & delivery
 - **D0 (first hour).** Settle OD-3 (exact deadline, submission format, AI-use disclosure, branding rules) and propose
   OD-1 (hosting) to the team; deploy the static frontend with mock data as a walking skeleton — accounts and deploys
@@ -205,7 +218,7 @@ FR-18 (Gaia). Never drop FR-3 / FR-14 (prebaked bundles).
   Відхилення від плану / Ризики та питання / Наступний крок.* Wait for "go".
 - Verify against real data, not just mocks; paste real numbers. If something cannot be verified, say so plainly.
 - Commit locally at each green checkpoint on your track branch, following the Git section of `CLAUDE.md`
-  (one-line messages; push only when explicitly told to). Never deploy or create accounts without a human OK.
+  (one-line Conventional Commits, e.g. `feat(pipeline): …`; push only when explicitly told to). Never deploy or create accounts without a human OK.
 - Before each commit: ruff check + ruff format + mypy + pytest clean for Python, `npm run build` + `npm run lint` for
   the frontend. Python deps only via `uv add` (commit `uv.lock`); never `pip install` into the env by hand.
 - Ask before: changing the API contract or `domain.py`, adding a heavy dependency, cutting a P0 item, anything public-facing.

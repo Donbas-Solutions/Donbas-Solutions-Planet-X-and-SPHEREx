@@ -1,0 +1,872 @@
+{
+ "grid": {
+  "ra": 269.4462289413008,
+  "dec": 4.768706574518166,
+  "fov_arcmin": 10.0,
+  "npix": 97,
+  "pixscale_arcsec": 6.2,
+  "wcs": {
+   "WCSAXES": 2,
+   "CRPIX1": 49.0,
+   "CRPIX2": 49.0,
+   "CDELT1": -0.0017222222222222,
+   "CDELT2": 0.0017222222222222,
+   "CUNIT1": "deg",
+   "CUNIT2": "deg",
+   "CTYPE1": "RA---TAN",
+   "CTYPE2": "DEC--TAN",
+   "CRVAL1": 269.4462289413,
+   "CRVAL2": 4.7687065745182,
+   "LONPOLE": 180.0,
+   "LATPOLE": 4.7687065745182,
+   "MJDREF": 0.0,
+   "RADESYS": "ICRS",
+   "NAXIS1": 97,
+   "NAXIS2": 97
+  }
+ },
+ "stretch": {
+  "kind": "asinh",
+  "vmin": -0.1176,
+  "vmax": 11.4972,
+  "a": 0.1
+ },
+ "flag_bits": [
+  {
+   "bit": 0,
+   "name": "TRANSIENT",
+   "description": "Transient detected during SUR",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 1,
+   "name": "OVERFLOW",
+   "description": "Overflow detected during SUR",
+   "group": "saturation",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 2,
+   "name": "SUR_ERROR",
+   "description": "Error in onboard processing",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 6,
+   "name": "NONFUNC",
+   "description": "Permanently unusable",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 7,
+   "name": "DICHROIC",
+   "description": "Low efficiency due to dichroic",
+   "group": "info",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 9,
+   "name": "MISSING_DATA",
+   "description": "Onboard data lost",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 10,
+   "name": "HOT",
+   "description": "Hot pixel",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 11,
+   "name": "COLD",
+   "description": "Anomalously low signal",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 12,
+   "name": "FULLSAMPLE",
+   "description": "Pixel full sample history is available",
+   "group": "info",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 14,
+   "name": "PHANMISS",
+   "description": "Phantom correction was not applied",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 15,
+   "name": "NONLINEAR",
+   "description": "Nonlinearity correction cannot be applied reliably",
+   "group": "saturation",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 17,
+   "name": "PERSIST",
+   "description": "Persistent charge above threshold",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 19,
+   "name": "OUTLIER",
+   "description": "Pixel flagged by Detect Outliers",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 20,
+   "name": "CROSSTALK",
+   "description": "Pixel affected by crosstalk.",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 21,
+   "name": "SOURCE",
+   "description": "Pixel mapped to a known source",
+   "group": "info",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 22,
+   "name": "GHOST",
+   "description": "Affected by a bright source inside the exposure",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 23,
+   "name": "GHOST_FPA",
+   "description": "Affected by a bright source on another detector",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 24,
+   "name": "GHOST_EXT",
+   "description": "Pixel affected by a bright source outside FOV",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 25,
+   "name": "STREAK",
+   "description": "Pixel affected by a streak",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 26,
+   "name": "BLOOM",
+   "description": "Pixel part of a bloom artifact",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 27,
+   "name": "SNOWBALL",
+   "description": "Pixel part of a snowball artifact",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 28,
+   "name": "HALO",
+   "description": "Pixel part of a transient halo",
+   "group": "artifact",
+   "mask_in_stack": false
+  }
+ ],
+ "frames": [
+  {
+   "id": "v1-D1",
+   "kind": "visit_stack",
+   "label": "2025-08 · D1",
+   "mjd_mid": 60923.7664,
+   "date_range": [
+    "2025-08-27",
+    "2025-10-01"
+   ],
+   "detectors": [
+    1
+   ],
+   "lambda_um": [
+    0.75,
+    1.107
+   ],
+   "n_exposures": 20,
+   "data": "frames/v1-D1.f32",
+   "flags": "frames/v1-D1.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 47.94,
+    "y": 47.17
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v1-D2",
+   "kind": "visit_stack",
+   "label": "2025-08 · D2",
+   "mjd_mid": 60913.7362,
+   "date_range": [
+    "2025-08-21",
+    "2025-08-30"
+   ],
+   "detectors": [
+    2
+   ],
+   "lambda_um": [
+    1.101,
+    1.629
+   ],
+   "n_exposures": 18,
+   "data": "frames/v1-D2.f32",
+   "flags": "frames/v1-D2.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 47.93,
+    "y": 47.13
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v1-D3",
+   "kind": "visit_stack",
+   "label": "2025-08 · D3",
+   "mjd_mid": 60908.0073,
+   "date_range": [
+    "2025-08-15",
+    "2025-08-27"
+   ],
+   "detectors": [
+    3
+   ],
+   "lambda_um": [
+    1.632,
+    2.411
+   ],
+   "n_exposures": 18,
+   "data": "frames/v1-D3.f32",
+   "flags": "frames/v1-D3.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 47.93,
+    "y": 47.1
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v1-D4",
+   "kind": "visit_stack",
+   "label": "2025-08 · D4",
+   "mjd_mid": 60923.8034,
+   "date_range": [
+    "2025-08-27",
+    "2025-10-01"
+   ],
+   "detectors": [
+    4
+   ],
+   "lambda_um": [
+    2.441,
+    3.8
+   ],
+   "n_exposures": 20,
+   "data": "frames/v1-D4.f32",
+   "flags": "frames/v1-D4.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 47.94,
+    "y": 47.17
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v1-D5",
+   "kind": "visit_stack",
+   "label": "2025-08 · D5",
+   "mjd_mid": 60913.7362,
+   "date_range": [
+    "2025-08-21",
+    "2025-08-30"
+   ],
+   "detectors": [
+    5
+   ],
+   "lambda_um": [
+    3.821,
+    4.407
+   ],
+   "n_exposures": 18,
+   "data": "frames/v1-D5.f32",
+   "flags": "frames/v1-D5.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 47.93,
+    "y": 47.13
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v1-D6",
+   "kind": "visit_stack",
+   "label": "2025-08 · D6",
+   "mjd_mid": 60908.1338,
+   "date_range": [
+    "2025-08-15",
+    "2025-08-27"
+   ],
+   "detectors": [
+    6
+   ],
+   "lambda_um": [
+    4.418,
+    5.001
+   ],
+   "n_exposures": 17,
+   "data": "frames/v1-D6.f32",
+   "flags": "frames/v1-D6.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 47.93,
+    "y": 47.1
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v1-all",
+   "kind": "visit_stack",
+   "label": "2025-08 · all",
+   "mjd_mid": 60915.5703,
+   "date_range": [
+    "2025-08-15",
+    "2025-10-01"
+   ],
+   "detectors": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "lambda_um": [
+    0.75,
+    5.001
+   ],
+   "n_exposures": 111,
+   "data": "frames/v1-all.f32",
+   "flags": "frames/v1-all.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 47.93,
+    "y": 47.13
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v2-D1",
+   "kind": "visit_stack",
+   "label": "2026-03 · D1",
+   "mjd_mid": 61110.4709,
+   "date_range": [
+    "2026-03-11",
+    "2026-03-11"
+   ],
+   "detectors": [
+    1
+   ],
+   "lambda_um": [
+    0.745,
+    1.092
+   ],
+   "n_exposures": 18,
+   "data": "frames/v2-D1.f32",
+   "flags": "frames/v2-D1.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.0,
+    "y": 48.03
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v2-D2",
+   "kind": "visit_stack",
+   "label": "2026-03 · D2",
+   "mjd_mid": 61116.1544,
+   "date_range": [
+    "2026-03-15",
+    "2026-03-22"
+   ],
+   "detectors": [
+    2
+   ],
+   "lambda_um": [
+    1.118,
+    1.629
+   ],
+   "n_exposures": 18,
+   "data": "frames/v2-D2.f32",
+   "flags": "frames/v2-D2.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.0,
+    "y": 48.05
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v2-D3",
+   "kind": "visit_stack",
+   "label": "2026-03 · D3",
+   "mjd_mid": 61128.0836,
+   "date_range": [
+    "2026-03-19",
+    "2026-05-05"
+   ],
+   "detectors": [
+    3
+   ],
+   "lambda_um": [
+    1.662,
+    2.362
+   ],
+   "n_exposures": 20,
+   "data": "frames/v2-D3.f32",
+   "flags": "frames/v2-D3.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.01,
+    "y": 48.11
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v2-D4",
+   "kind": "visit_stack",
+   "label": "2026-03 · D4",
+   "mjd_mid": 61110.4709,
+   "date_range": [
+    "2026-03-11",
+    "2026-03-11"
+   ],
+   "detectors": [
+    4
+   ],
+   "lambda_um": [
+    2.43,
+    3.738
+   ],
+   "n_exposures": 18,
+   "data": "frames/v2-D4.f32",
+   "flags": "frames/v2-D4.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.0,
+    "y": 48.03
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v2-D5",
+   "kind": "visit_stack",
+   "label": "2026-03 · D5",
+   "mjd_mid": 61116.3858,
+   "date_range": [
+    "2026-03-15",
+    "2026-03-22"
+   ],
+   "detectors": [
+    5
+   ],
+   "lambda_um": [
+    3.811,
+    4.407
+   ],
+   "n_exposures": 19,
+   "data": "frames/v2-D5.f32",
+   "flags": "frames/v2-D5.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.0,
+    "y": 48.05
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v2-D6",
+   "kind": "visit_stack",
+   "label": "2026-03 · D6",
+   "mjd_mid": 61128.0836,
+   "date_range": [
+    "2026-03-19",
+    "2026-05-05"
+   ],
+   "detectors": [
+    6
+   ],
+   "lambda_um": [
+    4.444,
+    4.966
+   ],
+   "n_exposures": 20,
+   "data": "frames/v2-D6.f32",
+   "flags": "frames/v2-D6.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.01,
+    "y": 48.11
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v2-all",
+   "kind": "visit_stack",
+   "label": "2026-03 · all",
+   "mjd_mid": 61118.6054,
+   "date_range": [
+    "2026-03-11",
+    "2026-05-05"
+   ],
+   "detectors": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "lambda_um": [
+    0.745,
+    4.966
+   ],
+   "n_exposures": 113,
+   "data": "frames/v2-all.f32",
+   "flags": "frames/v2-all.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.0,
+    "y": 48.06
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v3-D1",
+   "kind": "visit_stack",
+   "label": "2026-08 · D1",
+   "mjd_mid": 61278.3288,
+   "date_range": [
+    "2026-08-23",
+    "2026-09-02"
+   ],
+   "detectors": [
+    1
+   ],
+   "lambda_um": [
+    0.741,
+    1.097
+   ],
+   "n_exposures": 18,
+   "data": "frames/v3-D1.f32",
+   "flags": "frames/v3-D1.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.06,
+    "y": 48.79
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v3-D2",
+   "kind": "visit_stack",
+   "label": "2026-08 · D2",
+   "mjd_mid": 61275.1598,
+   "date_range": [
+    "2026-08-18",
+    "2026-09-22"
+   ],
+   "detectors": [
+    2
+   ],
+   "lambda_um": [
+    1.088,
+    1.661
+   ],
+   "n_exposures": 20,
+   "data": "frames/v3-D2.f32",
+   "flags": "frames/v3-D2.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.06,
+    "y": 48.78
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v3-D3",
+   "kind": "visit_stack",
+   "label": "2026-08 · D3",
+   "mjd_mid": 61272.0094,
+   "date_range": [
+    "2026-08-16",
+    "2026-09-20"
+   ],
+   "detectors": [
+    3
+   ],
+   "lambda_um": [
+    1.65,
+    2.423
+   ],
+   "n_exposures": 19,
+   "data": "frames/v3-D3.f32",
+   "flags": "frames/v3-D3.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.06,
+    "y": 48.77
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v3-D4",
+   "kind": "visit_stack",
+   "label": "2026-08 · D4",
+   "mjd_mid": 61278.3288,
+   "date_range": [
+    "2026-08-23",
+    "2026-09-02"
+   ],
+   "detectors": [
+    4
+   ],
+   "lambda_um": [
+    2.419,
+    3.762
+   ],
+   "n_exposures": 18,
+   "data": "frames/v3-D4.f32",
+   "flags": "frames/v3-D4.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.06,
+    "y": 48.79
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v3-D5",
+   "kind": "visit_stack",
+   "label": "2026-08 · D5",
+   "mjd_mid": 61275.1598,
+   "date_range": [
+    "2026-08-18",
+    "2026-09-22"
+   ],
+   "detectors": [
+    5
+   ],
+   "lambda_um": [
+    3.804,
+    4.43
+   ],
+   "n_exposures": 20,
+   "data": "frames/v3-D5.f32",
+   "flags": "frames/v3-D5.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.06,
+    "y": 48.78
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v3-D6",
+   "kind": "visit_stack",
+   "label": "2026-08 · D6",
+   "mjd_mid": 61272.0343,
+   "date_range": [
+    "2026-08-16",
+    "2026-09-22"
+   ],
+   "detectors": [
+    6
+   ],
+   "lambda_um": [
+    4.434,
+    4.977
+   ],
+   "n_exposures": 19,
+   "data": "frames/v3-D6.f32",
+   "flags": "frames/v3-D6.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.06,
+    "y": 48.77
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  },
+  {
+   "id": "v3-all",
+   "kind": "visit_stack",
+   "label": "2026-08 · all",
+   "mjd_mid": 61275.1145,
+   "date_range": [
+    "2026-08-16",
+    "2026-09-22"
+   ],
+   "detectors": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "lambda_um": [
+    0.741,
+    4.977
+   ],
+   "n_exposures": 114,
+   "data": "frames/v3-all.f32",
+   "flags": "frames/v3-all.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.06,
+    "y": 48.78
+   },
+   "warnings": [
+    "target pixel saturated (OVERFLOW/NONLINEAR)"
+   ]
+  }
+ ],
+ "meta": {
+  "target_name": "Barnard's Star",
+  "collections": [
+   "spherex_dr1",
+   "spherex_qr3"
+  ],
+  "n_exposures_total": 338,
+  "generated_at": "2026-11-14T15:03:59+00:00",
+  "pipeline_tags": [
+   "l2b-v27"
+  ],
+  "mock": false,
+  "spectrum": "spectrum.json"
+ }
+}

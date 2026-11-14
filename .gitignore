@@ -55,3 +55,7 @@ cache/
 *.fits
 *.fits.gz
 *.fz
+
+# Python caches of root-level scripts (science/, scripts/)
+__pycache__/
+*.py[cod]

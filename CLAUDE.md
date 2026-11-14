@@ -55,6 +55,23 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - **IRSA cutout service under load** (2026-11-14): many 503s at 4 parallel workers; at 2 workers ~3–6 s per cutout
   depending on the day; at 3 workers 18 % 503 with `Retry-After: 5`. Only `center` and `size` are accepted: EPSF
   cannot be dropped server-side.
+- **`ZODI` is not subtracted from `IMAGE`** by the pipeline (IRSA tutorial) — subtract it yourself.
+- **Bicubic `reproject_interp` with a single NaN input returns an all-NaN image.** Fill masked pixels first and re-mask
+  from a resampled validity map (`backend/app/pipeline/exposure.py`).
+- **Positions on the undersampled PSF:** flux-weighted centroids lock onto pixel centres and shortened 1-px shifts by
+  10–20 % (ε Indi B: 0.87 vs 1.05 px); a 2D Gaussian fit with masked pixels excluded recovers them (1.05 px) and also
+  works on Barnard's saturated (NaN) core.
+- **WISE 0855 is blended with a field star:** at its propagated position a 3-px aperture gets 957 µJy at λ < 1.6 µm
+  (S/N 83), where WISE 0855 itself (J ≈ 25) is invisible. In D5–D6 the source moves toward PA 276–277° (expected 275°),
+  shortened by the blend; the 412 ± 26 µJy at λ ≥ 3.8 µm is an upper bound, not WISE 0855's flux.
+- **Saturation confirmed at full depth:** Barnard in every band; RW Aur in D2–D6 (161 of 178 points); R Dra in all
+  128 points. ε Indi B is not saturated (2 of 357 points).
+- **ε Indi B's QR3 visit (2026-09/10) has no D1 and D4 exposures** — those frame sets have a shorter baseline.
+- **SAPM** (per-pixel solid angle, would refine photometry): `s3://nasa-irsa-spherex/dr1/solid_angle_pixel_map/
+  cal-sapm-v3-2026-191/<k>/solid_angle_pixel_map_D<k>_spx_cal-sapm-v3-2026-191.fits`, HDU `IMAGE`, arcsec² per pixel
+  (IRSA source-discovery tutorial). Not used yet: photometry takes the pixel area from the WCS.
+- Calling `logging.getLogger("astropy")` **before** importing astropy breaks astropy's logger (`AttributeError:
+  _set_defaults`); configure it after the imports.
 - DR1 and QR3 sample files both carry pipeline tag `l2b-v27` (consistent calibration).
 - **Full L2 file layout** (62 MB): `IMAGE`, `VARIANCE`, `ZODI` = uncompressed float32 2040×2040 (8160 B per row);
   `FLAGS` = RICE_1 tile-compressed, one tile per image row (~3.9 KB); `EPSF` 3.9 MB; `WCS-WAVE` 2.9 KB.
@@ -94,18 +111,30 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   and cap exposures per bin.
 - Propagate catalog positions with proper motion to each frame's `MJD-AVG` (`SkyCoord.apply_space_motion`).
   Stay in ICRS: do NOT transform to GCRS (aberration ≈ 20″). Ignore parallax (≤0.55″, <0.1 px) and say so.
-- Background first (ZODI extension or sigma-clipped median), then one shared stretch for every frame of a sequence.
+- Background first (ZODI extension, then a local 2D background — `photutils.Background2D`, 24-px boxes, no 3×3 filter),
+  then one shared stretch for every frame of a sequence.
 - Reproject to a common north-up TAN grid at native 6.2″/px with bicubic interpolation; upsample only for display.
 - FLAGS: mask in stacks, show as overlay, never report a saturated measurement as a number.
+- Positions: masked 2D Gaussian fit (`pipeline.measure.locate_source`), never flux-weighted centroids (see facts).
 - Honesty: WISE 0855 is at the detection limit — show the expected position and S/N or an upper limit, no detection claims
-  below 5σ. No Planet Nine claims.
+  below 5σ. Its aperture is blended with a field star (see facts): its motion is shown, its flux is only an upper
+  bound. No Planet Nine claims.
 
 ## Git: commits and pushes
-- Commit messages are **exactly one line**: English, imperative, ≤72 chars, no body, no trailers.
-  Example: `Add visit grouping for SIA results`.
+- Commit messages follow **Conventional Commits** and are **exactly one line**: `<type>(<scope>): <summary>`.
+  English, imperative, lower-case summary, no trailing period, ≤72 chars in total, no body, no trailers.
+  - `type`: `feat` (new behaviour) · `fix` (bug fix) · `docs` · `test` · `refactor` (no behaviour change) · `perf` ·
+    `build` (deps, packaging) · `ci` · `chore` (tooling, config, housekeeping) · `style` (formatting only).
+  - `scope` (optional, one word): the area — `archive`, `api`, `jobs`, `pipeline`, `science`, `prebake`, `frontend`,
+    `player`, `charts`, `deploy`, `docs`.
+  - A change that breaks the API contract or `domain.py` gets `!`: `feat(api)!: add spectrum.json to static bundles`.
+  - Examples: `feat(pipeline): add per-visit inverse-variance stacks` · `fix(archive): dedupe sia rows by obs_id and
+    detector` · `docs: correct eps ind a distance` · `chore: ignore python caches of root scripts`.
+  - Merge commits created by `git pull` / PRs keep git's default message.
 - Commits are **local only**: commit at green checkpoints on your track branch.
 - Before every commit, everything you touched is clean: Python — `ruff check`, `ruff format --check`, `mypy`, `pytest`;
   frontend — `npm run build`, `npm run lint` (see Commands).
+  Do not pipe the gate commands into `tail`/`grep` inside an `&&` chain: the pipe hides their exit code.
 - **Never push** (`git push`, PRs, remote branches, tags) unless the person you are working with explicitly tells you
   to push in the current conversation. One "push" covers that one push, not later ones.
 - Never force-push or rewrite history that is already on the remote.
@@ -137,7 +166,10 @@ All commands below are the same on macOS and Windows.
 | Real data sample (from root) | `uv run --project backend python scripts/fetch_sample.py barnard eps_ind_b --max-per-detector 4` → `cache/raw/` |
 | Add a Python dependency | `cd backend && uv add <pkg>` (dev: `uv add --dev <pkg>`); commit `pyproject.toml` + `uv.lock` |
 | View a bundle | `http://localhost:5173/?manifest=/mock/sequence.json` (default) |
-| Prebake real targets (from root) | `uv run --project backend python scripts/prebake.py` (Track C, not written yet) |
+| Prebake static bundles (from root) | `uv run --project backend python scripts/prebake.py [target ...]` → `frontend/public/prebaked/` (S3 fetcher; ~1–2 min per target) |
+| Validate the test targets (from root) | `uv run --project backend python science/validate.py [target ...]` → `science/VALIDATION.md` (~5 min for all; a subset rewrites the report with only that subset) |
+| Preview one target (from root) | `uv run --project backend python science/preview.py barnard` → `cache/preview/<target>/preview.png` |
+| Type-check the scripts | `uv run --project backend mypy --strict --ignore-missing-imports --explicit-package-bases science/validate.py scripts/prebake.py` |
 
 Use `uv run ... ruff` for checks: it is the locked version. A brew/editor ruff may differ by a patch release
 (on 2026-11-14: brew 0.17.4, lock 0.17.5). VS Code Ruff extension: set `"ruff.importStrategy": "fromEnvironment"`.

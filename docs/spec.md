@@ -186,7 +186,7 @@ a verdict, caveats. Catalog values: `science/targets.json`.
 | ID | Target | Must show |
 |---|---|---|
 | T-1 | Barnard's Star | 3 visits. Difference last − first: dipole toward PA 356° ± 30°, separation 1.3–2.3 px (expected ≈ 1.8). Saturated core flagged; marker (FR-10) and Gaia (FR-18) follow the source; centroid labelled unreliable. |
-| T-2 | ε Indi B | 4 visits. Dipole toward PA 122° ± 30°, separation 0.7–1.5 px (expected ≈ 1.1). Measured PM (FR-20) consistent with (+3982, −2467) mas/yr within 3σ. Artifacts from ε Indi A (~24′ away) flagged if present. |
+| T-2 | ε Indi B | 4 visits. Dipole toward PA 122° ± 30°, separation 0.7–1.5 px (expected ≈ 1.1). Measured PM (FR-20) consistent with (+3982, −2467) mas/yr within 3σ. ε Indi A (V 4.7) is only 6.7′ to the west: its halo enters a 10′ field and must not dominate the difference (local background). |
 | T-3 | WISE 0855−0714 | DR1 visits only (3; the first with 30 exposures and a warning). Expected position from SIMBAD J2000 + PM. D5–D6 stack: S/N at the expected position reported; below 5σ → "not detected, 5σ limit = X µJy". |
 | T-4 | RW Aurigae | 3 visits. Per-detector flux per visit with errors (light curve); variability amplitude stated; saturated points labelled. |
 | T-5 | R Draconis | Deep field: 30-d bins within the exposure cap; binned light curve or "saturated" labels; no numbers for saturated points. |
