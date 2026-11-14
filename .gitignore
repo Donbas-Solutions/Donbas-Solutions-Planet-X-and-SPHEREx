@@ -9,6 +9,10 @@
 *.vsix
 *.code-workspace
 
+# Claude Code (personal settings stay local; .claude/settings.json is shared)
+.claude/settings.local.json
+CLAUDE.local.md
+
 # Secrets / environment
 .env
 .env.*
@@ -16,10 +20,53 @@
 *.pem
 *.key
 
-# OS files
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.TemporaryItems
+.DocumentRevisions-V100
+
+# Windows
 Thumbs.db
-desktop.ini
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.stackdump
 
 # Logs
 *.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+.eslintcache
+
+# SPHEREx data and caches (each cutout is ~4 MB)
+cache/
+*.fits
+*.fits.gz
+*.fz
+!backend/tests/fixtures/**/*.fits

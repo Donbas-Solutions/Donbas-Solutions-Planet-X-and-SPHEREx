@@ -1,0 +1,19 @@
+# Same line endings on macOS and Windows: LF in the repo and in working copies
+* text=auto eol=lf
+
+# Windows batch files need CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary data: no line-ending conversion, no text diffs
+*.f32 binary
+*.u16 binary
+*.u32 binary
+*.npy binary
+*.fits binary
+*.png binary
+*.gif binary
+*.jpg binary
+*.webp binary
+*.ico binary
+*.mp4 binary
