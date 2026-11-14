@@ -1,24 +1,29 @@
-"""Validate the motion targets (T-1, T-2, FR-20) and write science/VALIDATION.md with figures.
+"""Validate the five test targets (docs/spec.md §6.2: T-1 … T-5, FR-16, FR-20) → science/VALIDATION.md + figures.
 
-Usage (from the repo root; run scripts/fetch_sample.py first — cutouts come from cache/raw/):
-    uv run --project backend python science/validate.py --max-per-detector 4
+Usage (from the repo root, after scripts/prebake.py — it uses the same depth, so cutouts come from cache/raw/):
+    uv run --project backend python science/validate.py                 # all targets
+    uv run --project backend python science/validate.py barnard eps_ind_b --max-per-detector 4
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
+import math
+from collections import defaultdict
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from statistics import fmean
 
 import numpy as np
 from PIL import Image
 
-from app.archive.naive import fetch_sample
+from app.archive.naive import Sample, fetch_sample
 from app.config import configure_ssl
-from app.domain import SequenceParams, SequenceResult
-from app.models import Frame
+from app.domain import SequenceParams, SequenceResult, Target
+from app.models import Frame, SpectrumPoint
 from app.pipeline.measure import Shift, fit_proper_motion, locate_source
 from app.pipeline.photometry import measure_spectrum
 from app.pipeline.sequence import build_sequence
@@ -28,6 +33,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FIGURES = ROOT / "science" / "figures"
 REPORT = ROOT / "science" / "VALIDATION.md"
 CROP_HALF_PX = 20
+DETECTION_SIGMA = 5.0
 
 
 @dataclass(frozen=True)
@@ -39,10 +45,55 @@ class Criteria:
     max_px: float
 
 
+@dataclass(frozen=True)
+class Band:
+    name: str
+    lo_um: float
+    hi_um: float
+    zero_point_jy: float
+
+
 MOTION_TARGETS = {
     "barnard": Criteria("T-1", 356.0, 30.0, 1.3, 2.3),
     "eps_ind_b": Criteria("T-2", 122.0, 30.0, 0.7, 1.5),
 }
+# 2MASS bands and Vega zero points (Cohen et al. 2003); the windows select SPHEREx points inside each band.
+TWO_MASS = (Band("J", 1.15, 1.32, 1594.0), Band("H", 1.55, 1.77, 1024.0), Band("Ks", 2.03, 2.30, 666.7))
+EPS_IND_B_2MASS_MAG = {"J": 11.91, "H": 11.31, "Ks": 11.21}
+# WISE W2 (4.6 µm) Vega zero point (Jarrett et al. 2011) and WISE 0855's W2 magnitude.
+W2_ZERO_POINT_JY, WISE0855_W2_MAG = 171.787, 14.0
+MWIR_MIN_UM = 3.82
+
+
+@dataclass(frozen=True)
+class Data:
+    target: Target
+    entry: dict[str, object]
+    cap: int
+    sample: Sample
+    result: SequenceResult
+    points: list[SpectrumPoint]
+
+
+def load(target_id: str, cap_override: int | None) -> Data:
+    target, entry = load_target(target_id)
+    cap = cap_override or int(str(entry["prebake_cap"]))
+    sample = fetch_sample(target, max_per_detector=cap)
+    result = build_sequence(sample.cutouts, target, SequenceParams())
+    points = measure_spectrum(sample.cutouts, target).points
+    return Data(target, entry, cap, sample, result, points)
+
+
+def header(test_id: str, data: Data) -> list[str]:
+    visits = len({f.id.split("-")[0] for f in data.result.sequence.frames})
+    failed = f", {len(data.sample.failed)} failed downloads" if data.sample.failed else ""
+    return [
+        f"## {test_id} — {data.target.name}",
+        "",
+        f"Data: {len(data.sample.cutouts)} cutouts (≤ {data.cap} per detector and visit or bin), {visits} "
+        f"visits/bins{failed}.",
+        "",
+    ]
 
 
 def frame_sets(result: SequenceResult) -> dict[str, list[Frame]]:
@@ -52,17 +103,20 @@ def frame_sets(result: SequenceResult) -> dict[str, list[Frame]]:
     return sets
 
 
-def locate(result: SequenceResult, frame: Frame) -> tuple[float, float] | None:
-    if frame.expected_px is None:
-        return None
-    return locate_source(result.arrays[frame.id].data, frame.expected_px.x, frame.expected_px.y)
-
-
 def pa_error(a: float, b: float) -> float:
     return abs((a - b + 180) % 360 - 180)
 
 
-def figure(target_id: str, result: SequenceResult, frames: list[Frame]) -> Path:
+def weighted_mean(points: Sequence[SpectrumPoint]) -> tuple[float, float] | None:
+    """Inverse-variance mean flux and its error (µJy) of the usable points; None if there are none."""
+    usable = [(p.flux_ujy, p.err_ujy) for p in points if p.flux_ujy is not None and p.err_ujy]
+    if not usable:
+        return None
+    weights = [1 / e**2 for _, e in usable]
+    return sum(f * w for (f, _), w in zip(usable, weights, strict=True)) / sum(weights), 1 / math.sqrt(sum(weights))
+
+
+def motion_figure(target_id: str, result: SequenceResult, frames: list[Frame]) -> Path:
     seq = result.sequence
     first = frames[0].expected_px
     cx, cy = (round(first.x), round(first.y)) if first else (seq.grid.npix // 2, seq.grid.npix // 2)
@@ -84,25 +138,23 @@ def figure(target_id: str, result: SequenceResult, frames: list[Frame]) -> Path:
     return path
 
 
-def validate(target_id: str, criteria: Criteria, cap: int) -> list[str]:
-    target, entry = load_target(target_id)
-    sample = fetch_sample(target, max_per_detector=cap)
-    result = build_sequence(sample.cutouts, target, SequenceParams())
-    pixscale = result.sequence.grid.pixscale_arcsec
-    cat_pmra, cat_pmdec = float(entry["pmra"]), float(entry["pmdec"])  # type: ignore[arg-type]  # JSON numbers
+def motion_section(target_id: str, criteria: Criteria, data: Data) -> list[str]:
+    pixscale = data.result.sequence.grid.pixscale_arcsec
+    cat_pmra, cat_pmdec = float(data.target.pmra_masyr or 0), float(data.target.pmdec_masyr or 0)
     lines = [
-        f"## {criteria.test_id} — {target.name}",
-        "",
-        f"Sample: {len(sample.cutouts)} cutouts (≤ {cap} per detector and visit), "
-        f"{len({f.id.split('-')[0] for f in result.sequence.frames})} visits. "
-        f"Catalog PM (SIMBAD): ({cat_pmra:+.0f}, {cat_pmdec:+.0f}) mas/yr.",
+        *header(criteria.test_id, data),
+        f"Catalog proper motion (SIMBAD): ({cat_pmra:+.0f}, {cat_pmdec:+.0f}) mas/yr.",
         "",
         "| Frames | Epochs | Shift first→last | PA | Measured PM (mas/yr) | Δ/σ vs catalog | Criteria |",
         "|---|---|---|---|---|---|---|",
     ]
     all_frames: list[Frame] = []
-    for name, frames in frame_sets(result).items():
-        located = [(f, locate(result, f)) for f in frames]
+    for name, frames in frame_sets(data.result).items():
+        located = [
+            (f, locate_source(data.result.arrays[f.id].data, f.expected_px.x, f.expected_px.y))
+            for f in frames
+            if f.expected_px is not None
+        ]
         points = [(f, p) for f, p in located if p is not None]
         if len(points) < 2:
             lines.append(f"| {name} | {len(points)} | — | — | source not found | — | ✗ |")
@@ -128,48 +180,32 @@ def validate(target_id: str, criteria: Criteria, cap: int) -> list[str]:
         )
         if name == "all":
             all_frames = frames
-    fig = figure(target_id, result, all_frames) if all_frames else None
     lines += [
         "",
         f"Criteria ({criteria.test_id}): shift {criteria.min_px}–{criteria.max_px} px toward PA "
         f"{criteria.pa_deg:.0f}° ± {criteria.pa_tolerance_deg:.0f}° (docs/spec.md §6.2).",
     ]
-    if fig is not None:
-        lines += ["", f"![{target.name}: all-detector visit stacks and difference](figures/{fig.name})"]
+    if all_frames:
+        fig = motion_figure(target_id, data.result, all_frames)
+        lines += ["", f"![{data.target.name}: all-detector visit stacks and difference](figures/{fig.name})"]
     return [*lines, ""]
 
 
-@dataclass(frozen=True)
-class Band:
-    name: str
-    lo_um: float
-    hi_um: float
-    zero_point_jy: float
-
-
-# 2MASS bands and Vega zero points (Cohen et al. 2003); the windows select SPHEREx points inside each band.
-TWO_MASS = (Band("J", 1.15, 1.32, 1594.0), Band("H", 1.55, 1.77, 1024.0), Band("Ks", 2.03, 2.30, 666.7))
-EPS_IND_B_2MASS_MAG = {"J": 11.91, "H": 11.31, "Ks": 11.21}
-
-
-def spectrum_section(cap: int) -> list[str]:
-    target, _ = load_target("eps_ind_b")
-    points = measure_spectrum(fetch_sample(target, max_per_detector=cap).cutouts, target).points
-    measured = [p for p in points if p.flux_ujy is not None]
+def spectrum_section(data: Data) -> list[str]:
+    measured = [p for p in data.points if p.flux_ujy is not None]
     lines = [
         "## FR-16 — spectrum of ε Indi B vs 2MASS",
         "",
-        f"{len(points)} exposures measured by forced aperture photometry (r = 3 px) at the propagated position; "
-        f"{len(measured)} usable, {sum(p.saturated for p in points)} saturated.",
+        f"{len(data.points)} exposures measured by forced aperture photometry (r = 3 px) at the propagated position; "
+        f"{len(measured)} usable, {sum(p.saturated for p in data.points)} saturated.",
         "",
         "| 2MASS band | 2MASS (mJy) | SPHEREx median in band (mJy) | Points | Ratio |",
         "|---|---|---|---|---|",
     ]
     for band in TWO_MASS:
         reference = band.zero_point_jy * 10 ** (-EPS_IND_B_2MASS_MAG[band.name] / 2.5) * 1000
-        inside = [
-            p.flux_ujy / 1000 for p in measured if p.flux_ujy is not None and band.lo_um <= p.lambda_um < band.hi_um
-        ]
+        in_band = [p for p in measured if band.lo_um <= p.lambda_um < band.hi_um]
+        inside = [p.flux_ujy / 1000 for p in in_band if p.flux_ujy is not None]
         if inside:
             median = float(np.median(inside))
             lines.append(f"| {band.name} | {reference:.1f} | {median:.1f} | {len(inside)} | {median / reference:.2f} |")
@@ -185,22 +221,99 @@ def spectrum_section(cap: int) -> list[str]:
     return lines
 
 
+def wise0855_section(data: Data) -> list[str]:
+    mwir = [p for p in data.points if p.lambda_um >= MWIR_MIN_UM]
+    expected_ujy = W2_ZERO_POINT_JY * 10 ** (-WISE0855_W2_MAG / 2.5) * 1e6
+    lines = [*header("T-3", data)]
+    combined = weighted_mean(mwir)
+    if combined is None:
+        lines.append("No usable D5–D6 photometry at the expected position.")
+        return [*lines, ""]
+    flux, err = combined
+    snr = flux / err
+    verdict = (
+        f"**detected** at S/N = {snr:.1f}"
+        if snr >= DETECTION_SIGMA
+        else f"**not detected** (S/N = {snr:.1f}); {DETECTION_SIGMA:.0f}σ upper limit = {DETECTION_SIGMA * err:.0f} µJy"
+    )
+    by_visit = defaultdict(list)
+    for p in mwir:
+        by_visit[p.visit].append(p)
+    lines += [
+        f"Forced aperture photometry at the position propagated from SIMBAD J2000 + proper motion (the challenge "
+        f"coordinates are epoch ≈2010.5). {len(mwir)} exposures at λ ≥ {MWIR_MIN_UM} µm (D5–D6) combined by inverse "
+        f"variance: {flux:.0f} ± {err:.0f} µJy → {verdict}. For reference, WISE W2 = {WISE0855_W2_MAG} corresponds "
+        f"to ≈ {expected_ujy:.0f} µJy at 4.6 µm.",
+        "",
+        "| Visit | Exposures | Flux (µJy) | S/N |",
+        "|---|---|---|---|",
+    ]
+    for visit, points in sorted(by_visit.items(), key=lambda kv: fmean(p.mjd for p in kv[1])):
+        mean = weighted_mean(points)
+        cell = f"{mean[0]:.0f} ± {mean[1]:.0f} | {mean[0] / mean[1]:.1f}" if mean else "— | —"
+        lines.append(f"| {visit} | {len(points)} | {cell} |")
+    return [*lines, ""]
+
+
+def light_curve_section(test_id: str, data: Data, note: str) -> list[str]:
+    lines = [*header(test_id, data)]
+    saturated = sum(p.saturated for p in data.points)
+    lines += [
+        f"{len(data.points)} exposures measured; {saturated} saturated (reported as saturated, no flux). {note}",
+        "",
+        "| Detector | Visits with flux | Min (mJy) | Max (mJy) | Max/min | Significance (σ) | Saturated points |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    by_detector: dict[int, dict[str, list[SpectrumPoint]]] = defaultdict(lambda: defaultdict(list))
+    for p in data.points:
+        by_detector[p.detector][p.visit].append(p)
+    for detector in sorted(by_detector):
+        visits = by_detector[detector]
+        means = [m for m in (weighted_mean(points) for points in visits.values()) if m is not None]
+        n_sat = sum(p.saturated for points in visits.values() for p in points)
+        if len(means) < 2:
+            lines.append(f"| D{detector} | {len(means)} | — | — | — | — | {n_sat} |")
+            continue
+        low, high = min(means), max(means)
+        significance = (high[0] - low[0]) / math.hypot(high[1], low[1])
+        lines.append(
+            f"| D{detector} | {len(means)} | {low[0] / 1000:.2f} | {high[0] / 1000:.2f} | {high[0] / low[0]:.2f} | "
+            f"{significance:.0f} | {n_sat} |"
+        )
+    lines += [
+        "",
+        "Fluxes are per detector, averaged over each visit's exposures; the LVF wavelength differs between "
+        "exposures, so changes in λ coverage between visits add to the apparent variability.",
+    ]
+    return [*lines, ""]
+
+
 CAVEATS = """## Caveats
 
-- Development sample, not full depth: λ coverage per visit is partial, so some frames carry "incomplete λ
-  coverage" warnings. Numbers will be refreshed from the full-depth prebake.
 - Positions come from a 2D Gaussian fit with masked pixels excluded (Barnard's saturated core is left out).
   Flux-weighted centroids lock onto pixel centres of the undersampled PSF and shortened the shifts by 10-20 %.
 - Proper-motion errors come from the scatter of 3–4 epochs around a line; parallax (0.27–0.55″) is ignored
-  (SR-3) and contributes to that scatter, so Δ/σ can exceed 3 even when the motion is clearly right.
+  (SR-3) and contributes to that scatter.
 - ε Indi A (V 4.7) lies 6.7′ west of ε Indi B: its halo leaves residuals at the western edge of the difference.
 - D1 (0.75–1.1 µm) barely detects the T dwarfs ε Indi Ba/Bb, so its shift is noise-dominated.
+- Photometry uses the pixel solid angle from the WCS; IRSA's per-pixel SAPM map would refine it by the small
+  distortion term. Aperture r = 3 px without an aperture correction.
 """
+
+Section = Callable[[Data], list[str]]
+SECTIONS: dict[str, list[Section]] = {
+    "barnard": [lambda d: motion_section("barnard", MOTION_TARGETS["barnard"], d)],
+    "eps_ind_b": [lambda d: motion_section("eps_ind_b", MOTION_TARGETS["eps_ind_b"], d), spectrum_section],
+    "wise0855": [wise0855_section],
+    "rw_aur": [lambda d: light_curve_section("T-4", d, "T Tauri star with irregular dimming.")],
+    "r_dra": [lambda d: light_curve_section("T-5", d, "Mira variable in the deep field; 30-day bins.")],
+}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--max-per-detector", type=int, default=4)
+    parser.add_argument("targets", nargs="*", help="ids from science/targets.json (default: all)")
+    parser.add_argument("--max-per-detector", type=int, default=None, help="override prebake_cap (dev samples)")
     args = parser.parse_args()
     logging.getLogger("astropy").setLevel(logging.ERROR)
     configure_ssl()
@@ -208,13 +321,14 @@ def main() -> None:
         "# Validation of the test targets",
         "",
         f"Generated by `science/validate.py` on {datetime.now(UTC):%Y-%m-%d %H:%M} UTC. Acceptance criteria: "
-        "`docs/spec.md` §6.2. Status: **draft** — motion targets (T-1, T-2) and the ε Indi B spectrum; "
-        "T-3 … T-5 follow.",
+        "`docs/spec.md` §6.2.",
         "",
     ]
-    for target_id, criteria in MOTION_TARGETS.items():
-        lines += validate(target_id, criteria, args.max_per_detector)
-    lines += spectrum_section(args.max_per_detector)
+    for target_id in args.targets or list(SECTIONS):
+        data = load(target_id, args.max_per_detector)
+        for section in SECTIONS[target_id]:
+            lines += section(data)
+        print(f"validated {target_id}")
     lines.append(CAVEATS)
     REPORT.write_text("\n".join(lines), encoding="utf-8")
     print(f"wrote {REPORT.relative_to(ROOT)}")

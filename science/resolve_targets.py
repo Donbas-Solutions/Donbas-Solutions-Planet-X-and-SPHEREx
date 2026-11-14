@@ -66,6 +66,7 @@ TARGETS = [
         "name": "R Draconis",
         "simbad_query": "R Dra",
         "test": "brightness",
+        "prebake_cap": 6,
         "doc_coords": ("16h32m40.3s", "+66d45m18s"),
         "notes": "Mira variable (~246 d). In the SPHEREx deep field near the NEP (dense time sampling). "
         "Likely saturated: mark, don't measure.",
@@ -129,6 +130,7 @@ def main() -> None:
                 "id": t["id"],
                 "name": t["name"],
                 "test": t["test"],
+                "prebake_cap": t.get("prebake_cap", 20),
                 "simbad_query": t["simbad_query"],
                 "simbad_main_id": str(row["main_id"]),
                 "ra": round(ra, 7),
@@ -149,7 +151,8 @@ def main() -> None:
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "source": f"SIMBAD ({server}) via astroquery {astroquery.__version__}",
         "conventions": "ra/dec: ICRS degrees at ref_epoch (Julian year). pmra includes cos(dec). "
-        "pm in mas/yr, parallax in mas. doc_epoch_estimate = epoch at which doc_coords match the PM track.",
+        "pm in mas/yr, parallax in mas. doc_epoch_estimate = epoch at which doc_coords match the PM track. "
+        "prebake_cap: exposures per detector and visit (or 30-day bin) used by prebake and validation.",
         "targets": out,
     }
     path = ROOT / "science" / "targets.json"

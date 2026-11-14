@@ -1,7 +1,7 @@
 {
   "generated_at": "2026-11-14T12:11:50+00:00",
   "source": "SIMBAD (simbad.harvard.edu) via astroquery 0.4.11",
-  "conventions": "ra/dec: ICRS degrees at ref_epoch (Julian year). pmra includes cos(dec). pm in mas/yr, parallax in mas. doc_epoch_estimate = epoch at which doc_coords match the PM track.",
+  "conventions": "ra/dec: ICRS degrees at ref_epoch (Julian year). pmra includes cos(dec). pm in mas/yr, parallax in mas. doc_epoch_estimate = epoch at which doc_coords match the PM track. prebake_cap: exposures per detector and visit (or 30-day bin) used by prebake and validation.",
   "targets": [
     {
       "id": "barnard",
@@ -22,7 +22,8 @@
       ],
       "doc_offset_arcsec": 0.0,
       "doc_epoch_estimate": 2000.0,
-      "notes": "Saturated in SPHEREx; motion visible as a shifted saturated blob. Centroid unreliable."
+      "notes": "Saturated in SPHEREx; motion visible as a shifted saturated blob. Centroid unreliable.",
+      "prebake_cap": 20
     },
     {
       "id": "eps_ind_b",
@@ -43,7 +44,8 @@
       ],
       "doc_offset_arcsec": 0.8,
       "doc_epoch_estimate": 1999.8,
-      "notes": "Unresolved T1+T6 pair (0.6-0.7 arcsec). Not saturated: best target for measured proper motion. eps Ind A (V 4.7) is only 6.7 arcmin to the west: its halo enters a 10 arcmin field."
+      "notes": "Unresolved T1+T6 pair (0.6-0.7 arcsec). Not saturated: best target for measured proper motion. eps Ind A (V 4.7) is only 6.7 arcmin to the west: its halo enters a 10 arcmin field.",
+      "prebake_cap": 20
     },
     {
       "id": "wise0855",
@@ -64,7 +66,8 @@
       ],
       "doc_offset_arcsec": 85.2,
       "doc_epoch_estimate": 2010.5,
-      "notes": "Y dwarf, J ~ 25: invisible at short wavelengths; only D5-D6 stacks have a chance. Report S/N or an upper limit, never claim a detection below 5 sigma."
+      "notes": "Y dwarf, J ~ 25: invisible at short wavelengths; only D5-D6 stacks have a chance. Report S/N or an upper limit, never claim a detection below 5 sigma.",
+      "prebake_cap": 20
     },
     {
       "id": "rw_aur",
@@ -85,7 +88,8 @@
       ],
       "doc_offset_arcsec": 1.4,
       "doc_epoch_estimate": null,
-      "notes": "T Tauri star with irregular dimming events: light-curve test."
+      "notes": "T Tauri star with irregular dimming events: light-curve test.",
+      "prebake_cap": 20
     },
     {
       "id": "r_dra",
@@ -106,7 +110,8 @@
       ],
       "doc_offset_arcsec": 0.4,
       "doc_epoch_estimate": null,
-      "notes": "Mira variable (~246 d). In the SPHEREx deep field near the NEP (dense time sampling). Likely saturated: mark, don't measure."
+      "notes": "Mira variable (~246 d). In the SPHEREx deep field near the NEP (dense time sampling). Likely saturated: mark, don't measure.",
+      "prebake_cap": 6
     }
   ]
 }
