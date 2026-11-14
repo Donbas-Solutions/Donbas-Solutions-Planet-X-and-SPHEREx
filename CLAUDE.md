@@ -52,11 +52,20 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   `archive.cutouts.load_cutout` already returns per-pixel `wavelength_um` / `bandwidth_um` maps.
 - **Cutouts are truncated at detector edges**, not padded: shapes differ between exposures (seen: 129×128, 106×129,
   56×128, 7×29). Only the common grid (reprojection) makes frames comparable.
-- **IRSA cutout service under load** (2026-11-14): many 503s at 4 parallel workers; at 2 workers with backoff
-  ~6 s per cutout → full depth of one target ~20 min. Prebake early.
+- **IRSA cutout service under load** (2026-11-14): many 503s at 4 parallel workers; at 2 workers ~3–6 s per cutout
+  depending on the day; at 3 workers 18 % 503 with `Retry-After: 5`. Only `center` and `size` are accepted: EPSF
+  cannot be dropped server-side.
 - DR1 and QR3 sample files both carry pipeline tag `l2b-v27` (consistent calibration).
-- **S3 mirror** `nasa-irsa-spherex` (anonymous, plain HTTPS works): prefixes `dr1/`, `qr2/`, `qr3/`; same paths as the IRSA
-  `ibe` URLs (`dr1/level2/<week>/<version>/<detector>/…`); full file ~65 MB; HTTP range requests supported.
+- **Full L2 file layout** (62 MB): `IMAGE`, `VARIANCE`, `ZODI` = uncompressed float32 2040×2040 (8160 B per row);
+  `FLAGS` = RICE_1 tile-compressed, one tile per image row (~3.9 KB); `EPSF` 3.9 MB; `WCS-WAVE` 2.9 KB.
+- **S3 mirror** `nasa-irsa-spherex` (anonymous, plain HTTPS, region us-east-1): prefixes `dr1/`, `qr2/`, `qr3/`; same
+  paths as the IRSA `ibe` URLs (`dr1/level2/<week>/<version>/<detector>/…`). **Primary fetch path (OD-4, A0):**
+  single-range reads of whole rows give pixels bit-identical to the cutout service, ~3.9 MB per exposure, 0 errors,
+  scales linearly (8 workers → 0.6 s per exposure, Barnard full depth ~4 min).
+  **S3 ignores multi-range requests and answers `200` with the whole 62 MB file** — send one range per request.
+- **IRSA `ibe` range reads** (fallback): `multipart/byteranges` up to **100 ranges per request**; 101+ → `200` with the
+  whole file. Row-window multi-range reads: ~1 MB per exposure, 3 workers → 2 s per exposure, 0 errors.
+- Any range request must stream the response and abort on a status other than `206`, without reading the body.
 - All Resources-tab sources (IRSA, tutorials, WiseView, Gaia MAST/ESA TAP, NEOSSat, CADC) are publicly reachable; no
   private hackathon data exists beyond them.
 - **Coverage of test targets** (SIA radius 0.01°, DR1+QR3, wide+deep):

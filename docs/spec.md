@@ -227,7 +227,7 @@ Float32 arrays and are stretched and differenced client-side. Details: `docs/age
 | OD-1 | Hosting for backend (Docker, persistent disk) and frontend (static) | Team | Sunday morning |
 | OD-2 | Repository licence (Aladin Lite is GPL/LGPL-3) | Team | Before submission |
 | OD-3 | Exact submission deadline (hour, time zone) and required format (video/slides, AI-use disclosure, branding rules) | Track D | Saturday |
-| OD-4 | Fetch strategy (IRSA cutouts / range reads / S3) and exposure cap per group | Track A | Checkpoint A0 |
+| OD-4 | Fetch strategy — decided 2026-11-14 (A0): S3 range reads primary, IRSA `ibe` multi-range fallback, cutout service last resort (`CLAUDE.md` → Verified data facts). Exposure cap per group — proposed 20 per (detector, visit), 10 per deep-field bin; awaiting the team | Track A | Checkpoint A0 |
 | OD-5 | Uncached end-to-end latency budget | Track A | Checkpoint A0 |
 | OD-6 | ~~Who owns which track~~ — decided 2026-11-14: four roles A–D (`docs/agent-prompt.md` → Roles and ownership); people assigned by the team | Team | Done |
 
