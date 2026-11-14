@@ -4,16 +4,18 @@ Usage (from the repo root):
     uv run --project backend python scripts/prebake.py                    # all five targets
     uv run --project backend python scripts/prebake.py barnard --max-per-detector 20
 
-Full depth is ~17 exposures per detector and visit (one per LVF channel); at the IRSA speed measured on 2026-11-14
-(~4-6 s per cutout) a target takes 10-30 min, so run it unattended. Cutouts are cached in cache/raw/, so a re-run
-only downloads what is missing. Depth per target is `prebake_cap` in science/targets.json (R Dra: smaller,
-per 30-day bin). Writes spectrum.json (Spectrum model: one photometry point per exposure) next to sequence.json.
+Full depth is ~17 exposures per detector and visit (one per LVF channel). Windows come from Track A's async fetcher
+(S3 range reads first, OD-4: a full-depth target in minutes); they are cached in cache/raw/, so a re-run only
+downloads what is missing. Depth per target is `prebake_cap` in science/targets.json (R Dra: smaller,
+per 30-day bin). Writes spectrum.json (Spectrum model: one photometry point per exposure) next to sequence.json
+and links it from the manifest (`meta.spectrum`).
 Also writes blink.gif (the all-detector visit stacks, 1 frame per second) next to each bundle for the pitch.
 """
 
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import logging
 import time
@@ -22,9 +24,14 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from app.archive.naive import fetch_sample
+from app.archive.collections import CollectionDiscovery
+from app.archive.cutouts import cutout_size_deg
+from app.archive.fetch import FetchResult, fetch_cutouts, query_exposures
+from app.archive.http import make_http
+from app.archive.visits import cap_per_detector, group_visits
+from app.astrometry import position_at
 from app.config import configure_ssl
-from app.domain import SequenceParams, SequenceResult, Target
+from app.domain import ExposureMeta, SequenceParams, SequenceResult, Target, Visit
 from app.pipeline.bundle import write_bundle
 from app.pipeline.photometry import measure_spectrum
 from app.pipeline.sequence import build_sequence
@@ -74,17 +81,43 @@ def show_progress(stage: str, done: int, total: int) -> None:
     print(f"\r  {stage} {done}/{total}", end="", flush=True)
 
 
+async def fetch_target(target: Target, cap: int, fov_arcmin: float = 10.0) -> FetchResult:
+    """Same plan, centre and window size as `archive.naive.fetch_sample`, so earlier cached windows are reused."""
+    http = make_http()
+    async with http.client:
+        collections = await CollectionDiscovery().collections(http)
+        exposures = await query_exposures(http, target, collections)
+        plan: list[tuple[Visit, ExposureMeta]] = [
+            (visit, meta) for visit in group_visits(exposures) for meta in cap_per_detector(visit, cap)
+        ]
+        if not plan:
+            return FetchResult(cutouts=[], failed=[], off_detector=[])
+        first = min(meta.mjd_mid for _, meta in plan)
+        last = max(meta.mjd_mid for _, meta in plan)
+        center = position_at(target, (first + last) / 2)
+        size_deg = cutout_size_deg(fov_arcmin, target, last - first)
+        return await fetch_cutouts(http, plan, center, size_deg, progress=show_progress)
+
+
+def with_spectrum_link(result: SequenceResult) -> SequenceResult:
+    meta = result.sequence.meta.model_copy(update={"spectrum": SPECTRUM})
+    return SequenceResult(sequence=result.sequence.model_copy(update={"meta": meta}), arrays=result.arrays)
+
+
 def prebake(target_id: str, target: Target, cap: int) -> None:
     started = time.monotonic()
     print(f"{target_id} (cap {cap} per detector and visit):")
-    sample = fetch_sample(target, max_per_detector=cap, progress=show_progress)
-    print(f"\r  {len(sample.cutouts)} cutouts, {len(sample.failed)} failed, {time.monotonic() - started:.0f} s")
-    if sample.failed:
+    fetched = asyncio.run(fetch_target(target, cap))
+    print(
+        f"\r  {len(fetched.cutouts)} cutouts, {len(fetched.failed)} failed, {len(fetched.off_detector)} off detector, "
+        f"{time.monotonic() - started:.0f} s"
+    )
+    if fetched.failed:
         print("  re-run later to fill the failed exposures (finished cutouts are cached)")
-    result = build_sequence(sample.cutouts, target, SequenceParams(), progress=show_progress)
+    result = with_spectrum_link(build_sequence(fetched.cutouts, target, SequenceParams(), progress=show_progress))
     out = OUT / target_id
     manifest = write_bundle(result, out)
-    spectrum = measure_spectrum(sample.cutouts, target)
+    spectrum = measure_spectrum(fetched.cutouts, target)
     (out / SPECTRUM).write_text(spectrum.model_dump_json(indent=1) + "\n", encoding="utf-8")
     write_gif(result, out / "blink.gif")
     size_kb = sum(p.stat().st_size for p in out.rglob("*") if p.is_file()) / 1024
