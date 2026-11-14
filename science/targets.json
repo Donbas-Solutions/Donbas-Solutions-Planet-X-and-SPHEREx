@@ -89,7 +89,7 @@
       "doc_offset_arcsec": 1.4,
       "doc_epoch_estimate": null,
       "notes": "T Tauri star with irregular dimming events: light-curve test.",
-      "prebake_cap": 20
+      "prebake_cap": 10
     },
     {
       "id": "r_dra",
@@ -111,7 +111,7 @@
       "doc_offset_arcsec": 0.4,
       "doc_epoch_estimate": null,
       "notes": "Mira variable (~246 d). In the SPHEREx deep field near the NEP (dense time sampling). Likely saturated: mark, don't measure.",
-      "prebake_cap": 6
+      "prebake_cap": 3
     }
   ]
 }
