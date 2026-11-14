@@ -30,8 +30,8 @@ Source: the official *Project Submission Guide*, spaceappschallenge.org/resource
 
 What we need (NFR-4): a static frontend with the prebaked bundles that stays up for weeks after the event; a backend
 (Docker, cache on disk) that may sleep — the UI then falls back to `/prebaked/` (FR-14).
-Size estimate: a 290×290 frame is 336 KB of Float32 + 336 KB of flags; 5 targets ≈ 200 frames ≈ **150 MB** in total,
-mostly R Dra (30-day bins). No single file is over 1 MB.
+Size: the 5 committed bundles are **13 MB** (10′ FOV → 97×97 frames, 75 KB per frame incl. flags; R Dra is the
+largest at 5 MB). No single file is over 1 MB.
 
 | Part | Proposal | Why | Alternatives |
 |---|---|---|---|

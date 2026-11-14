@@ -3,7 +3,8 @@
 Public web tool: the user enters RA/Dec (or an object name) and gets an animated sequence (blink / flipbook)
 of NASA SPHEREx images of that sky patch, so moving and variable objects stand out.
 
-- Hackathon: submission deadline **2026-11-15**. Team of 3–4, parallel Claude Code sessions, one per track.
+- Hackathon: submission deadline **2026-11-15 23:59 Kyiv (21:59 UTC)** (`docs/deploy.md`). Team of 4, parallel Claude
+  Code sessions, one per role.
 - Requirements — what to build and when it is done (IDs FR/SR/NFR/T/OD): **`docs/spec.md`**, the source of truth.
 - Plan — tracks, order of work, checkpoints: `docs/agent-prompt.md`. API contract: `docs/api.md`.
 - Challenge text: `docs/project_info.md`. Background research (English): `docs/spherex-research.md`.
