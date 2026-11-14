@@ -1,18 +1,24 @@
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react'
 import type { PixelPos, Sequence } from '../api/types'
 import type { LoadedFrame } from '../lib/frames'
+import type { ProperMotion, SequenceSource, ViewParams } from '../lib/urlState'
 import type { SequenceLoad } from './useSequence'
+import type { SetViewParams } from './useViewParams'
 
 export interface TargetInfo {
   name: string | null
   /** ICRS degrees */
   ra: number
   dec: number
+  pm: ProperMotion | null
 }
 
 /** App-wide state shared by the player (Track B) and the tab panels (Track D). Read it with `useAppState()`. */
 export interface AppState {
-  manifestUrl: string
+  /** View params mirrored in the page URL (docs/spec.md §5.3). */
+  params: ViewParams
+  setParams: SetViewParams
+  source: SequenceSource
   load: SequenceLoad
   retry: () => void
   /** The ready sequence; null while loading or on error. */
