@@ -15,7 +15,10 @@ export default function AboutPage() {
       <ul>
         <li>The pixel is 6.2″: motion of less than about one pixel per year is hard to see by eye.</li>
         <li>Saturated stars are marked as saturated and are not measured.</li>
-        <li>WISE 0855−0714 is at the detection limit: we show its expected position, not a detection.</li>
+        <li>
+          WISE 0855−0714: its motion is seen in D5–D6, but its aperture is blended with a field star, so the flux
+          we measure there is only an upper bound, not WISE 0855's own flux.
+        </li>
         <li>This tool makes no claims about Planet Nine or Planet X.</li>
         <li>The expected-position marker uses catalog proper motion; parallax (≤ 0.55″) is ignored.</li>
       </ul>
