@@ -1,5 +1,5 @@
 import type { SpectrumPoint } from '../api/types'
-import type { PresetId } from './presets'
+import { presetNear, type PresetId } from './presets'
 
 export type PointStatus = 'measured' | 'saturated' | 'flagged'
 
@@ -42,18 +42,19 @@ export function visitsOf(points: readonly SpectrumPoint[]): VisitInfo[] {
     .sort((a, b) => a.mjdStart - b.mjdStart)
 }
 
-/** Colour slots: index = palette slot, value = visit id. Default is every visit, or the first and last (longest baseline). */
-export function defaultVisitSlots(visits: readonly VisitInfo[]): (string | null)[] {
-  const slots: (string | null)[] = Array.from({ length: MAX_VISIT_SERIES }, () => null)
-  const chosen = visits.length <= MAX_VISIT_SERIES ? visits : [visits[0], visits[visits.length - 1]]
-  chosen.forEach((v, i) => {
-    if (v) slots[i] = v.id
-  })
-  return slots
+/** Colour slots: index = palette slot, value = series id (visit or detector); the first ids fill the slots. */
+export function slotsFor(ids: readonly string[]): (string | null)[] {
+  return Array.from({ length: MAX_VISIT_SERIES }, (_, i) => ids[i] ?? null)
 }
 
-/** Toggling keeps the other visits in their slots, so their colours never change. */
-export function toggleVisitSlot(slots: readonly (string | null)[], id: string): (string | null)[] {
+/** Every visit, or the first and last (longest baseline). */
+export function defaultVisitSlots(visits: readonly VisitInfo[]): (string | null)[] {
+  const chosen = visits.length <= MAX_VISIT_SERIES ? visits : [visits[0], visits[visits.length - 1]]
+  return slotsFor(chosen.flatMap((v) => (v ? [v.id] : [])))
+}
+
+/** Toggling keeps the other series in their slots, so their colours never change. */
+export function toggleSlot(slots: readonly (string | null)[], id: string): (string | null)[] {
   if (slots.includes(id)) return slots.map((s) => (s === id ? null : s))
   const free = slots.indexOf(null)
   if (free < 0) return [...slots]
@@ -87,8 +88,14 @@ export function detectorBands(points: readonly SpectrumPoint[]): DetectorBand[] 
   return [...bands.values()].sort((a, b) => a.detector - b.detector)
 }
 
-export const SPECTRUM_CAVEATS: Partial<Record<PresetId, string>> = {
+const POSITION_CAVEATS: Partial<Record<PresetId, string>> = {
   wise0855:
     'At this position the aperture is blended with a field star: below 1.6 µm the flux is the field star’s, and at ' +
     '≥ 3.8 µm it is only an upper bound for WISE 0855. Not a measurement of WISE 0855 itself.',
+}
+
+/** Caveats describe the sky position (e.g. a blended aperture), so they apply to typed coordinates and live data too. */
+export function positionCaveat(presetId: PresetId | null, position: { ra: number; dec: number } | null): string | null {
+  const id = presetId ?? (position ? presetNear(position.ra, position.dec)?.id : undefined)
+  return (id && POSITION_CAVEATS[id]) ?? null
 }

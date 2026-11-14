@@ -30,6 +30,7 @@ interface Props {
   yScale: ScaleKind
   bands?: readonly ChartBand[]
   ariaLabel: string
+  formatX?: (v: number) => string
 }
 
 type Marker = 'series' | 'saturated' | 'flagged' | 'nonpositive'
@@ -61,7 +62,16 @@ function yDomain(points: readonly ChartPoint[], kind: ScaleKind): [number, numbe
   return ends ? pad(ends, 0.05) : null
 }
 
-export default function PointChart({ points, xDomain, xLabel, yLabel, yScale, bands = [], ariaLabel }: Props) {
+export default function PointChart({
+  points,
+  xDomain,
+  xLabel,
+  yLabel,
+  yScale,
+  bands = [],
+  ariaLabel,
+  formatX = formatTick,
+}: Props) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const width = Math.max(useElementWidth(wrapRef, 640), 280)
   const [hoverKey, setHoverKey] = useState<string | null>(null)
@@ -127,11 +137,13 @@ export default function PointChart({ points, xDomain, xLabel, yLabel, yScale, ba
         onPointerLeave={() => setHoverKey(null)}
       >
         {bands.map((b, i) => (
-          <g key={b.label} className={i % 2 === 0 ? 'band band-even' : 'band'}>
+          <g key={`${b.from}:${i}`} className={i % 2 === 0 ? 'band band-even' : 'band'}>
             <rect x={x.map(b.from)} y={MARGIN.top} width={Math.max(x.map(b.to) - x.map(b.from), 1)} height={PLOT_BOTTOM - MARGIN.top} />
-            <text x={(x.map(b.from) + x.map(b.to)) / 2} y={MARGIN.top - 8} textAnchor="middle">
-              {b.label}
-            </text>
+            {b.label && (
+              <text x={(x.map(b.from) + x.map(b.to)) / 2} y={MARGIN.top - 8} textAnchor="middle">
+                {b.label}
+              </text>
+            )}
           </g>
         ))}
 
@@ -152,7 +164,7 @@ export default function PointChart({ points, xDomain, xLabel, yLabel, yScale, ba
         <line x1={MARGIN.left} x2={plotRight} y1={PLOT_BOTTOM} y2={PLOT_BOTTOM} className="axis" />
         {x.ticks.map((t) => (
           <text key={t} x={x.map(t)} y={HEIGHT - 26} textAnchor="middle" className="tick-label">
-            {formatTick(t)}
+            {formatX(t)}
           </text>
         ))}
         <text x={(MARGIN.left + plotRight) / 2} y={HEIGHT - 6} textAnchor="middle" className="axis-title">
