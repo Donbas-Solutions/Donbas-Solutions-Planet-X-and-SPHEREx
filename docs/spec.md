@@ -197,7 +197,7 @@ a verdict, caveats. Catalog values: `science/targets.json`.
 |---|---|
 | NFR-1 | **Performance.** Prebaked or cached sequence: first frame < 2 s on a 20 Mbit/s connection; rendering a 290×290 frame < 16 ms on a mid-range laptop. Uncached: progress visible < 2 s; end-to-end time budget set after Checkpoint A0 (OD-5). |
 | NFR-2 | **Payload.** Image + flags ≤ 75 KB per frame at 10′ and ≤ 680 KB at 30′. A typical 10′ sequence (3–4 visits × 7 stacks) ≤ 3 MB; deep-field sequences (e.g. R Dra, ~17 bins) may be larger and load frames on demand. |
-| NFR-3 | **Data freshness.** No hardcoded collections: newest DR + QR discovered via TAP (cached 6 h, config fallback). Processed results are keyed by the set of `obs_id`s, so new exposures trigger a rebuild. Prebaked bundles regenerate with one command. |
+| NFR-3 | **Data freshness.** No hardcoded collections: newest DR + QR discovered via TAP (cached 6 h, config fallback). Processed results are keyed by the set of image keys (obs_id, detector), so new exposures trigger a rebuild. Prebaked bundles regenerate with one command. |
 | NFR-4 | **Availability.** Static frontend and prebaked bundles stay online through judging (weeks after the event); the backend may sleep — the UI degrades to offline mode (FR-14). |
 | NFR-5 | **Load on external services.** ≤ 8 concurrent requests to IRSA per backend instance, retries with backoff, timeouts, caching; generic User-Agent; no personal data in requests. |
 | NFR-6 | **Browsers.** Latest two versions of Chrome, Firefox, Safari, Edge on desktop; mobile Safari/Chrome usable. WebGL is required only for the context panel (FR-19). |
@@ -229,7 +229,7 @@ Float32 arrays and are stretched and differenced client-side. Details: `docs/age
 | OD-3 | Exact submission deadline (hour, time zone) and required format (video/slides, AI-use disclosure, branding rules) | Track D | Saturday |
 | OD-4 | Fetch strategy (IRSA cutouts / range reads / S3) and exposure cap per group | Track A | Checkpoint A0 |
 | OD-5 | Uncached end-to-end latency budget | Track A | Checkpoint A0 |
-| OD-6 | Who owns Tracks B and C | Team | Now |
+| OD-6 | ~~Who owns which track~~ — decided 2026-11-14: four roles A–D (`docs/agent-prompt.md` → Roles and ownership); people assigned by the team | Team | Done |
 
 ## 11. Glossary
 

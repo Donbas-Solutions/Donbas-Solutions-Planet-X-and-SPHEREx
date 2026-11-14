@@ -26,8 +26,12 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - `frontend/` — React 19 + Vite 8 + TypeScript, npm. Aladin Lite pinned to **3.8.2** (npm `latest` is a beta).
   Aladin Lite is GPL/LGPL-3 — keep in mind when choosing the repo license.
   Lint: **oxlint**. Frontend conventions: skill `.claude/skills/react-frontend`.
+- Backend seam (Phase 0.5): `backend/app/domain.py` holds the types shared by `archive/` (Track A: query, visits,
+  cutouts, fetch) and `pipeline/` (Track C: `build_sequence`, `write_bundle`). Ownership per track:
+  `docs/agent-prompt.md` → Roles and ownership.
 - `science/` — validation scripts/notebooks, `targets.json`, `VALIDATION.md`.
-- `scripts/prebake.py` — builds static bundles for the 5 test targets into `frontend/public/prebaked/`.
+- `scripts/fetch_sample.py` — real development sample via the temporary naive fetcher;
+  `scripts/prebake.py` (Track C) — static bundles for the 5 test targets into `frontend/public/prebaked/`.
 - `docs/api.md` — API contract shared by all tracks. Changing it = tell the team.
 
 ## Verified data facts (checked live against IRSA, 2026-11-14)
@@ -42,6 +46,14 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - **Cutouts**: `<access_url>?center=<ra>,<dec>&size=<deg>`. Returns MEF: `IMAGE` (surface brightness, check BUNIT),
   `FLAGS`, `VARIANCE`, `ZODI` — cut to size; `EPSF` (8752×451, ~4 MB) and `WCS-WAVE` (1100×1) — **not cut**.
   ⇒ every cutout is **~4 MB regardless of size**. Celestial WCS: `RA---TAN-SIP`. Headers: `DATE-OBS`, `MJD-AVG`, `DETECTOR`.
+- **One `obs_id` = one exposure seen by two detectors** (dichroic pair): SIA lists 2 rows per `obs_id`. The unique key
+  is (obs_id, detector) = `ExposureMeta.key`; deduplicating by `obs_id` alone silently drops half the data.
+- **Spectral WCS**: alternate WCS key `W` (`WAVE-TAB` lookup in `WCS-WAVE`), evaluated without SIP;
+  `archive.cutouts.load_cutout` already returns per-pixel `wavelength_um` / `bandwidth_um` maps.
+- **Cutouts are truncated at detector edges**, not padded: shapes differ between exposures (seen: 129×128, 106×129,
+  56×128, 7×29). Only the common grid (reprojection) makes frames comparable.
+- **IRSA cutout service under load** (2026-11-14): many 503s at 4 parallel workers; at 2 workers with backoff
+  ~6 s per cutout → full depth of one target ~20 min. Prebake early.
 - DR1 and QR3 sample files both carry pipeline tag `l2b-v27` (consistent calibration).
 - **S3 mirror** `nasa-irsa-spherex` (anonymous, plain HTTPS works): prefixes `dr1/`, `qr2/`, `qr3/`; same paths as the IRSA
   `ibe` URLs (`dr1/level2/<week>/<version>/<detector>/…`); full file ~65 MB; HTTP range requests supported.
@@ -113,6 +125,7 @@ All commands below are the same on macOS and Windows.
 | Frontend build / lint | `cd frontend && npm run build` · `npm run lint` |
 | Regenerate mock bundle (from root) | `uv run --project backend python scripts/make_mock.py` → `frontend/public/mock/` |
 | Re-resolve test targets (from root) | `uv run --project backend python science/resolve_targets.py` → `science/targets.json` |
+| Real data sample (from root) | `uv run --project backend python scripts/fetch_sample.py barnard eps_ind_b --max-per-detector 4` → `cache/raw/` |
 | Add a Python dependency | `cd backend && uv add <pkg>` (dev: `uv add --dev <pkg>`); commit `pyproject.toml` + `uv.lock` |
 | View a bundle | `http://localhost:5173/?manifest=/mock/sequence.json` (default) |
 | Prebake real targets (from root) | `uv run --project backend python scripts/prebake.py` (Track C, not written yet) |
