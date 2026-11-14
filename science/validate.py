@@ -22,6 +22,7 @@ import numpy as np
 from PIL import Image
 
 from app.archive.fetch import FetchResult
+from app.archive.http import ArchiveError
 from app.config import configure_ssl
 from app.domain import SequenceParams, SequenceResult, Target
 from app.models import Frame, SpectrumPoint
@@ -362,7 +363,10 @@ def matched_lambda_lines(points: Sequence[SpectrumPoint]) -> list[str]:
         first_mjd[p.visit] = min(first_mjd.get(p.visit, p.mjd), p.mjd)
     month = {v: f"{MJD_ZERO + timedelta(days=mjd):%Y-%m}" for v, mjd in first_mjd.items()}
     if not best:
-        return ["No visit pair shares a measured exposure within one LVF channel: no matched-λ comparison."]
+        return [
+            "Matched λ: no comparison — no two visits have measured (unsaturated, unmasked) exposures within one "
+            "LVF channel."
+        ]
     lines = [
         "Matched λ: each exposure is paired with the nearest-λ exposure of another visit (≤ 1 LVF channel apart); "
         "errors include a 5 % floor per exposure and the local spectral slope times the λ offset. The strongest "
@@ -397,6 +401,13 @@ CAVEATS = """## Caveats
 """
 
 Section = Callable[[Data], list[str]]
+HEADINGS = {
+    "barnard": ("T-1",),
+    "eps_ind_b": ("T-2", "FR-16"),
+    "wise0855": ("T-3",),
+    "rw_aur": ("T-4",),
+    "r_dra": ("T-5",),
+}
 SECTIONS: dict[str, list[Section]] = {
     "barnard": [lambda d: motion_section("barnard", MOTION_TARGETS["barnard"], d)],
     "eps_ind_b": [lambda d: motion_section("eps_ind_b", MOTION_TARGETS["eps_ind_b"], d), spectrum_section],
@@ -404,6 +415,33 @@ SECTIONS: dict[str, list[Section]] = {
     "rw_aur": [lambda d: light_curve_section("T-4", d, "T Tauri star with irregular dimming.")],
     "r_dra": [lambda d: light_curve_section("T-5", d, "Mira variable in the deep field; 30-day bins.")],
 }
+
+
+def previous_sections(target_id: str) -> list[str]:
+    """This target's sections from the last report, so one archive outage does not wipe the other targets' run."""
+    if not REPORT.exists():
+        return []
+    kept: list[str] = []
+    is_kept = False
+    for line in REPORT.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## "):
+            is_kept = line.removeprefix("## ").startswith(HEADINGS[target_id])
+        if is_kept:
+            kept.append(line)
+    return kept
+
+
+def load_or_none(target_id: str, cap_override: int | None) -> Data | None:
+    """None when IRSA fails for this target (the fetcher's task group wraps the error)."""
+    try:
+        return load(target_id, cap_override)
+    except ArchiveError as exc:
+        print(f"\n{target_id}: archive failed ({exc})")
+    except ExceptionGroup as group:
+        if group.subgroup(ArchiveError) is None:
+            raise
+        print(f"\n{target_id}: archive failed ({group.exceptions[0]})")
+    return None
 
 
 def main() -> None:
@@ -421,7 +459,12 @@ def main() -> None:
         "",
     ]
     for target_id in args.targets or list(SECTIONS):
-        data = load(target_id, args.max_per_detector)
+        data = load_or_none(target_id, args.max_per_detector)
+        if data is None:
+            kept = previous_sections(target_id)
+            print(f"{target_id}: kept {len(kept)} lines of the last report")
+            lines += kept
+            continue
         for section in SECTIONS[target_id]:
             lines += section(data)
         print(f"validated {target_id}")
