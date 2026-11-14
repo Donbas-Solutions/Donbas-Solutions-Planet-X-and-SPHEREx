@@ -1,12 +1,13 @@
 import { useAppState } from '../../hooks/useAppState'
 import { useSpectrum } from '../../hooks/useSpectrum'
+import { presetNear } from '../../lib/presets'
 import { SPECTRUM_CAVEATS } from '../../lib/spectrum'
 import { sourceKey } from '../../lib/urlState'
 import SpectrumChart from './SpectrumChart'
 import './charts.css'
 
 export default function SpectrumPanel() {
-  const { params, source, target, selectedPixel } = useAppState()
+  const { params, source, target, sequence, selectedPixel } = useAppState()
   const load = useSpectrum()
 
   switch (load.status) {
@@ -24,8 +25,10 @@ export default function SpectrumPanel() {
       break
   }
 
-  const name = target?.name ?? 'the target'
-  const caveat = params.target ? SPECTRUM_CAVEATS[params.target] : undefined
+  const name = target?.name ?? sequence?.meta.target_name ?? 'the target'
+  // The caveats describe the sky position (a blended aperture), so they also apply to typed coordinates and live data.
+  const presetId = params.target ?? (target ? presetNear(target.ra, target.dec)?.id : undefined)
+  const caveat = presetId ? SPECTRUM_CAVEATS[presetId] : undefined
 
   return (
     <div className="chart-panel">
