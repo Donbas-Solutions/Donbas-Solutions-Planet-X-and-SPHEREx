@@ -1,0 +1,94 @@
+import type { SpectrumPoint } from '../api/types'
+import type { PresetId } from './presets'
+
+export type PointStatus = 'measured' | 'saturated' | 'flagged'
+
+export interface VisitInfo {
+  id: string
+  /** UTC month of the visit's first point, e.g. "2025-04". */
+  label: string
+  mjdStart: number
+  count: number
+}
+
+/** The scatter palette validates for all pairs only up to three series (colour-blind safety). */
+export const MAX_VISIT_SERIES = 3
+
+const MJD_UNIX_EPOCH = 40587
+
+export function mjdToIsoDate(mjd: number): string {
+  return new Date((mjd - MJD_UNIX_EPOCH) * 86_400_000).toISOString().slice(0, 10)
+}
+
+/** A point is plotted only with a flux; saturated ones are labelled as such, the rest are masked by FLAGS. */
+export function pointStatus(p: SpectrumPoint): PointStatus {
+  if (p.saturated) return 'saturated'
+  return p.flux_ujy === null ? 'flagged' : 'measured'
+}
+
+export function visitsOf(points: readonly SpectrumPoint[]): VisitInfo[] {
+  const byId = new Map<string, { mjdStart: number; count: number }>()
+  for (const p of points) {
+    const v = byId.get(p.visit)
+    if (v) {
+      v.mjdStart = Math.min(v.mjdStart, p.mjd)
+      v.count++
+    } else {
+      byId.set(p.visit, { mjdStart: p.mjd, count: 1 })
+    }
+  }
+  return [...byId]
+    .map(([id, v]) => ({ id, label: mjdToIsoDate(v.mjdStart).slice(0, 7), ...v }))
+    .sort((a, b) => a.mjdStart - b.mjdStart)
+}
+
+/** Colour slots: index = palette slot, value = visit id. Default is every visit, or the first and last (longest baseline). */
+export function defaultVisitSlots(visits: readonly VisitInfo[]): (string | null)[] {
+  const slots: (string | null)[] = Array.from({ length: MAX_VISIT_SERIES }, () => null)
+  const chosen = visits.length <= MAX_VISIT_SERIES ? visits : [visits[0], visits[visits.length - 1]]
+  chosen.forEach((v, i) => {
+    if (v) slots[i] = v.id
+  })
+  return slots
+}
+
+/** Toggling keeps the other visits in their slots, so their colours never change. */
+export function toggleVisitSlot(slots: readonly (string | null)[], id: string): (string | null)[] {
+  if (slots.includes(id)) return slots.map((s) => (s === id ? null : s))
+  const free = slots.indexOf(null)
+  if (free < 0) return [...slots]
+  return slots.map((s, i) => (i === free ? id : s))
+}
+
+/** Log flux when the measured fluxes span more than two decades. */
+export function prefersLogScale(points: readonly SpectrumPoint[]): boolean {
+  const positive = points.flatMap((p) => (p.flux_ujy !== null && p.flux_ujy > 0 ? [p.flux_ujy] : []))
+  if (positive.length < 2) return false
+  return Math.max(...positive) / Math.min(...positive) > 100
+}
+
+export interface DetectorBand {
+  detector: number
+  lambdaMin: number
+  lambdaMax: number
+}
+
+export function detectorBands(points: readonly SpectrumPoint[]): DetectorBand[] {
+  const bands = new Map<number, DetectorBand>()
+  for (const p of points) {
+    const b = bands.get(p.detector)
+    if (b) {
+      b.lambdaMin = Math.min(b.lambdaMin, p.lambda_um)
+      b.lambdaMax = Math.max(b.lambdaMax, p.lambda_um)
+    } else {
+      bands.set(p.detector, { detector: p.detector, lambdaMin: p.lambda_um, lambdaMax: p.lambda_um })
+    }
+  }
+  return [...bands.values()].sort((a, b) => a.detector - b.detector)
+}
+
+export const SPECTRUM_CAVEATS: Partial<Record<PresetId, string>> = {
+  wise0855:
+    'At this position the aperture is blended with a field star: below 1.6 µm the flux is the field star’s, and at ' +
+    '≥ 3.8 µm it is only an upper bound for WISE 0855. Not a measurement of WISE 0855 itself.',
+}
