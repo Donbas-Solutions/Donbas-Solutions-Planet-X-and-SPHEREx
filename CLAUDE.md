@@ -54,6 +54,9 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   56×128, 7×29). Only the common grid (reprojection) makes frames comparable.
 - **IRSA cutout service under load** (2026-11-14): many 503s at 4 parallel workers; at 2 workers with backoff
   ~6 s per cutout → full depth of one target ~20 min. Prebake early.
+- **`ZODI` is not subtracted from `IMAGE`** by the pipeline (IRSA tutorial) — subtract it yourself.
+- **Bicubic `reproject_interp` with a single NaN input returns an all-NaN image.** Fill masked pixels first and re-mask
+  from a resampled validity map (`backend/app/pipeline/exposure.py`).
 - DR1 and QR3 sample files both carry pipeline tag `l2b-v27` (consistent calibration).
 - **S3 mirror** `nasa-irsa-spherex` (anonymous, plain HTTPS works): prefixes `dr1/`, `qr2/`, `qr3/`; same paths as the IRSA
   `ibe` URLs (`dr1/level2/<week>/<version>/<detector>/…`); full file ~65 MB; HTTP range requests supported.
