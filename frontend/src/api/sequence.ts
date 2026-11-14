@@ -29,6 +29,7 @@ export interface LiveSequence {
   base: URL
 }
 
+const NO_COVERAGE_RE = /no spherex coverage/i
 const POLL_FIRST_MS = 1000
 const POLL_MAX_MS = 3000
 
@@ -134,7 +135,11 @@ export async function fetchLiveSequence(
     const { body } = await getJson(jobUrl, signal)
     if (!isJobStatus(body)) throw new ApiError('Unexpected job status from the server.', null)
     onProgress(body.progress)
-    if (body.status === 'error') throw new ApiError(body.error ?? 'The request failed on the server.', null)
+    if (body.status === 'error') {
+      const message = body.error ?? 'The request failed on the server.'
+      // JobStatus has no error code yet; the backend's no-coverage message is the only way to tell it apart.
+      throw new ApiError(message, NO_COVERAGE_RE.test(message) ? 404 : null)
+    }
     if (body.status === 'done') {
       if (body.result) return { seq: body.result, base: jobUrl }
       const again = await getJson(url, signal)

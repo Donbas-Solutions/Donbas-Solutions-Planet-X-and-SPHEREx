@@ -63,7 +63,7 @@ async function run(
       const preset = source.fallbackPreset ? findPreset(source.fallbackPreset) : undefined
       if (!preset || !isOutage(e)) return { status: 'error', message: errorMessage(e), canRetry: true }
       ;({ seq, base } = await loadSequence(prebakedUrl(preset.id), signal))
-      notice = `Live data is unavailable (${errorMessage(e)}) Showing the prebaked bundle for ${preset.name}.`
+      notice = `Live data is unavailable: ${errorMessage(e)} Showing the prebaked bundle for ${preset.name}.`
     }
   }
 
