@@ -1,10 +1,6 @@
 # Промпт для Claude Code: SPHEREx Blink
 
-**Як користуватися.** Phase 0 робить одна людина в одній сесії Claude Code на `main`:
-
-> Read `CLAUDE.md` and `docs/agent-prompt.md`, then execute **Phase 0**. Stop at Checkpoint 0.
-
-Після Checkpoint 0 кожен учасник відкриває свою сесію на своїй гілці (`track-a-backend`, `track-b-frontend`, `track-c-science`) і пише:
+**Як користуватися.** Phase 0 уже виконано (коміти `07c4e26`, `fca9366`). Кожен учасник відкриває свою сесію на своїй гілці (`track-a-backend`, `track-b-frontend`, `track-c-science`) і пише:
 
 > Read `CLAUDE.md` and `docs/agent-prompt.md`, then execute **Track X**. Stop at every checkpoint.
 
@@ -22,30 +18,16 @@ Judges will compare dozens of blink viewers. We win on: **correct science on the
 limitations, and the "Potential Considerations" done well** (stack/diff, spectra on the fly, overlays, URL/embed, flags).
 A working, honest P0 beats an ambitious broken P2.
 
-Read before acting: `CLAUDE.md` (verified facts and rules — they override the research doc), `docs/project_info.md`
-(challenge text), `docs/spherex-research.md` (background; outdated parts: collection `spherex_qr2`, "cubes not
-published", "2.5 px baseline", cutout sizes).
+Read before acting: **`docs/spec.md`** (requirements with IDs and acceptance criteria — the source of truth for *what*
+to build), `CLAUDE.md` (verified facts, science and engineering rules), `docs/api.md` (contract),
+`docs/project_info.md` (challenge text), `docs/spherex-research.md` (background). This file is the **plan**: order of
+work, tracks, checkpoints. Where it seems to disagree with the spec, the spec wins — flag the conflict.
 
 ## 1. Priorities
 
-**P0 — must work by Milestone M2 (Saturday night):**
-1. Input: RA/Dec (decimal or sexagesimal) or object name (SIMBAD); FOV selector (2–30′, default 10′); detector selector (D1–D6 / all).
-2. Blink player over **per-visit stacks** (per detector and all-detector), shared stretch, zoom with pixelated upsampling, play/pause/fps/step/slider, A/B blink of two chosen frames.
-3. **Diff mode** (later − earlier visit, diverging colormap): a moving source shows a dipole, a variable one a single blob.
-4. Expected-position marker per frame (proper motion propagated to the frame epoch) when PM is known.
-5. FLAGS overlay toggle (at least saturation) and a metadata panel (dates, detectors, λ coverage, N exposures, warnings).
-6. URL state: `/?ra=&dec=&fov=&det=&mode=&name=` reproduces the view; share button.
-7. All 5 test targets **prebaked** and working with the backend switched off (static fallback).
-8. "Limitations" text in the UI and README.
-
-**P1 — Sunday morning:**
-spectrum on the fly (click → flux vs λ), light curves (RW Aur, R Dra), Gaia DR3 overlay propagated to the frame
-epoch, Aladin Lite context panel (SPHEREx color HiPS / AllWISE / 2MASS), measured proper motion with errors vs
-catalog, `/embed` mode, AllWISE (~2010) "old epoch" frame via CDS hips2fits.
-
-**P2 — only if P0+P1 are solid:**
-RGB pseudo-color from detector groups, single-exposure mode with a λ window, asteroid overlay (SkyBoT), citizen-science
-"I see a mover" button with automatic Gaia/SkyBoT check, GIF export, S3 fast path for fetching.
+Defined in `docs/spec.md` §4: **P0** = FR-1 … FR-15 (must work at M2), **P1** = FR-16 … FR-22 (Sunday morning),
+**P2** = FR-23 … FR-27 (only if P0 and P1 are solid). Science rules SR-1 … SR-7, test-target acceptance T-1 … T-5,
+non-functional NFR-1 … NFR-11. Reference these IDs in checkpoint reports.
 
 ## 2. Architecture
 
@@ -80,97 +62,62 @@ contrast sliders are instant and the same files work for the live API and the st
 
 ## 3. API contract
 
-**Done in Phase 0 — the authoritative version is `docs/api.md`** (+ `backend/app/models.py`, `frontend/src/api/types.ts`).
-It adds `flag_bits` to `Sequence` and uses uint32 `.flags.u32` files. The sketch below is kept for orientation.
+The authoritative contract is **`docs/api.md`**, mirrored by `backend/app/models.py` and `frontend/src/api/types.ts`
+(`backend/tests/test_contract.py` checks the mock bundle against it). Do not restate it here.
 
-```
-GET /api/health                    → {status, collections:[...], cache:{raw_mb, processed_items}}
-GET /api/resolve?name=             → {name, ra, dec, ref_epoch, pmra, pmdec, parallax, source}
-GET /api/sequence?ra=&dec=&fov=&det=&mode=&pmra=&pmdec=&ref_epoch=&allwise=
-                                   → 200 Sequence (cached) | 202 {job_id}
-GET /api/jobs/{job_id}             → {status: queued|running|done|error, progress:{stage, done, total}, result?: Sequence, error?}
-GET /api/spectrum?ra=&dec=&pmra=&pmdec=&ref_epoch=   (P1) → {points:[{lambda_um, flux_ujy, err_ujy, mjd, detector, visit, saturated, flags}]}
-GET /api/lightcurve?…same…         (P1) → same points; client groups by detector/λ bin
-GET /api/overlays?ra=&dec=&fov=&mjd=  (P1) → {gaia:[{source_id, ra, dec, g, pmra, pmdec}], asteroids:[{name, ra, dec, v}]}
-GET /files/...                     → Float32 / flag binaries
-```
+## 4. Test targets
 
-`Sequence`:
-```json
-{
-  "grid": {"ra": 0, "dec": 0, "fov_arcmin": 10, "npix": 97, "pixscale_arcsec": 6.2, "wcs": {"...": "FITS header cards"}},
-  "stretch": {"kind": "asinh", "vmin": 0, "vmax": 1, "a": 0.1},
-  "frames": [{
-    "id": "v2-D5", "kind": "visit_stack|exposure|diff|allwise", "label": "2026-03 · D5",
-    "mjd_mid": 0, "date_range": ["iso", "iso"], "detectors": [5], "lambda_um": [3.82, 4.42],
-    "n_exposures": 20, "data": "/files/.../v2-D5.f32", "flags": "/files/.../v2-D5.flags.u32",
-    "shape": [97, 97], "expected_px": {"x": 48.1, "y": 49.7}, "warnings": ["incomplete λ coverage"]
-  }],
-  "meta": {"collections": ["spherex_dr1", "spherex_qr3"], "n_exposures_total": 363, "generated_at": "iso", "pipeline_tags": ["l2b-v27"]}
-}
-```
-
-## 4. Test targets and acceptance criteria (Track C owns, everyone uses)
-
-Verify every catalog value via SIMBAD in Phase 0 and store it with its source and reference epoch in `science/targets.json`.
-
-| Target | Approx. ICRS (deg) | PM (mas/yr) | Acceptance |
-|---|---|---|---|
-| Barnard's Star | 269.4521, +4.6934 (J2000) | −802, +10362 | diff last−first visit shows a dipole ~north (PA ≈ 356°); shift ≈ 10.3″/yr × Δt (≈1.7–1.8 px); saturation flagged, centroid treated as unreliable |
-| ε Indi Ba/Bb | 331.0438, −56.7828 (2MASS, ep. 1999.9) | +3966, −2536 | shift ≈ 4.7″/yr × Δt (≈1.1 px) toward PA ≈ 122°; **best target for measured PM** (not saturated); ε Indi A is ~24′ away |
-| WISE 0855−0714 | SIMBAD J2000: 133.81891, −7.24705. Challenge coords 133.7951, −7.2451 are **epoch ≈2010.5** (85″ off J2000) | −8123.7, +673.2 | DR1 only; check D5–D6 stacks at the expected position; report S/N or 5σ upper limit; no detection claim below 5σ |
-| RW Aur | 76.9561, +30.4013 | small | per-detector light curve over 3 visits; saturation marked |
-| R Dra | 248.1679, +66.7550 | small | deep field, 2,514 exposures → binned light curve; likely saturated → flagged, not fake numbers |
-
-Track C writes `science/VALIDATION.md`: per target — figure/GIF, measured vs expected numbers with errors, verdict, caveats.
+Acceptance criteria: `docs/spec.md` §6.2 (T-1 … T-5). Catalog values (SIMBAD J2000 + proper motion, with the epoch of
+the challenge coordinates): `science/targets.json`. Track C writes the evidence to `science/VALIDATION.md`.
 
 ## 5. Plan
 
-### Phase 0 — skeleton and contract (one session on `main`, ≤1 h)
-1. Monorepo layout from `CLAUDE.md`. `.gitignore` and `.gitattributes` already cover Python, Node, caches, FITS and
-   macOS/Windows/VS Code files — extend them only if a new tool needs it.
-2. Backend skeleton: FastAPI app, `/api/health`, pydantic models for the contract, config via env, pytest wired.
-3. Frontend skeleton: Vite + React + TS, Aladin Lite pinned, a page that loads a manifest and draws one Float32 frame.
-4. `docs/api.md` (contract above) + **mock bundle** `frontend/public/mock/` with synthetic frames (a Gaussian source moving
-   1–2 px across 3 visits + a varying one) so the frontend can be built before the backend works.
-5. `science/targets.json` with SIMBAD-verified values.
-6. Fill the **Commands** section in `CLAUDE.md`.
-7. **Checkpoint 0**: everything runs locally with one command each; commit on `main`.
+### Phase 0 — done
+Skeletons (FastAPI with `/api/health` and validated 501 stubs; Vite + React + TS with a Float32 frame renderer and a
+lazy Aladin panel), contract `docs/api.md`, mock bundle `frontend/public/mock/` (`scripts/make_mock.py`),
+`science/targets.json` (`science/resolve_targets.py`), uv + ruff + mypy, Commands in `CLAUDE.md`.
+Not yet verified: Aladin rendering in a real browser (headless Chrome has no WebGL).
 
 ### Track A — backend (`backend/`)
-- **A0 spike (≤45 min, before committing to a fetch strategy).** For Barnard, time 20 cutouts (latency, MB/s, failures).
-  Check (a) whether the cutout service can drop `EPSF`; (b) the S3 layout (`aws s3 ls --no-sign-request s3://nasa-irsa-spherex/`)
-  and whether `astropy.io.fits.open(..., use_fsspec=True)` + `.section` reads only `IMAGE/FLAGS/VARIANCE/ZODI`;
-  (c) HTTP range reads on the `ibe` URL. Report numbers and pick a strategy. **Checkpoint A0.**
-- A1 collections discovery + SIA query + visit grouping; unit tests on recorded CSV fixtures (all 5 targets).
-- A2 fetch + cache + concurrency + progress.
-- A3 processing: background, flags, λ, reprojection, per-visit stacks, all-detector stack. Test with saved small fixtures
-  (strip `EPSF` before saving).
-- A4 API with the job model, CORS for the frontend origin, files endpoint. **Checkpoint A (M1):** real Barnard and ε Indi B sequences via HTTP.
-- A5 (P1) spectrum + light curve: forced aperture photometry at the PM-propagated position per exposure (photutils,
-  annulus background, VARIANCE errors, skip flagged), convert surface brightness × pixel solid angle → flux, aperture
+- **A0 spike (≤45 min, before committing to a fetch strategy; decides OD-4, OD-5).** For Barnard, time 20 cutouts
+  (latency, MB/s, failures). Check (a) whether the cutout service can drop `EPSF`; (b) S3 reads — already known: prefixes
+  `dr1/`, `qr2/`, `qr3/`, same paths as IRSA, ~65 MB per file, HTTP range requests supported; measure
+  `astropy.io.fits.open(..., use_fsspec=True)` + `.section` for `IMAGE/FLAGS/VARIANCE` (FITS rows are contiguous: a 97-px
+  window still reads ~0.8 MB per extension); (c) HTTP range reads on the IRSA `ibe` URL. Report a table of
+  bytes/time/reliability per method and recommend one. **Checkpoint A0.**
+- A1 collections discovery + SIA query + visit grouping (SR-2, NFR-3); unit tests on recorded CSV fixtures (all 5 targets).
+- A2 fetch + cache + concurrency + progress (NFR-5).
+- A3 processing (SR-1, SR-3 … SR-6): background, flags, λ, reprojection, per-visit stacks, all-detector stack. Test with
+  saved small fixtures (strip `EPSF` before saving). Show PNG/GIF of Barnard and ε Indi B diffs (T-1, T-2) before A4.
+- A4 API with the job model (FR-13), CORS, files endpoint, `/api/resolve` with mirror fallback (FR-2).
+  **Checkpoint A (M1):** real Barnard and ε Indi B sequences via HTTP.
+- A5 (P1, FR-16, FR-17) spectrum + light curve: forced aperture photometry at the PM-propagated position per exposure
+  (photutils, annulus background, VARIANCE errors, skip flagged), surface brightness × pixel solid angle → flux, aperture
   correction from EPSF or empirically; validate against the IRSA Spectrophotometry Tool on one unsaturated star.
-- A6 (P1) overlays: Gaia DR3 cone (epoch 2016.0 → frame mjd), SkyBoT with cache, short timeout, graceful "unavailable".
-- A7 Dockerfile, health check, raw-cache LRU cap.
+- A6 (P1, FR-18, FR-25) overlays: Gaia DR3 cone (epoch 2016.0 → frame mjd), SkyBoT with cache, short timeout, graceful "unavailable".
+- A7 Dockerfile, health check, raw-cache LRU cap (NFR-4).
 
 ### Track B — frontend (`frontend/`)
-- B1 URL ↔ state sync; input parsing (decimal/sexagesimal), name resolve, preset buttons for the 5 test targets.
-- B2 Canvas player on Float32: stretch (asinh/linear/log + sliders), colormaps (gray, inverted, diverging for diff),
-  play/pause/fps/step/slider, A/B blink, zoom with `image-rendering: pixelated`, crosshair + expected-position marker,
-  keyboard shortcuts (space, ←/→, B).
-- B3 Data layer: job polling with a progress bar; fallback order live API → `/prebaked/<target>/` → error message; dev on `/mock/`.
-- B4 Metadata panel + warnings + FLAGS overlay toggle. **Checkpoint B (M1):** the mock and then the live sequence play end-to-end.
-- B5 (P1) Aladin Lite panel synced to target/FOV: `CDS/P/SPHEREx/QR2/color`, AllWISE, 2MASS; Gaia DR3 via VizieR (`I/355/gaiadr3`).
-- B6 (P1) spectrum and light-curve charts (one small chart lib), saturated points drawn hollow and labeled.
-- B7 (P1) `/embed?...` minimal mode + "copy embed code"; share button.
-- B8 About/Help: how to read a blink and a dipole, limitations, data credits (NASA/IPAC IRSA, SPHEREx, Gaia, CDS).
+- B1 (FR-1 … FR-5) URL ↔ state sync per spec §5.3; input parsing (decimal/sexagesimal), name resolve, presets.
+- B2 (FR-7 … FR-10) canvas player on Float32: stretch (asinh/linear/log + sliders), colormaps (grey; diverging
+  blue–orange for diff), play/pause/fps/step/slider, A/B blink, zoom with `image-rendering: pixelated`, expected-position
+  marker, keyboard shortcuts (Space, ←/→, B); fps cap and `prefers-reduced-motion` per spec §5.4.
+- B3 (FR-13, FR-14) data layer: job polling with progress; fallback live API → `/prebaked/<target>/` → offline banner;
+  all states of spec §5.2; dev on `/mock/`.
+- B4 (FR-11, FR-12) metadata panel, warnings, FLAGS overlay by group. **Checkpoint B (M1):** the mock and then the live
+  sequence play end-to-end.
+- B5 (P1, FR-19) Aladin Lite panel synced to target/FOV: `CDS/P/SPHEREx/QR2/color`, AllWISE, 2MASS; Gaia DR3 via VizieR (`I/355/gaiadr3`).
+- B6 (P1, FR-16, FR-17) spectrum and light-curve charts (one small chart lib), saturated points drawn hollow and labelled.
+- B7 (P1, FR-21) `/embed?...` minimal mode + "copy embed code".
+- B8 (FR-15) About/limitations page with data credits (NFR-10).
 
 ### Track C — science and prebake (`science/`, `scripts/`)
-- C1 `targets.json` (Phase 0), expected shifts per visit pair.
-- C2 Validation runs on all 5 targets → `science/VALIDATION.md` (draft by M1, complete by M3).
-- C3 `scripts/prebake.py` → `frontend/public/prebaked/<target>/` (manifest + frames) + GIFs for the pitch. **Checkpoint C (M2):** the app works on all 5 targets with the backend off.
-- C4 (P1) proper motion measurement: centroid per visit stack, linear fit over time → μ with errors vs catalog (Barnard, ε Indi B).
-- C5 (P1) WISE 0855: D5–D6 stack S/N at the expected position or an upper limit; AllWISE frame for comparison.
+- C1 `targets.json` (done in Phase 0); add expected shifts per visit pair.
+- C2 Validation runs on all 5 targets against T-1 … T-5 → `science/VALIDATION.md` (draft by M1, complete by M3).
+- C3 (FR-3, FR-14) `scripts/prebake.py` → `frontend/public/prebaked/<target>/` (manifest + frames) + GIFs for the pitch.
+  **Checkpoint C (M2):** the app works on all 5 targets with the backend off.
+- C4 (P1, FR-20) proper-motion measurement: centroid per visit stack, linear fit over time → μ with errors vs catalog.
+- C5 (P1, T-3) WISE 0855: D5–D6 stack S/N at the expected position or a 5σ upper limit; AllWISE frame (FR-22) for comparison.
 
 ### Track D — pitch (humans; Claude assists on request)
 README (what, how, screenshots, limitations, credits), demo script, project description, video. Check the Space Apps
@@ -186,7 +133,8 @@ Participant Guides for submission format and rules (AI-use disclosure, NASA bran
 | Sun midday | Feature freeze → deploy (with human OK) → clean-browser test → GIFs/screenshots |
 | Before deadline | Submission (Track D) |
 
-If M1 slips by >2 h, drop P1 items in this order: AllWISE frame → light curves → spectrum → Gaia overlay. Never drop P0.7 (prebake).
+If M1 slips by >2 h, drop P1 items in this order: FR-22 (AllWISE) → FR-17 (light curves) → FR-16 (spectrum) →
+FR-18 (Gaia). Never drop FR-3 / FR-14 (prebaked bundles).
 
 ## 6. Working rules
 - **Checkpoints:** stop and report in Ukrainian using: *Зроблено / Як перевірено (команди + реальний вивід) /
@@ -194,8 +142,8 @@ If M1 slips by >2 h, drop P1 items in this order: AllWISE frame → light curves
 - Verify against real data, not just mocks; paste real numbers. If something cannot be verified, say so plainly.
 - Commit locally at each green checkpoint on your track branch, following the Git section of `CLAUDE.md`
   (one-line messages; push only when explicitly told to). Never deploy or create accounts without a human OK.
-- Before each commit: ruff check + ruff format + pytest clean for Python, `npm run build` + `npm run lint` for the
-  frontend. Python deps only via `uv add` (commit `uv.lock`); never `pip install` into the env by hand.
+- Before each commit: ruff check + ruff format + mypy + pytest clean for Python, `npm run build` + `npm run lint` for
+  the frontend. Python deps only via `uv add` (commit `uv.lock`); never `pip install` into the env by hand.
 - Ask before: changing the API contract, adding a heavy dependency, cutting a P0 item, anything public-facing.
 - Keep it simple: no auth, no database (disk cache + JSON), no microservices.
 - Tests: pytest for pure logic (visit grouping, PM propagation, stretch, cache keys, collection selection); a smoke test
@@ -204,7 +152,7 @@ If M1 slips by >2 h, drop P1 items in this order: AllWISE frame → light curves
 ## 7. Risks and fallbacks
 | Risk | Mitigation |
 |---|---|
-| IRSA slow / down during the demo | prebaked bundles (P0.7); cached processed results |
+| IRSA slow / down during the demo | prebaked bundles (FR-3, FR-14); cached processed results |
 | ~4 MB per cutout (EPSF not trimmed) | A0 spike: S3/range reads; caps per group; cache processed, not raw |
 | λ differences fake brightness changes | per-visit stacks per detector; λ coverage warnings |
 | Sub-pixel motion invisible | longest baseline (first vs last visit), diff mode, upsampled display, AllWISE old epoch |

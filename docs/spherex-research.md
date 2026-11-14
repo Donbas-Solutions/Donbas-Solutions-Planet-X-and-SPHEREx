@@ -1,220 +1,223 @@
-# Planet X and SPHEREx — ресерч челенджу (Space Apps 2026)
+# Planet X and SPHEREx — challenge research (Space Apps 2026)
 
 Nov 14, 2026 · @Huss
 
-> **Оновлено 14.11.2026 після перевірки на живому IRSA.** Виправлено: назви колекцій (QR2 більше немає, є DR1 і QR3), спектральні куби вже опубліковані, cutout завжди важить \~4 МБ, реальні епохи тестових цілей, текстовий опис архітектури. Детальний план для агентів — `docs/agent-prompt.md`, перевірені факти — `CLAUDE.md`.
+> **Updated 2026-11-14 after checking the live IRSA archive; translated from Ukrainian** (the original is in git
+> history). Fixed: collection names (QR2 is gone from SIA, DR1 and QR3 exist), spectral cubes are already published,
+> every cutout weighs \~4 MB, real epochs of the test targets, a text description of the architecture.
+> Requirements: `docs/spec.md`. Plan for agents: `docs/agent-prompt.md`. Verified facts: `CLAUDE.md`.
 
-## Суть челенджу
+## The challenge in short
 
-Завдання — публічний веб-інструмент: користувач вводить координати ділянки неба (RA і Dec), а інструмент показує серію знімків SPHEREx цієї ділянки як коротке відео, щоб рухомі об'єкти було видно одразу. Пошук Planet X — це мотивація і назва, а не обов'язкова ціль. Складність: Advanced; теми: астрофізика, планети, софт. ([сторінка челенджу](https://www.spaceappschallenge.org/2026/challenges/planet-x-and-spherex/))
+Build a public web tool: the user enters the coordinates of a patch of sky (RA and Dec), and the tool shows a series of SPHEREx images of that patch as a short video, so moving objects stand out at once. Finding Planet X is the motivation and the name, not a required goal. Difficulty: Advanced; topics: astrophysics, planets, software. ([challenge page](https://www.spaceappschallenge.org/2026/challenges/planet-x-and-spherex/))
 
-**Контекст з опису.** SPHEREx з травня 2025 року картографує все небо раз на шість місяців у 102 ближньо-інфрачервоних смугах і дає знімки понад мільярда об'єктів. Комети, астероїди, близькі зорі, коричневі карлики і, можливо, нові планети видно за зсувом між знімками. Так само було відкрито Плутон, а волонтери Backyard Worlds знайшли цим методом сотні коричневих карликів.
+**Context from the description.** Since May 2025 SPHEREx has mapped the whole sky every six months in 102 near-infrared bands, imaging more than a billion objects. Comets, asteroids, nearby stars, brown dwarfs and possibly new planets reveal themselves by shifting between images. Pluto was discovered this way, and Backyard Worlds volunteers found hundreds of brown dwarfs with the same method.
 
-**Обов'язкове (Objectives):**
+**Required (Objectives):**
 
-1. Ввід RA/Dec ділянки неба.
-2. Показ серії знімків SPHEREx цієї ділянки як анімації (blink / flipbook).
-3. Перевірка на тестових цілях: Barnard's Star, Epsilon Indi B, WISE 0855, RW Aurigae, R Draconis (наступний розділ).
+1. Input of the RA/Dec of a sky patch.
+2. Display of a series of SPHEREx images of that patch as an animation (blink / flipbook).
+3. Testing on the target list: Barnard's Star, Epsilon Indi B, WISE 0855, RW Aurigae, R Draconis (next section).
 
-**Бажане (Potential Considerations) — по суті, критерії «extra kudos»:**
+**Desirable (Potential Considerations) — in practice the "extra kudos" criteria:**
 
-- Легке оновлення під нові релізи даних (дані приходять щотижня).
-- Креативний показ 102 смуг: наприклад, складати всі дані кожного з 6 детекторів окремо для кращого signal-to-noise. Окремі бали за **спектр на льоту**.
-- Опції складати (stack) і віднімати (difference) знімки різних епох.
-- Вибір поля зору користувачем: більше поле — простіше відстежити швидкі об'єкти, але довше вантажиться.
-- Оверлей даних інших телескопів: Gaia, WISE.
-- Координати в URL, щоб інструмент можна було вбудовувати в інші сайти.
-- Показ метаданих, наприклад прапорців забруднення (contamination flags).
-- Готові бібліотеки: Astropy для обробки, Aladin (CDS) для показу.
+- Easy updates for new data releases (data arrive weekly).
+- Creative display of the 102 bands: e.g. co-add all data of each of the 6 detectors separately for better signal-to-noise. Extra points for **spectra on the fly**.
+- Options to add (stack) and subtract (difference) images from different epochs.
+- User-selectable field of view: a larger field makes fast movers easier to track but loads longer.
+- Overlays of data from other telescopes: Gaia, WISE.
+- Coordinates in the URL so the tool can be embedded in other websites.
+- Display of metadata such as contamination flags.
+- Ready-made libraries: Astropy for processing, Aladin (CDS) for display.
 
-**Офіційні ресурси (вкладка Resources):** SPHEREx-ресурси архіву IRSA, туторіал-ноутбуки SPHEREx, WiseView як зразок схожого інструменту для WISE, дані Gaia DR3. Від CSA: дані та туторіал NEOSSat і архів CADC — для цього челенджу другорядні.
+**Official resources (Resources tab):** IRSA's SPHEREx resources, the SPHEREx tutorial notebooks, WiseView as an example of a similar tool for WISE, Gaia DR3 data. From CSA: NEOSSat data and tutorial and the CADC archive — secondary for this challenge.
 
-## Тестові цілі
+## Test targets
 
-У п'яти цілей дві різні перевірки: три беруть на **рух** (власний рух близьких об'єктів), дві — на **зміну яскравості**. Головна пастка: координати з каталогів — епохи 2000 або 2010 року, і за цей час об'єкти зсунулися на 2–4.5′. Це десятки пікселів SPHEREx, тож малий cutout на каталожних координатах може промахнутися. Позицію треба перенести на дату знімка (astropy `SkyCoord.apply_space_motion`) або брати поле зору від \~10′.
+The five targets test two different things: three test **motion** (proper motion of nearby objects), two test **brightness changes**. The main trap: catalog coordinates are for epoch 2000 or 2010, and since then the objects have moved by 2–4.5′. That is dozens of SPHEREx pixels, so a small cutout at the catalog coordinates can miss the target. Propagate the position to the image date (astropy `SkyCoord.apply_space_motion`) or use a field of view of at least \~10′.
 
-| Ціль | Що це | RA / Dec | Рух | Яскравість в ІЧ | Чого чекати в SPHEREx |
+| Target | What it is | RA / Dec | Motion | IR brightness | What to expect in SPHEREx |
 | --- | --- | --- | --- | --- | --- |
-| [Barnard's Star](https://en.wikipedia.org/wiki/Barnard%27s_Star) | червоний карлик M4, 1.83 пк | 17h57m48.50s +04°41′36.1″ (епоха 2000) | 10.3″/рік, на північ; з 2000 р. зсунулась приблизно на 4.5′ | J 5.2, K 4.5 | майже напевно насичена в усіх смугах; рух видно по зсуву насиченої плями та прапорців |
-| [Epsilon Indi Ba/Bb](https://en.wikipedia.org/wiki/Epsilon_Indi) | пара коричневих карликів T1 + T6, 0.6″ між ними | 22h04m10.5s −56°46′58″ (2MASS, епоха 1999.9) | ≈ 4.7″/рік (+3.98″, −2.47″); з 1999 р. приблизно 2′ | J 11.9, K 11.2 (разом) | одна точка (0.6″ — це дуже мало для пікселя 6.2″); за \~24′ яскрава ε Indi A (V 4.7): у полі 10′ її немає, але її артефакти можуть потрапити в кадр; не насичена, тож це найкраща ціль для виміру власного руху; [джерело](https://arxiv.org/pdf/astro-ph/0309256) |
-| [WISE 0855−0714](https://en.wikipedia.org/wiki/WISE_0855%E2%88%920714) | найхолодніший відомий коричневий карлик Y4, 2.28 пк | 08h55m10.831s −07°14′42.53″ (з умови, позиція WISE \~2010) | 8.15″/рік, на захід; паралакс 0.44″ | J ≈ 25, W2 ≈ 14.0 (4.6 мкм) | невидимий на коротких хвилях; шанс лише в смугах 5–6 (3.8–5 мкм) і лише в сумі кількох знімків |
-| [RW Aurigae](https://en.wikipedia.org/wiki/RW_Aurigae) | молода зоря типу T Tauri, \~160 пк | 05h07m49.46s +30°24′04.8″ | малий, для цієї цілі неважливий | G ≈ 12.2 | нерегулярні затемнення пиловим диском; нове сильне затемнення почалося в лютому 2025 (джерела немає, звірити з AAVSO) — тест на криву блиску |
-| R Draconis | змінна типу Міра | 16h32m40.3s +66°45′18″ ([BAA](https://britastro.org/vss/obj-dra.html)) | для цієї цілі неважливий | V 6.7–13.2, період \~246 діб | в ІЧ дуже яскрава, ймовірно насичена; лежить у Deep-полі біля північного полюса екліптики: 2 514 знімків з безперервним покриттям, тож можлива щільна крива блиску |
+| [Barnard's Star](https://en.wikipedia.org/wiki/Barnard%27s_Star) | M4 red dwarf, 1.83 pc | 17h57m48.50s +04°41′36.1″ (epoch 2000) | 10.3″/yr, northward; moved about 4.5′ since 2000 | J 5.2, K 4.5 | almost certainly saturated in all bands; motion is visible as a shift of the saturated blob and its flags |
+| [Epsilon Indi Ba/Bb](https://en.wikipedia.org/wiki/Epsilon_Indi) | pair of brown dwarfs T1 + T6, 0.6″ apart | 22h04m10.5s −56°46′58″ (2MASS, epoch 1999.9) | ≈ 4.7″/yr (+3.98″, −2.47″); about 2′ since 1999 | J 11.9, K 11.2 (combined) | a single point (0.6″ is tiny next to a 6.2″ pixel); bright ε Indi A (V 4.7) is \~24′ away: outside a 10′ field, but its artifacts can reach the frame; not saturated, so the best target for measuring proper motion; [source](https://arxiv.org/pdf/astro-ph/0309256) |
+| [WISE 0855−0714](https://en.wikipedia.org/wiki/WISE_0855%E2%88%920714) | coldest known brown dwarf, Y4, 2.28 pc | 08h55m10.831s −07°14′42.53″ (from the challenge; WISE position, epoch ≈2010.5 — 85″ from the J2000 position) | 8.15″/yr, westward; parallax 0.44″ | J ≈ 25, W2 ≈ 14.0 (4.6 µm) | invisible at short wavelengths; a chance only in bands 5–6 (3.8–5 µm) and only in a stack of several images |
+| [RW Aurigae](https://en.wikipedia.org/wiki/RW_Aurigae) | young T Tauri star, \~160 pc | 05h07m49.46s +30°24′04.8″ | small, irrelevant for this target | G ≈ 12.2 | irregular dimming by a dusty disk; a new deep dimming started in February 2025 (no source, check against AAVSO) — a light-curve test |
+| R Draconis | Mira variable | 16h32m40.3s +66°45′18″ ([BAA](https://britastro.org/vss/obj-dra.html)) | irrelevant for this target | V 6.7–13.2, period \~246 d | very bright in the IR, probably saturated; lies in the Deep field near the north ecliptic pole: 2,514 images with continuous coverage, so a dense light curve is possible |
 
-Рух за півроку менший за піксель: Barnard \~5.2″, WISE 0855 \~4″, ε Indi B \~2.4″ при пікселі 6.2″. Повна база коротша, ніж здається: перший візит SPHEREx до Barnard — серпень 2025, останній — вересень 2026, тобто \~1.1 року і \~1.8 пікселя. Покриття тестових цілей, перевірене в IRSA 14.11.2026 (DR1 + QR3, wide + deep, радіус 0.01°):
+Motion over half a year is less than a pixel: Barnard \~5.2″, WISE 0855 \~4″, ε Indi B \~2.4″ with a 6.2″ pixel. The full baseline is shorter than it looks: SPHEREx's first visit to Barnard is August 2025, the last is September 2026, i.e. \~1.1 yr and \~1.8 pixels. Coverage of the test targets, checked in IRSA on 2026-11-14 (DR1 + QR3, wide + deep, radius 0.01°):
 
-| Ціль | Знімків | Візити | Макс. база → зсув |
+| Target | Images | Visits | Max baseline → shift |
 | --- | --- | --- | --- |
-| Barnard's Star | 363 | 2025-08/10 · 2026-03/05 · 2026-08/09 | \~1.1 р → \~11″ ≈ 1.8 px |
-| ε Indi B | 468 | 2025-04/06 · 2025-09/11 · 2026-04/05 · 2026-09/10 | \~1.4 р → \~6.6″ ≈ 1.1 px |
-| WISE 0855 | 258 (лише DR1, у QR3 ще немає) | 2025-05 (лише 30 знімків) · 2025-10/12 · 2026-04/05 | \~1.0 р → \~8″ ≈ 1.3 px |
-| RW Aur | 336 | 2025-09 · 2026-02/03 · 2026-09 | тест яскравості |
-| R Dra | 2 514 (Deep-поле) | безперервно 2025-04 … 2026-09 | тест яскравості |
+| Barnard's Star | 363 | 2025-08/10 · 2026-03/05 · 2026-08/09 | \~1.1 yr → \~11″ ≈ 1.8 px |
+| ε Indi B | 468 | 2025-04/06 · 2025-09/11 · 2026-04/05 · 2026-09/10 | \~1.4 yr → \~6.6″ ≈ 1.1 px |
+| WISE 0855 | 258 (DR1 only, none in QR3 yet) | 2025-05 (only 30 images) · 2025-10/12 · 2026-04/05 | \~1.0 yr → \~8″ ≈ 1.3 px |
+| RW Aur | 336 | 2025-09 · 2026-02/03 · 2026-09 | brightness test |
+| R Dra | 2,514 (Deep field) | continuous 2025-04 … 2026-09 | brightness test |
 
-Тому в blink варто показувати першу і останню епохи, а не лише сусідні. Для кращої помітності можна додати AllWISE (2010) як дуже стару епоху. Поріг насичення SPHEREx — приблизно 11.7–9.7 AB mag ([джерело](https://arxiv.org/pdf/2604.22983)), тож яскраві цілі потребують чесного показу прапорців насичення.
+So the blink should show the first and the last epoch, not only neighbouring ones. AllWISE (2010) can be added as a very old epoch to make motion more obvious. SPHEREx saturates at roughly 11.7–9.7 AB mag ([source](https://arxiv.org/pdf/2604.22983)), so bright targets need honest display of saturation flags.
 
-## SPHEREx: що треба знати
+## SPHEREx: what you need to know
 
-Один знімок SPHEREx — це не «фото в одному фільтрі»: довжина хвилі змінюється вздовж кадру, тож одна точка неба в різних експозиціях потрапляє в різні довжини хвиль. Це визначає всю логіку blink-а: порівнювати треба знімки зі схожою довжиною хвилі, інакше зміна кольору виглядатиме як зміна яскравості.
+A SPHEREx image is not "a photo through one filter": the wavelength changes across the frame, so the same point of the sky falls at different wavelengths in different exposures. This drives the whole blink logic: compare images at similar wavelengths, otherwise a change of colour looks like a change of brightness.
 
-| Параметр | Значення |
+| Parameter | Value |
 | --- | --- |
-| Запуск / початок огляду | 11 березня 2025 / 1 травня 2025 ([джерело](https://arxiv.org/pdf/2506.13863)) |
-| Покриття | все небо раз на \~6 місяців; 4 проходи за 2 роки номінальної місії |
-| Спектр | 0.75–5.0 мкм, 102 канали = 6 смуг × 17, R ≈ 35–130 |
-| Детектори | 6 × H2RG 2048×2048, кожен зі своїм лінійно-змінним фільтром (LVF); 1 детектор = 1 смуга |
-| Піксель / поле зору | 6.2″ / 3.5° × 3.5° на детектор, 3.5° × 11° усього |
-| Експозиція | 112.5 с, \~600 експозицій на добу |
-| Чутливість | понад 18.4 AB mag (5σ) на спектральний бін при 2 мкм ([Crill et al. 2024](https://arxiv.org/pdf/2404.11017)); уточнити, чи це глибина за всю місію, чи одного кадру: від цього залежать висновки про WISE 0855 і Planet Nine |
-| Насичення | приблизно 11.7–9.7 AB mag; найяскравіші зорі мають чорну середину |
+| Launch / survey start | 11 March 2025 / 1 May 2025 ([source](https://arxiv.org/pdf/2506.13863)) |
+| Coverage | whole sky every \~6 months; 4 passes in the 2-year nominal mission |
+| Spectrum | 0.75–5.0 µm, 102 channels = 6 bands × 17, R ≈ 35–130 |
+| Detectors | 6 × H2RG 2048×2048, each with its own linear variable filter (LVF); 1 detector = 1 band |
+| Pixel / field of view | 6.2″ / 3.5° × 3.5° per detector, 3.5° × 11° in total |
+| Exposure | 112.5 s, \~600 exposures per day |
+| Sensitivity | deeper than 18.4 AB mag (5σ) per spectral bin at 2 µm ([Crill et al. 2024](https://arxiv.org/pdf/2404.11017)); to be confirmed whether this is the full-mission depth or a single frame: conclusions about WISE 0855 and Planet Nine depend on it |
+| Saturation | roughly 11.7–9.7 AB mag; the brightest stars have a black core |
 
-Смуги 1–3 (0.75–2.42 мкм) мають R = 41, смуга 4 (2.42–3.82 мкм) R = 35, смуги 5–6 (3.82–5.0 мкм) R ≈ 110–130. Для холодних коричневих карликів корисні саме смуги 5–6. На знімках смуги 1 (0.75–1.11 мкм) є світла дуга лінії гелію 1.083 мкм від атмосфери Землі — це не об'єкт ([SPHEREx first images](https://spherex.caltech.edu/image/spherex20250401b-spherex-first-images)).
+Bands 1–3 (0.75–2.42 µm) have R = 41, band 4 (2.42–3.82 µm) R = 35, bands 5–6 (3.82–5.0 µm) R ≈ 110–130. Bands 5–6 are the useful ones for cold brown dwarfs. Band 1 images (0.75–1.11 µm) show a bright arc of the 1.083 µm helium line from Earth's atmosphere — it is not an object ([SPHEREx first images](https://spherex.caltech.edu/image/spherex20250401b-spherex-first-images)).
 
-## Дані та доступ
+## Data and access
 
-Все потрібне є в архіві NASA/IPAC IRSA і доступне без авторизації. Основний продукт — калібровані **Spectral Images** рівня 2. Станом на 14.11.2026 є два набори: **DR1** (`spherex_dr1`, вийшов у жовтні 2026, знімки до травня 2026) і **QR3** (`spherex_qr3`, щотижневі Quick Release з серпня 2026) ([QR overview](https://irsa.ipac.caltech.edu/data/SPHEREx/docs/overview_qr.html)). QR2 з архіву прибрали: запит до `spherex_qr2` повертає 0 рядків. Зразки файлів з обох наборів мають тег пайплайна `l2b-v27`, тож їх можна змішувати. У DR1 вже вийшли **спектральні куби** (`spherex_dr1_cube`, HiPS-тайли), але для blink працюємо з окремими експозиціями.
+Everything needed is in the NASA/IPAC IRSA archive and is available without authentication. The main product is calibrated level-2 **Spectral Images**. As of 2026-11-14 there are two sets: **DR1** (`spherex_dr1`, released October 2026, images up to May 2026) and **QR3** (`spherex_qr3`, weekly Quick Releases since August 2026) ([QR overview](https://irsa.ipac.caltech.edu/data/SPHEREx/docs/overview_qr.html)). QR2 was removed from SIA: a query for `spherex_qr2` returns 0 rows. Sample files from both sets carry the pipeline tag `l2b-v27`, so they can be mixed. DR1 also includes **spectral cubes** (`spherex_dr1_cube`, HiPS tiles), but for the blink we work with individual exposures.
 
-**Що всередині файлу (multi-extension FITS):** `IMAGE` (потік у MJy/sr), `FLAGS` (бітова маска: космічні промені, насичення, відомі джерела), `VARIANCE`, `ZODI` (модель зодіакального світла), `EPSF` (PSF) і `WCS-WAVE` (довжина хвилі кожного пікселя); небесна WCS — `RA---TAN-SIP` ([Spectrophotometry Tool docs](https://irsa.ipac.caltech.edu/onlinehelp/spherex/spherex/sp.html)). Прапорці з `FLAGS` — це і є «contamination flags» з умови.
+**What is inside a file (multi-extension FITS):** `IMAGE` (surface brightness in MJy/sr), `FLAGS` (bitmask: cosmic rays, saturation, known sources), `VARIANCE`, `ZODI` (zodiacal light model), `EPSF` (PSF) and `WCS-WAVE` (wavelength of each pixel); the celestial WCS is `RA---TAN-SIP` ([Spectrophotometry Tool docs](https://irsa.ipac.caltech.edu/onlinehelp/spherex/spherex/sp.html)). The `FLAGS` bits are the "contamination flags" from the challenge text.
 
-| Спосіб | Як | Коли брати |
+| Method | How | When to use |
 | --- | --- | --- |
-| astroquery (Python) | `Irsa.query_sia(pos=(coord, radius), collection='spherex_dr1')` (і так само `spherex_qr3`), рядок результату = один знімок ([туторіал](https://caltech-ipac.github.io/irsa-tutorials/spherex-intro)) | основний шлях для бекенду |
-| SIA2 по HTTP | `https://irsa.ipac.caltech.edu/SIA?COLLECTION=spherex_dr1&POS=circle+RA+DEC+0.01&RESPONSEFORMAT=CSV` ([документація](https://caltech-ipac.github.io/spherex-archive-documentation/spherex-data-access)) | з будь-якої мови, зокрема C# |
-| Cutout service | до URL знімка додати `?center=RA,Dec&size=0.1` (градуси); ріже `IMAGE/FLAGS/VARIANCE/ZODI`, але `EPSF` (\~4 МБ) і `WCS-WAVE` віддає повністю, тож **кожен cutout важить \~4 МБ** незалежно від розміру ([IRSA](https://irsa.ipac.caltech.edu/data/SPHEREx/docs/cutout_tool.html)) | завжди замість повного файлу; ціль — це \~360–470 знімків ≈ 1.5–1.9 ГБ, тож кешувати оброблені стеки, а не сирі cutouts |
-| TAP | `https://irsa.ipac.caltech.edu/TAP` через pyvo ([туторіал](https://caltech-ipac.github.io/irsa-tutorials/spherex-cutouts)) | метадані: дати, детектори, довжини хвиль; список колекцій: `SELECT obs_collection, COUNT(*) FROM ivoa.obscore WHERE obs_collection LIKE 'spherex%' GROUP BY obs_collection` |
-| AWS S3 | `aws s3 ls --no-sign-request s3://nasa-irsa-spherex/` (структуру префіксів після DR1 не перевіряли) ([AWS Open Data](https://registry.opendata.aws/spherex-qr/)) | масове завантаження; можливо, читання лише потрібних розширень через `fits.open(use_fsspec=True)` + `.section` (перевірити) |
-| SPHEREx Data Explorer | веб-застосунок IRSA | ручна перевірка та порівняння |
-| Spectrophotometry Tool | forced-фотометрія (Tractor) по всіх знімках точки → таблиця-спектр | еталон для вашого «спектра на льоту» |
-| HiPS SPHEREx (CDS) | `CDS/P/SPHEREx/QR2/D1`…`D6`, `CDS/P/SPHEREx/QR2/color` | фон і контекст в Aladin Lite без бекенду |
+| astroquery (Python) | `Irsa.query_sia(pos=(coord, radius), collection='spherex_dr1')` (and likewise `spherex_qr3`); one result row = one image ([tutorial](https://caltech-ipac.github.io/irsa-tutorials/spherex-intro)) | main path for the backend |
+| SIA2 over HTTP | `https://irsa.ipac.caltech.edu/SIA?COLLECTION=spherex_dr1&POS=circle+RA+DEC+0.01&RESPONSEFORMAT=CSV` ([documentation](https://caltech-ipac.github.io/spherex-archive-documentation/spherex-data-access)) | from any language, C# included |
+| Cutout service | append `?center=RA,Dec&size=0.1` (degrees) to the image URL; it cuts `IMAGE/FLAGS/VARIANCE/ZODI` but returns `EPSF` (\~4 MB) and `WCS-WAVE` in full, so **every cutout weighs \~4 MB** regardless of size ([IRSA](https://irsa.ipac.caltech.edu/data/SPHEREx/docs/cutout_tool.html)) | always instead of the full file; a target is \~360–470 images ≈ 1.5–1.9 GB, so cache processed stacks, not raw cutouts |
+| TAP | `https://irsa.ipac.caltech.edu/TAP` via pyvo ([tutorial](https://caltech-ipac.github.io/irsa-tutorials/spherex-cutouts)) | metadata: dates, detectors, wavelengths; list of collections: `SELECT obs_collection, COUNT(*) FROM ivoa.obscore WHERE obs_collection LIKE 'spherex%' GROUP BY obs_collection` |
+| AWS S3 | `s3://nasa-irsa-spherex/` (anonymous, `--no-sign-request`; plain HTTPS also works) — prefixes `dr1/`, `qr2/`, `qr3/` (QR2 is still in S3 although SIA dropped it), same paths as IRSA (`dr1/level2/<week>/<version>/<detector>/…`); full file \~65 MB, HTTP range requests supported ([AWS Open Data](https://registry.opendata.aws/spherex-qr/)) | bulk download; maybe reading only the needed rows of `IMAGE/FLAGS/VARIANCE` via `fits.open(use_fsspec=True)` + `.section` — to be measured (FITS rows are contiguous, so a 97-px window still reads \~0.8 MB per extension) |
+| SPHEREx Data Explorer | IRSA web application | manual checks and comparisons |
+| Spectrophotometry Tool | forced photometry (Tractor) on all images of a point → spectrum table | the reference for our "spectrum on the fly" |
+| SPHEREx HiPS (CDS) | `CDS/P/SPHEREx/QR2/D1`…`D6`, `CDS/P/SPHEREx/QR2/color` | background and context in Aladin Lite without a backend |
 
-**Колекції (на 14.11.2026):** `spherex_dr1` (Wide Survey), `spherex_dr1_deep` (Deep Survey біля полюсів екліптики), `spherex_dr1_cal` (калібрувальні файли), `spherex_dr1_cube` (спектральні куби), `spherex_qr3` і `spherex_qr3_deep` (нові щотижневі дані). Назви змінюються з кожним релізом, тому в коді їх не хардкодимо, а беремо з TAP. Дані в SIA з'являються з затримкою приблизно в день, тож найпростіше «оновлення під нові релізи» — кешувати cutouts і оброблені стеки, а список колекцій і знімків оновлювати з TTL.
+**Collections (as of 2026-11-14):** `spherex_dr1` (Wide Survey), `spherex_dr1_deep` (Deep Survey near the ecliptic poles), `spherex_dr1_cal` (calibration files), `spherex_dr1_cube` (spectral cubes), `spherex_qr3` and `spherex_qr3_deep` (new weekly data). The names change with every release, so code must not hardcode them but discover them via TAP. Data appear in SIA with about a one-day delay, so the simplest "update for new releases" is to cache cutouts and processed stacks while refreshing the lists of collections and images with a TTL.
 
-**Допоміжні джерела для оверлеїв і перевірки:**
+**Auxiliary sources for overlays and checks:**
 
-- **Gaia DR3** — позиції та власні рухи зір; можна перенести на дату знімка і накласти маркерами.
-- **AllWISE / unWISE** — небо 2010–2020-х на 3.4 і 4.6 мкм; дає довгу базу для помітного руху ([unWISE в IRSA](https://irsa.ipac.caltech.edu/data/WISE/unWISE/overview.html)).
-- **HiPS-плитки** 2MASS / AllWISE / DSS2 — фон для Aladin Lite.
-- **SIMBAD** — назва об'єкта → координати і власний рух (для пошуку за назвою).
-- **SkyBoT (IMCCE) / MPC MPChecker / JPL Horizons** — відомі астероїди в полі на дату знімка.
+- **Gaia DR3** — positions and proper motions of stars; can be propagated to the image date and overlaid as markers.
+- **AllWISE / unWISE** — the sky of the 2010s–2020s at 3.4 and 4.6 µm; gives a long baseline for visible motion ([unWISE at IRSA](https://irsa.ipac.caltech.edu/data/WISE/unWISE/overview.html)).
+- **HiPS tiles** 2MASS / AllWISE / DSS2 — backgrounds for Aladin Lite.
+- **SIMBAD** — object name → coordinates and proper motion (for search by name).
+- **SkyBoT (IMCCE) / MPC MPChecker / JPL Horizons** — known asteroids in the field at the image date.
 
-## Архітектура та пайплайн
+## Architecture and pipeline
 
-Усю астрономічну обробку робить Python-бекенд, а браузер отримує готові кадри і лише показує їх. Так не доведеться тягнути FITS у браузер.
+A Python backend does all astronomical processing; the browser receives ready frames and only displays them. This way FITS never has to travel to the browser.
 
 ```
-браузер (React + Aladin Lite) ──RA/Dec, FOV, детектор──► бекенд (FastAPI) ──► SIMBAD · IRSA (TAP, SIA, cutouts/S3) · Gaia DR3 · SkyBoT
+browser (React + Aladin Lite) ──RA/Dec, FOV, detector──► backend (FastAPI) ──► SIMBAD · IRSA (TAP, SIA, cutouts/S3) · Gaia DR3 · SkyBoT
 ```
 
-Бекенд робить 5 кроків:
+The backend runs 5 steps:
 
-1. **Resolve** — назва → координати, власний рух, епоха (SIMBAD).
-2. **Query** — список колекцій з TAP, SIA-запит, групування знімків за детектором і візитом (Deep-поля — за 30-денними бінами).
-3. **Fetch** — cutouts з обмеженням паралельності, повторами і дисковим кешем.
-4. **Process** — віднімання фону, маска FLAGS, λ у точці цілі, репроєкція на спільну north-up сітку, стек кожного візиту.
-5. **Serve** — кадри як Float32-масиви + прапорці + JSON-маніфест.
+1. **Resolve** — name → coordinates, proper motion, epoch (SIMBAD).
+2. **Query** — list of collections from TAP, SIA query, grouping of images by detector and visit (Deep fields — by 30-day bins).
+3. **Fetch** — cutouts with a concurrency limit, retries and a disk cache.
+4. **Process** — background subtraction, FLAGS mask, λ at the target pixel, reprojection onto a common north-up grid, a stack per visit.
+5. **Serve** — frames as Float32 arrays + flags + a JSON manifest.
 
-Браузер надсилає координати й отримує кадри разом із прапорцями та метаданими; контраст і різницю кадрів рахує сам. Кеш на диску бекенду рятує від повільного архіву, а статичні пакети п'яти тестових цілей працюють навіть без бекенду.
+The browser sends coordinates and receives frames with flags and metadata; it computes contrast and frame differences itself. The backend's disk cache protects against a slow archive, and static bundles of the five test targets work even without a backend.
 
-**Мінімальний API бекенду:**
+**Minimal backend API:**
 
-- `GET /api/sequence?ra=&dec=&fov=&det=&mode=` → готова послідовність кадрів або `job_id`: перший запит довгий, тому фронт опитує `/api/jobs/{id}` і показує прогрес
-- `GET /api/spectrum?ra=&dec=&pmra=&pmdec=` → точки (λ, потік, похибка, дата, прапорці)
-- `GET /api/overlays?ra=&dec=&fov=&mjd=` → зорі Gaia DR3 на дату кадру та відомі астероїди
-- `GET /api/resolve?name=` → координати та власний рух з SIMBAD
+- `GET /api/sequence?ra=&dec=&fov=&det=&mode=` → a ready sequence of frames or a `job_id`: the first request is slow, so the frontend polls `/api/jobs/{id}` and shows progress
+- `GET /api/spectrum?ra=&dec=&pmra=&pmdec=` → points (λ, flux, error, date, flags)
+- `GET /api/overlays?ra=&dec=&fov=&mjd=` → Gaia DR3 stars at the frame date and known asteroids
+- `GET /api/resolve?name=` → coordinates and proper motion from SIMBAD
 
-Фронт читає ті самі параметри з власного URL (`/?ra=...&dec=...`), тож посилання і embed працюють без додаткової логіки. Повний контракт API — `docs/agent-prompt.md`, розділ 3.
+The frontend reads the same parameters from its own URL (`/?ra=...&dec=...`), so links and embeds work without extra logic. Full API contract: `docs/api.md`.
 
-## Підводні камені
+## Pitfalls
 
-Більшість проблем не в коді, а в фізиці та особливостях даних. Перевірте це до того, як полірувати UI.
+Most problems are not in the code but in the physics and the quirks of the data. Check these before polishing the UI.
 
-1. **Різні довжини хвиль у різних епохах.** Через LVF одна точка в різних експозиціях має різну λ, і червоний карлик буде «блимати» без жодної зміни. Порівнюйте знімки одного детектора і зблизька однакової λ, або складайте всі знімки детектора в межах одного огляду (це й радить умова).
-2. **Рух менший за піксель.** Навіть Barnard's Star за півроку зсувається на \~0.8 пікселя. Одна з команд пише, що її детектор пропускає рух під \~0.8 пікселя за весь період ([SPHEREx Blink](https://github.com/mateibut/SPHEREx)). Рішення: найдовша база, upsampling при показі, стара епоха AllWISE як додатковий кадр.
-3. **Каталожні координати застаріли** на 2–4.5′ для тестових цілей (див. вище). Центрування поля — на позиції, перенесеній на дату знімка.
-4. **Насичення і артефакти.** Яскраві зорі (Barnard, R Dra, ε Indi A) дають чорну середину, ореол (BLOOM), інвертований фантом рівно за 32 рядки вище від crosstalk; космічні промені лишають «snowball»-плями ([огляд артефактів](https://blog.pebblous.ai/blog/spherex-detector-artifact-bestiary/en/); це блог, деталі не перевірені — значення бітів FLAGS брати з офіційної документації IRSA). Усе це простіше показати оверлеєм з `FLAGS`, ніж приховувати.
-5. **Зодіакальний фон і нерівність.** Перед blink відніміть модель зодіакального світла або медіану фону і використовуйте спільний asinh-stretch для всіх кадрів, інакше кадри мигатимуть яскравістю.
-6. **Репроєкція.** PSF субдискретизована: білінійна інтерполяція сплющує піки і дає залишки від зір при відніманні; кубічний сплайн кращий ([досвід команди](https://github.com/lzphellipe/spherex)). Вирівнюйте всі кадри на спільну сітку «north-up».
-7. **Швидкість і обсяг архіву.** Читання SPHEREx-файлів може перевищити стандартний таймаут astropy (`conf.remote_timeout = 120`). Кожен cutout важить \~4 МБ через неурізаний `EPSF`, тож одна ціль — це 1.5–1.9 ГБ, а R Dra у Deep-полі — понад 10 ГБ (потрібен ліміт знімків на візит). Для демо зберіть статичні пакети всіх п'яти тестових цілей — живий запит під час пітчу — це ризик. На Mac з Python від python.org HTTPS до IRSA падає з `CERTIFICATE_VERIFY_FAILED`: запустіть `Install Certificates.command`.
-8. **Зовнішні API відмовляють.** У однієї команди JPL identification API падав по таймауту, а SkyBoT блокував запити ([GhostShift](https://github.com/ahmedatta3322/ghostshift)). Кешуйте відповіді та майте запасне джерело.
-9. **WISE 0855 майже не видно.** При J ≈ 25 на коротких хвилях його немає. Одна команда на стеку отримала лише «натяк» (0.4 мЯн, 4.3× шуму), а не детекцію. Краще чесно показати очікувану позицію та ліміт чутливості, ніж заявляти виявлення.
-10. **Planet Nine від SPHEREx не чекати.** Тіло на кшталт Planet Nine на відстані сотень а.о. слабше за ліміт одиночного знімка на 3–5 зоряних величин. Інфрачервоні пошуки в IRAS/AKARI дали лише непідтверджених кандидатів ([Phan et al. 2025](https://arxiv.org/abs/2504.17288)). Planet X — це історія для пітчу, а не обіцянка.
+1. **Different wavelengths at different epochs.** Because of the LVF, the same point has a different λ in different exposures, and a red dwarf will "blink" without any real change. Compare images from the same detector at nearly the same λ, or co-add all images of a detector within one survey pass (which is what the challenge suggests).
+2. **Motion smaller than a pixel.** Even Barnard's Star moves only \~0.8 pixel in half a year. One team reports that its detector misses motion below \~0.8 pixel over the whole period ([SPHEREx Blink](https://github.com/mateibut/SPHEREx)). Remedy: the longest baseline, upsampling for display, an old AllWISE epoch as an extra frame.
+3. **Catalog coordinates are outdated** by 2–4.5′ for the test targets (see above). Centre the field on the position propagated to the image date.
+4. **Saturation and artifacts.** Bright stars (Barnard, R Dra, ε Indi A) produce a black core, a halo (BLOOM), an inverted ghost exactly 32 rows above from crosstalk; cosmic rays leave "snowball" blobs ([artifact overview](https://blog.pebblous.ai/blog/spherex-detector-artifact-bestiary/en/); this is a blog and the details are unverified — take the FLAGS bit meanings from the official IRSA documentation). It is easier to show all this as an overlay from `FLAGS` than to hide it.
+5. **Zodiacal background and unevenness.** Before blinking, subtract the zodiacal light model or the background median and use a shared asinh stretch for all frames, otherwise the frames flicker in brightness.
+6. **Reprojection.** The PSF is undersampled: bilinear interpolation flattens peaks and leaves star residuals in differences; a cubic spline is better ([another team's experience](https://github.com/lzphellipe/spherex)). Align all frames on a common north-up grid.
+7. **Archive speed and volume.** Reading SPHEREx files can exceed astropy's default timeout (`conf.remote_timeout = 120`). Every cutout weighs \~4 MB because of the untrimmed `EPSF`, so one target is 1.5–1.9 GB and R Dra in the Deep field is more than 10 GB (a per-visit image cap is needed). For the demo, build static bundles of all five test targets — a live request during the pitch is a risk. On a Mac with Python from python.org, HTTPS to IRSA fails with `CERTIFICATE_VERIFY_FAILED`: run `Install Certificates.command`.
+8. **External APIs fail.** One team's JPL identification API timed out and SkyBoT blocked its requests ([GhostShift](https://github.com/ahmedatta3322/ghostshift)). Cache responses and have a fallback source.
+9. **WISE 0855 is barely visible.** At J ≈ 25 it is absent at short wavelengths. One team got only a "hint" in a stack (0.4 mJy, 4.3× the noise), not a detection. Better to honestly show the expected position and the sensitivity limit than to claim a detection.
+10. **Don't expect Planet Nine from SPHEREx.** A Planet Nine–like body hundreds of AU away is 3–5 magnitudes fainter than the single-image limit. Infrared searches in IRAS/AKARI produced only unconfirmed candidates ([Phan et al. 2025](https://arxiv.org/abs/2504.17288)). Planet X is a story for the pitch, not a promise.
 
-## Як виділитися
+## How to stand out
 
-Blink-переглядач за RA/Dec роблять майже всі: на GitHub уже десятки репозиторіїв під цей челендж (наприклад, [planetx-spherex](https://github.com/gitmahin/planetx-spherex), [spherex-blink](https://github.com/pythonhack000/spherex-blink), [GhostShift](https://github.com/ahmedatta3322/ghostshift)). Тож перемагатиме не сам факт blink, а пункти з «Potential Considerations», зроблені добре, та чесна демонстрація на тестових цілях.
+Almost everyone builds an RA/Dec blink viewer: GitHub already has dozens of repositories for this challenge (e.g. [planetx-spherex](https://github.com/gitmahin/planetx-spherex), [spherex-blink](https://github.com/pythonhack000/spherex-blink), [GhostShift](https://github.com/ahmedatta3322/ghostshift)). So the winner will not be decided by the blink itself but by the "Potential Considerations" done well and an honest demonstration on the test targets.
 
-- **Спектр на льоту (extra kudos з умови).** Клік по об'єкту → апертурна фотометрія по всіх знімках, де точка потрапляє в різні λ → графік потоку від λ. Для рухомих об'єктів апертура рухається за власним рухом. Звірка з Spectrophotometry Tool IRSA (а для нерухомих джерел — зі спектральними кубами DR1) покаже, що цифри справжні.
-- **Стек по детекторах і режим різниці.** Для кожного огляду — сума всіх знімків одного детектора (вищий S/N), потім різниця оглядів: рухомий об'єкт дає диполь (темне на старому місці, світле на новому), змінна зоря — одну пляму.
-- **Псевдоколір з 6 детекторів.** Три смуги → RGB: коричневі карлики та льодові джерела виділяться кольором, як WISE 0855 — помаранчева точка в Backyard Worlds.
-- **Оверлеї Gaia DR3 з перенесенням на дату кадру.** Маркер рухається разом із зорею в blink — наочна перевірка, що рух справжній. Плюс AllWISE (2010) як дуже старий кадр.
-- **Вимір руху з цифрами.** Для ε Indi B (не насичена) і Barnard (насичена, центроїд менш надійний) показати виміряний власний рух із похибкою поруч із каталожним. Збіг у межах похибки — сильний аргумент для журі. Для орієнтира: одна команда отримала розбіжність 0.2–0.8″/рік.
-- **Крива блиску для змінних.** Для RW Aur і R Dra — графік потоку від дати поруч із blink; для насичених точок — позначка «насичено», а не хибне число.
-- **Shareable URL і embed.** `/?ra=269.45&dec=4.74&fov=10&det=3` + режим iframe — це прямо в умові і дешево в реалізації.
-- **Citizen science.** Кнопка «Я бачу рухомий об'єкт» з кліком по позиції → автоматична перевірка за SkyBoT і Gaia («відомий астероїд» / «відома зоря з рухом» / «невідоме»). Це відповідає духу челенджу — залучити якомога більше людей.
-- **Чесність у пітчі.** Показати, що інструмент бачить, а чого ні (WISE 0855 на межі, Planet Nine недосяжна). Журі на наукових челенджах цінують це більше за гучні заяви.
+- **Spectrum on the fly (extra kudos in the challenge).** Click an object → aperture photometry on all images where the point falls at different λ → a flux-vs-λ plot. For moving objects the aperture follows the proper motion. A comparison with IRSA's Spectrophotometry Tool (and, for static sources, with the DR1 spectral cubes) shows the numbers are real.
+- **Per-detector stacks and difference mode.** For each survey pass, co-add all images of one detector (higher S/N), then subtract passes: a moving object gives a dipole (dark at the old position, bright at the new one), a variable star a single blob.
+- **Pseudo-colour from the 6 detectors.** Three bands → RGB: brown dwarfs and icy sources stand out by colour, like WISE 0855 as an orange dot in Backyard Worlds.
+- **Gaia DR3 overlays propagated to the frame date.** The marker moves together with the star in the blink — a visual check that the motion is real. Plus AllWISE (2010) as a very old frame.
+- **Motion measured in numbers.** For ε Indi B (not saturated) and Barnard (saturated, centroid less reliable) show the measured proper motion with its error next to the catalog value. Agreement within the error is a strong argument for the judges. For reference: one team got a discrepancy of 0.2–0.8″/yr.
+- **Light curves for the variables.** For RW Aur and R Dra — a flux-vs-date plot next to the blink; saturated points labelled "saturated" rather than given a false number.
+- **Shareable URL and embed.** `/?ra=269.45&dec=4.74&fov=10&det=3` + an iframe mode — it is right in the challenge text and cheap to build.
+- **Citizen science.** An "I see a moving object" button with a click on the position → automatic check against SkyBoT and Gaia ("known asteroid" / "known star with proper motion" / "unknown"). This matches the spirit of the challenge — involve as many people as possible.
+- **Honesty in the pitch.** Show what the tool can and cannot see (WISE 0855 at the limit, Planet Nine out of reach). Judges of science challenges value this more than loud claims.
 
-## План на хакатон і ролі
+## Hackathon plan and roles
 
-Мета до вечора суботи — робочий blink і різниця кадрів для Barnard's Star та ε Indi B на реальних даних; усе інше нашаровується потім. Детальний план з треками, пріоритетами P0/P1/P2 і чекпоінтами — у `docs/agent-prompt.md`. Стек: Python (FastAPI + astropy, astroquery, reproject, photutils) для даних, React + Aladin Lite v3 для фронту. Обробку FITS на C# робити невигідно: астрономічна екосистема — це Python.
+Goal by Saturday evening: a working blink and frame difference for Barnard's Star and ε Indi B on real data; everything else is layered on top. The detailed plan with tracks, P0/P1/P2 priorities and checkpoints is in `docs/agent-prompt.md`. Stack: Python (FastAPI + astropy, astroquery, reproject, photutils) for data, React + Aladin Lite v3 for the frontend. Processing FITS in C# does not pay off: the astronomy ecosystem is Python.
 
-**Ролі (на 3–4 людей):**
+**Roles (for 3–4 people):**
 
-- **Дані / бекенд** — SIA-запити, cutouts, репроєкція, стек/різниця, спектр, кеш.
-- **Фронтенд** — форма RA/Dec, плеєр кадрів, слайдер, Aladin, оверлеї, URL-параметри.
-- **Наука / QA** — тестові цілі, перенесення позицій, звірка з каталогами та Spectrophotometry Tool.
-- **Пітч** — відео, опис проєкту, сабміт (вимоги — у Participant Guides на сайті Space Apps).
+- **Data / backend** — SIA queries, cutouts, reprojection, stack/difference, spectrum, cache.
+- **Frontend** — RA/Dec form, frame player, slider, Aladin, overlays, URL parameters.
+- **Science / QA** — test targets, position propagation, checks against catalogs and the Spectrophotometry Tool.
+- **Pitch** — video, project description, submission (requirements are in the Participant Guides on the Space Apps site).
 
-**Субота, день — фундамент**
+**Saturday, day — foundation**
 
-- [ ] Пройти ноутбуки IRSA `spherex-intro` і `spherex-cutouts`
-- [ ] Скрипт: RA/Dec + детектор → список знімків з датами → cutouts → стеки візитів (Float32) зі спільним stretch
-- [ ] Перенесення позиції за власним рухом для тестових цілей
-- [ ] Скелет фронту: форма RA/Dec + анімація кадрів
+- [ ] Work through the IRSA notebooks `spherex-intro` and `spherex-cutouts`
+- [ ] Script: RA/Dec + detector → list of images with dates → cutouts → visit stacks (Float32) with a shared stretch
+- [ ] Proper-motion propagation of positions for the test targets
+- [ ] Frontend skeleton: RA/Dec form + frame animation
 
-**Субота, вечір — перший наскрізний результат**
+**Saturday, evening — first end-to-end result**
 
-- [ ] Blink Barnard's Star з реальних даних у браузері
-- [ ] Репроєкція на спільну north-up сітку, вибір поля зору
-- [ ] Стек по детектору в межах огляду + режим різниці
-- [ ] Статичні пакети всіх п'яти тестових цілей (працюють без бекенду)
+- [ ] Blink of Barnard's Star from real data in the browser
+- [ ] Reprojection onto a common north-up grid, field-of-view selection
+- [ ] Per-detector stack within a pass + difference mode
+- [ ] Static bundles of all five test targets (working without a backend)
 
-**Неділя, ранок — фічі з Considerations**
+**Sunday, morning — features from the Considerations**
 
-- [ ] Оверлеї: Gaia DR3 (перенесені на дату), FLAGS, AllWISE-кадр
-- [ ] Спектр по кліку + крива блиску для RW Aur / R Dra
-- [ ] Координати в URL, embed-режим, пошук за назвою через SIMBAD
+- [ ] Overlays: Gaia DR3 (propagated to the date), FLAGS, an AllWISE frame
+- [ ] Spectrum on click + light curves for RW Aur / R Dra
+- [ ] Coordinates in the URL, embed mode, search by name via SIMBAD
 
-**Неділя, день — заморожування і сабміт**
+**Sunday, day — freeze and submission**
 
-- [ ] Деплой і перевірка з чистого браузера
-- [ ] Скріншоти/GIF по кожній тестовій цілі, секція «обмеження»
-- [ ] Відео і опис проєкту, сабміт до закриття хакатону 15 листопада
+- [ ] Deploy and check from a clean browser
+- [ ] Screenshots/GIFs for each test target, a "limitations" section
+- [ ] Video and project description, submission before the hackathon closes on 15 November
 
-## Джерела
+## Sources
 
-**Челендж і офіційні ресурси**
+**Challenge and official resources**
 
-- [Planet X and SPHEREx — сторінка челенджу](https://www.spaceappschallenge.org/2026/challenges/planet-x-and-spherex/) (вкладки Details і Resources)
+- [Planet X and SPHEREx — challenge page](https://www.spaceappschallenge.org/2026/challenges/planet-x-and-spherex/) (Details and Resources tabs)
 - [IRSA: SPHEREx mission page](https://irsa.ipac.caltech.edu/Missions/spherex.html) · [QR Overview](https://irsa.ipac.caltech.edu/data/SPHEREx/docs/overview_qr.html)
 - [SPHEREx Data Access (User Guide)](https://caltech-ipac.github.io/spherex-archive-documentation/spherex-data-access)
 - [IRSA tutorial: SPHEREx intro](https://caltech-ipac.github.io/irsa-tutorials/spherex-intro) · [cutouts](https://caltech-ipac.github.io/irsa-tutorials/spherex-cutouts) · [source discovery tool](https://caltech-ipac.github.io/irsa-tutorials/spherex-source-discovery-tool-demo)
 - [SPHEREx Cutout Service](https://irsa.ipac.caltech.edu/data/SPHEREx/docs/cutout_tool.html) · [Spectrophotometry Tool](https://irsa.ipac.caltech.edu/onlinehelp/spherex/spherex/sp.html)
-- [SPHEREx на AWS Open Data](https://registry.opendata.aws/spherex-qr/)
-- [SPHEREx HiPS у CDS (color)](https://alasky.cds.unistra.fr/SPHEREx/color) · [IRSA TAP](https://irsa.ipac.caltech.edu/TAP)
-- [WiseView (ASCL)](https://ascl.net/1806.004) · [пост про WiseView](https://blog.backyardworlds.org/2017/09/13/wiseview/) · [Backyard Worlds](https://en.wikipedia.org/wiki/Backyard_Worlds)
+- [SPHEREx on AWS Open Data](https://registry.opendata.aws/spherex-qr/)
+- [SPHEREx HiPS at CDS (color)](https://alasky.cds.unistra.fr/SPHEREx/color) · [IRSA TAP](https://irsa.ipac.caltech.edu/TAP)
+- [WiseView (ASCL)](https://ascl.net/1806.004) · [WiseView blog post](https://blog.backyardworlds.org/2017/09/13/wiseview/) · [Backyard Worlds](https://en.wikipedia.org/wiki/Backyard_Worlds)
 
-**Місія SPHEREx**
+**The SPHEREx mission**
 
 - [Crill et al. 2024 — SPHEREx all-sky survey](https://arxiv.org/pdf/2404.11017)
 - [Spectral response of SPHEREx](https://arxiv.org/pdf/2602.09139)
 - [SPHEREx first images](https://spherex.caltech.edu/image/spherex20250401b-spherex-first-images)
-- [POKEMON-DLC (поріг насичення SPHEREx)](https://arxiv.org/pdf/2604.22983)
+- [POKEMON-DLC (SPHEREx saturation limit)](https://arxiv.org/pdf/2604.22983)
 
-**Тестові цілі та Planet Nine**
+**Test targets and Planet Nine**
 
 - [Barnard's Star](https://en.wikipedia.org/wiki/Barnard%27s_Star) · [Epsilon Indi](https://en.wikipedia.org/wiki/Epsilon_Indi) · [ε Indi Ba/Bb (McCaughrean et al.)](https://arxiv.org/pdf/astro-ph/0309256) · [WISE 0855−0714](https://en.wikipedia.org/wiki/WISE_0855%E2%88%920714) · [RW Aurigae](https://en.wikipedia.org/wiki/RW_Aurigae) · [R Draconis (BAA)](https://britastro.org/vss/obj-dra.html)
-- [Phan et al. 2025 — Planet Nine в IRAS і AKARI](https://arxiv.org/abs/2504.17288)
+- [Phan et al. 2025 — Planet Nine in IRAS and AKARI](https://arxiv.org/abs/2504.17288)
 
-**Репозиторії інших команд (для орієнтира)**
+**Other teams' repositories (for orientation)**
 
 - [SPHEREx Blink (mateibut)](https://github.com/mateibut/SPHEREx) · [GhostShift](https://github.com/ahmedatta3322/ghostshift) · [SPHEREx Moving Objects](https://github.com/lzphellipe/spherex) · [planetx-spherex](https://github.com/gitmahin/planetx-spherex) · [spherex-blink](https://github.com/pythonhack000/spherex-blink)

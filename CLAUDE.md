@@ -4,9 +4,10 @@ Public web tool: the user enters RA/Dec (or an object name) and gets an animated
 of NASA SPHEREx images of that sky patch, so moving and variable objects stand out.
 
 - Hackathon: submission deadline **2026-11-15**. Team of 3–4, parallel Claude Code sessions, one per track.
-- Plan, tracks, priorities, API contract: `docs/agent-prompt.md` (source of truth for *what* to build).
-- Challenge text: `docs/project_info.md`. Background research: `docs/spherex-research.md`.
-  The research doc is **partly outdated**: where it disagrees with "Verified data facts" below, this file wins.
+- Requirements — what to build and when it is done (IDs FR/SR/NFR/T/OD): **`docs/spec.md`**, the source of truth.
+- Plan — tracks, order of work, checkpoints: `docs/agent-prompt.md`. API contract: `docs/api.md`.
+- Challenge text: `docs/project_info.md`. Background research (English): `docs/spherex-research.md`.
+  Where any doc disagrees with "Verified data facts" below, this file wins.
 
 ## Communication
 - Reports to the team: **Ukrainian**. Code, comments, identifiers, commit messages, API: English.
@@ -42,6 +43,10 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   `FLAGS`, `VARIANCE`, `ZODI` — cut to size; `EPSF` (8752×451, ~4 MB) and `WCS-WAVE` (1100×1) — **not cut**.
   ⇒ every cutout is **~4 MB regardless of size**. Celestial WCS: `RA---TAN-SIP`. Headers: `DATE-OBS`, `MJD-AVG`, `DETECTOR`.
 - DR1 and QR3 sample files both carry pipeline tag `l2b-v27` (consistent calibration).
+- **S3 mirror** `nasa-irsa-spherex` (anonymous, plain HTTPS works): prefixes `dr1/`, `qr2/`, `qr3/`; same paths as the IRSA
+  `ibe` URLs (`dr1/level2/<week>/<version>/<detector>/…`); full file ~65 MB; HTTP range requests supported.
+- All Resources-tab sources (IRSA, tutorials, WiseView, Gaia MAST/ESA TAP, NEOSSat, CADC) are publicly reachable; no
+  private hackathon data exists beyond them.
 - **Coverage of test targets** (SIA radius 0.01°, DR1+QR3, wide+deep):
 
   | Target | Exposures | Visits | Max baseline → expected shift |
