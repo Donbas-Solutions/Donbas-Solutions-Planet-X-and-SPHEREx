@@ -23,12 +23,11 @@ from ..astrometry import position_at
 from ..config import settings
 from ..domain import Cutout, ExposureMeta, ProgressCallback, Target, Visit
 from .cutouts import cache_name, cutout_size_deg, cutout_url, load_cutout, strip_to_file
-from .sia import SIA_URL, parse_sia_csv, sia_params
+from .sia import SEARCH_RADIUS_DEG, SIA_URL, parse_sia_csv, sia_params
 from .visits import cap_per_detector, group_visits
 
 logger = logging.getLogger(__name__)
 
-SEARCH_RADIUS_DEG: Final = 0.01
 WORKERS: Final = 2
 ATTEMPTS: Final = 5
 MAX_BACKOFF_S: Final = 60.0

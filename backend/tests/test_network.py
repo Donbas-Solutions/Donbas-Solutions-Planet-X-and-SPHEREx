@@ -1,4 +1,4 @@
-"""Live IRSA checks for the naive fetcher. Deselected by default; run with: uv run pytest -m network"""
+"""Live IRSA checks for the naive and the async fetchers. Deselected by default; run with: uv run pytest -m network"""
 
 from __future__ import annotations
 
@@ -6,6 +6,9 @@ from pathlib import Path
 
 import pytest
 
+from app.archive.collections import CollectionDiscovery
+from app.archive.fetch import query_exposures as async_query_exposures
+from app.archive.http import make_http
 from app.archive.naive import fetch_one, make_client, query_exposures
 from app.archive.visits import group_visits
 from app.astrometry import position_at
@@ -36,3 +39,18 @@ def test_one_cutout_downloads_and_loads(tmp_path: Path) -> None:
     assert cutout.image.size > 0
     assert cutout.flags.shape == cutout.image.shape
     assert cutout.meta.detector == meta.detector
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("anyio_backend", ["asyncio"])
+async def test_async_discovery_and_query_find_barnard(anyio_backend: str) -> None:
+    configure_ssl()
+    discovery = CollectionDiscovery()
+    http = make_http()
+    async with http.client:
+        collections = await discovery.collections(http)
+        exposures = await async_query_exposures(http, BARNARD, collections)
+    assert discovery.source == "tap"
+    assert "spherex_dr1" in collections
+    assert len(exposures) >= 363
+    assert len(group_visits(exposures)) >= 3

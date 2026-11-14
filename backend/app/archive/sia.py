@@ -13,6 +13,7 @@ from ..domain import ExposureMeta
 logger = logging.getLogger(__name__)
 
 SIA_URL: Final = "https://irsa.ipac.caltech.edu/SIA"
+SEARCH_RADIUS_DEG: Final = 0.01
 _BANDPASS = re.compile(r"^SPHEREx-D([1-6])$")
 _METRES_TO_UM: Final = 1e6
 
