@@ -20,6 +20,7 @@ from .config import configure_ssl, settings
 from .domain import DETECTORS, SequenceParams, Target
 from .jobs import JobRunner, SequenceRequest, fetch_for_request
 from .models import CacheStats, Health, JobAccepted, JobStatus, Overlays, ResolveResult, Sequence, Spectrum
+from .pipeline.bundle import MANIFEST
 
 configure_ssl()
 
@@ -86,7 +87,7 @@ Discovery = Annotated[CollectionDiscovery, Depends(get_discovery)]
 
 def _cache_stats() -> CacheStats:
     raw_bytes = sum(p.stat().st_size for p in settings.raw_dir.rglob("*") if p.is_file())
-    processed = sum(1 for p in settings.processed_dir.rglob("*.json") if p.is_file())
+    processed = sum(1 for p in settings.processed_dir.glob(f"*/{MANIFEST}") if p.is_file())
     return CacheStats(raw_mb=round(raw_bytes / 1e6, 1), processed_items=processed)
 
 
@@ -159,9 +160,32 @@ async def job(runner: Runner, job_id: JobId) -> JobStatus:
     return found.status()
 
 
+async def _target_spectrum(
+    runner: JobRunner, ra: float, dec: float, pmra: float | None, pmdec: float | None, ref_epoch: float
+) -> Spectrum:
+    target = Target(ra_deg=ra, dec_deg=dec, ref_epoch=ref_epoch, pmra_masyr=pmra, pmdec_masyr=pmdec)
+    found = await runner.spectrum(target)
+    if found is None:
+        raise HTTPException(
+            status_code=404, detail="No live spectrum for this target yet: it is measured when its sequence is built."
+        )
+    return found
+
+
 @app.get("/api/spectrum", response_model=Spectrum)
-def spectrum(ra: Ra, dec: Dec, pmra: Pm = None, pmdec: Pm = None, ref_epoch: RefEpoch = 2000.0) -> Spectrum:
-    raise _not_yet("Track A, P1")
+async def spectrum(
+    runner: Runner, ra: Ra, dec: Dec, pmra: Pm = None, pmdec: Pm = None, ref_epoch: RefEpoch = 2000.0
+) -> Spectrum:
+    """Forced photometry of the target on every exposure of its latest sequence (FR-16)."""
+    return await _target_spectrum(runner, ra, dec, pmra, pmdec, ref_epoch)
+
+
+@app.get("/api/lightcurve", response_model=Spectrum)
+async def lightcurve(
+    runner: Runner, ra: Ra, dec: Dec, pmra: Pm = None, pmdec: Pm = None, ref_epoch: RefEpoch = 2000.0
+) -> Spectrum:
+    """The same points as `/api/spectrum`; the client groups them by detector or λ bin (FR-17, docs/api.md)."""
+    return await _target_spectrum(runner, ra, dec, pmra, pmdec, ref_epoch)
 
 
 @app.get("/api/overlays", response_model=Overlays)
