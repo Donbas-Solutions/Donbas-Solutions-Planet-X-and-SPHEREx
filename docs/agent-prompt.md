@@ -1,10 +1,9 @@
 # Промпт для Claude Code: SPHEREx Blink
 
-**Як користуватися.** Phase 0 і Phase 0.5 вже виконано. Команда з 4 людей: кожен бере одну роль (A, B, C, D),
-відкриває свою сесію Claude Code на своїй гілці (`track-a-archive`, `track-b-frontend`, `track-c-science`,
-`track-d-delivery`) і пише:
+**Як користуватися.** Phase 0, Phase 0.5 і перша хвиля треків уже в `main` (PR #1–#4). Команда з 4 людей, кожен бере
+одну роль і працює у своїй гілці (див. «Roles and ownership — round 2»). У своїй сесії Claude Code пишіть:
 
-> Read `CLAUDE.md` and `docs/agent-prompt.md`, then execute **Track X**. Stop at every checkpoint.
+> Read `CLAUDE.md` and `docs/agent-prompt.md`, then execute **Track X, round 2**. Stop at every checkpoint.
 
 Сам промпт нижче — англійською. Звіти агент пише українською.
 
@@ -93,125 +92,97 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
 2 workers and patient retries a cutout takes **~6 s**, so the full depth of one target (360–470 exposures) is
 **~20 min**. A real Barnard sample (3 visits × 6 detectors × 2) came back with shapes 129×128, 106×129, 56×128.
 
-### Roles and ownership
+### Status after round 1 (2026-11-14, 18:20) — what is already in `main`
+- **A:** A0 spike (`docs/a0-fetch-spike.md`), A1 SIA + TAP collection discovery, A2 async fetcher (S3 → `ibe` →
+  cutout service), bundled-spectrum contract (`meta.spectrum`). Not yet: jobs, and all five API endpoints still answer
+  **501**.
+- **B:** app shell, URL state, presets, search box, blink player (A/B, diff, stretch, zoom, expected position), flags
+  overlay, frame metadata, pixel readout, job polling, offline fallback, About page.
+- **C:** pipeline (`build_sequence`, positions, photometry), 5 static bundles with spectra and GIFs,
+  `science/VALIDATION.md` (T-1 ✓, T-2 ✓, FR-16 vs 2MASS ✓, T-3 motion ✓ / flux blended, T-4/T-5 saturated),
+  structured frame warnings (`{code, message}`, PR #4).
+- **D:** not started — Spectrum / Light curve / Context tabs are placeholders; README is a draft.
+- Milestones: **M1 ✗** (no live API), **M2 🟡** (offline part works end to end), **M3 ✗**.
 
-| Track | Branch | Owns | Ask before touching |
-|---|---|---|---|
-| **A — Archive & API** | `track-a-archive` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`, Dockerfile; contract files `docs/api.md`, `models.py`, `frontend/src/api/types.ts` | `pipeline/` |
-| **B — Frontend core** | `track-b-frontend` | `frontend/` app shell, state, URL, player, panels; `package.json` | `components/{context,charts,embed}/` |
-| **C — Science pipeline** | `track-c-science` | `backend/app/pipeline/`, `astrometry.py`, `science/`, `scripts/prebake.py`, `frontend/public/prebaked/` | `archive/` |
-| **D — P1 features & delivery** | `track-d-delivery` | `frontend/src/components/{context,charts,embed}/`, `README.md`, deploy config, pitch material | B's state and player internals |
+### Roles and ownership — round 2
 
-Shared: `domain.py` (A and C agree on every change), `CLAUDE.md`, `docs/spec.md` (announce changes).
+| Role | Who | Branch | Owns | Mission now |
+|---|---|---|---|---|
+| **A — Archive & API** | the A person | `track-a-archive` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`, Dockerfile; contract files | Live API (M1) and the backend deploy |
+| **B — Frontend core** | the B person | `track-b-frontend` | app shell, state, URL, player, panels, `package.json` | Live mode, fixes, sub-path-safe URLs for the deploy |
+| **C — Science & delivery** | the team lead | `track-c-science` (science), `track-c-delivery` (deploy, README, pitch) | `backend/app/pipeline/`, `science/`, `scripts/prebake.py`, `frontend/public/prebaked/`, README, deploy config, pitch | Spectrum endpoint with A, FR-16 acceptance, **submission and static deploy** |
+| **D — P1 features** | the new person | `track-d-features` | `frontend/src/components/{charts,context,embed}/` (+ their `lib/` helpers) | Spectrum and light-curve charts, Aladin context panel, embed, Gaia markers |
 
-### Track A — Archive & API
-- **A0 spike (≤45 min; decides OD-4, OD-5).** Measure for Barnard: (a) cutout service at 1, 2, 3 workers —
-  latency, MB/s, 503 rate, `Retry-After` behaviour; whether `EPSF` can be dropped server-side; (b) S3
-  `nasa-irsa-spherex` (same paths as IRSA, ~65 MB per file, HTTP ranges supported): `fits.open(..., use_fsspec=True)`
-  + `.section` for `IMAGE/FLAGS/VARIANCE/ZODI` — FITS rows are contiguous, so a 128-px window reads ~1 MB per
-  extension, or many small per-row ranges; (c) HTTP range reads on the IRSA `ibe` URL. Report a table of
-  bytes / time / reliability per method and recommend one. **Checkpoint A0.**
-- A1 `archive/fetch.query_exposures`: async SIA for the collections discovered via TAP (cached 6 h, fallback
-  `settings.fallback_collections`); reuse `sia.parse_sia_csv` (NFR-3).
-- A2 `archive/fetch.fetch_cutouts`: shared `httpx.AsyncClient`, semaphore (start at 2 given the 503s), retries with
-  backoff, jitter and `Retry-After`, atomic cache writes (`strip_to_file`), `load_cutout` in a worker thread,
-  progress; failed exposures reported, not fatal. Same output as `naive.fetch_sample` (NFR-5).
-- A3 `jobs.py`: registry keyed by request (sorted image keys of the plan + FOV + detectors); background task:
-  query → plan → fetch → `build_sequence` in a process pool → `write_bundle` into `cache/processed/<key>/` (FR-13).
-  Until C delivers `build_sequence`, test with a trivial stand-in that stacks nothing.
-- A4 endpoints: `/api/sequence` (200 cached | 202 job), `/api/jobs/{id}`, `/api/resolve` (SIMBAD + mirror, FR-2),
-  `/api/health` with discovered collections. **Checkpoint A (M1):** live Barnard and ε Indi B sequences via HTTP.
-- A5 (P1, FR-18, FR-25) `/api/overlays`: Gaia DR3 cone propagated to the frame epoch; SkyBoT with cache and graceful failure.
-- A6 Dockerfile, raw-cache LRU cap, deployment together with D (NFR-4).
-- Backup duty: if C is behind at M2, A takes the photometry of FR-16 / FR-17.
+Shared: `domain.py` (A + C), `CLAUDE.md`, `docs/spec.md`, `docs/api.md` (announce changes). B and D share the
+frontend: D only touches its component folders and reads app state through B's hooks; anything else goes through B.
 
-### Track B — Frontend core
-- **B0 (first hour; push on a human OK — D depends on it).** App shell with layout slots per spec §5.1: tabs
-  *Spectrum* / *Light curve* / *Context*, route `/embed`, and a small shared state hook D can read (target, current
-  frame, selected pixel, sequence).
-- B1 (FR-1 … FR-5) URL ↔ state per spec §5.3; input parsing (decimal/sexagesimal), name resolve, presets.
-- B2 (FR-7 … FR-10) canvas player on Float32: stretch (asinh/linear/log + sliders), colormaps (grey; diverging
-  blue–orange for diff), play/pause/fps/step/slider, A/B blink, zoom with `image-rendering: pixelated`, expected-position
-  marker, keyboard (Space, ←/→, B); fps cap and `prefers-reduced-motion` per spec §5.4.
-- B3 (FR-13, FR-14) data layer: job polling with progress; fallback live API → `/prebaked/<target>/` → offline banner;
-  all states of spec §5.2; develop on `/mock/`.
-- B4 (FR-11, FR-12) metadata panel, warnings, FLAGS overlay by group. **Checkpoint B (M1):** mock, then live, end to end.
-- B5 (FR-15) About / limitations page with data credits (NFR-10).
+### Track A — round 2
+1. **A3 `jobs.py`** (FR-13): registry keyed by request; background task query → plan → `fetch_cutouts` →
+   `build_sequence` in a process pool (`progress=None`) → `write_bundle` into `cache/processed/<key>/`, served at `/files`.
+2. **A4 endpoints**: `/api/sequence` (200 cached | 202 job), `/api/jobs/{id}`, `/api/resolve` (SIMBAD + Harvard mirror,
+   FR-2), `/api/health` with discovered collections. **Checkpoint A (M1):** live Barnard and ε Indi B over HTTP.
+3. **`/api/spectrum` and `/api/lightcurve`** with C: call `pipeline.photometry.measure_spectrum` on the cutouts of the
+   job's plan.
+4. **Dockerfile + backend hosting** (with C, OD-1): persistent disk for `cache/`, health check, LRU cap.
+5. P1: `/api/overlays` (Gaia DR3 propagated to the frame epoch) for D's Gaia markers (FR-18).
 
-### Track C — Science pipeline
-- **C0 (now).** Real data without waiting for A:
-  `uv run --project backend python scripts/fetch_sample.py barnard eps_ind_b --max-per-detector 4`. Read the IRSA
-  `spherex-intro` tutorial; the λ maps are already in `Cutout`.
-- C1 (SR-1 … SR-6) `pipeline/`: per-exposure background (ZODI, then residual median) and mask
-  (`flags.stack_mask_bits`); reprojection onto `grid.make_grid` (bicubic; flags nearest + OR); per-visit
-  inverse-variance stacks per detector and all detectors; λ coverage and warnings; `expected_px` via
-  `astrometry.position_at`; shared stretch → `build_sequence`. Show PNG/GIF of the Barnard and ε Indi B differences
-  (T-1, T-2). **Checkpoint C1** — A wires it into the jobs (M1).
-- C2 (FR-3, FR-14) `scripts/prebake.py`: full-depth fetch + `build_sequence` + `write_bundle` →
-  `frontend/public/prebaked/<target>/` for all 5 targets, plus GIFs. Full depth is ~20 min per target at today's IRSA
-  speed: start it as soon as C1 works and let it run unattended. **Checkpoint C (M2):** the app works on all 5
-  targets with the backend off.
-- C3 Validation against T-1 … T-5 → `science/VALIDATION.md` (draft by M1, complete by M3).
-- C4 (P1, FR-16, FR-17) photometry: forced aperture at the propagated position per exposure, errors from VARIANCE,
-  saturated / flagged points marked; data for the spectrum and light curve (wire `/api/spectrum` with A); compare
-  with the IRSA Spectrophotometry Tool on one unsaturated star.
-- C5 (P1, FR-20) proper-motion measurement with errors vs catalog.
+### Track B — round 2
+1. **Sub-path-safe URLs** (blocks C's static deploy if the host serves the site under `/<repo>/`, e.g. GitHub Pages):
+   every `/prebaked/…`, `/mock/…`, `/api/…`, `/files/…` URL built from `import.meta.env.BASE_URL` / one API base.
+2. **Live mode** once A4 lands: `/?ra=&dec=` and `/?name=` end to end, job progress, errors (FR-2, FR-13).
+3. Fixes: the default diff of ε Indi B uses visit 2026-04 instead of the last visit 2026-09; About says WISE 0855 is
+   "not a detection" — update to "motion seen in D5–D6, flux blended with a field star" (`science/VALIDATION.md` T-3).
+4. Support D: expose the selected pixel / current frame / sequence through the state hook; review D's PRs.
 
-**Track C status (2026-11-14, 17:30)** — branch `track-c-science`, draft PR #1; `main` (incl. Track A's PR #2) is
-merged into it.
-- Done: C0; C1 (`pipeline/exposure.py`, `stack.py`, `sequence.py`, `measure.py`); C2 (5 bundles with
-  `spectrum.json` + `blink.gif` in `frontend/public/prebaked/`, S3 fetcher, depth = `prebake_cap` in
-  `science/targets.json`); C3 (`science/VALIDATION.md` at full depth: T-1 ✓, T-2 ✓, FR-16 vs 2MASS ✓, T-3 motion ✓ /
-  flux blended, T-4 and T-5 saturated); C5 (ε Indi B PM within 1.3σ). C4 partly: `pipeline/photometry.py`
-  (`measure_spectrum`) and the bundled spectra.
-- Next: (1) wire `measure_spectrum` into `/api/spectrum` and `/api/lightcurve` with Track A; (2) FR-16 acceptance
-  proper — compare one unsaturated star with IRSA's Spectrophotometry Tool (ratio 0.8–1.25); (3) optional: SAPM pixel
-  areas, an aperture correction, deblending WISE 0855 from its field star (e.g. difference of D5–D6 visit stacks or a
-  two-source PSF fit), photometry of saturated stars from their wings.
-- Tools: `scripts/prebake.py`, `science/validate.py`, `science/preview.py` (commands in `CLAUDE.md`).
+### Track C — round 2
+1. **First (blocks everyone's deadline): settle OD-3** — exact submission deadline (hour, time zone), required format
+   (project page, video length, slides), AI-use disclosure and branding rules from the Space Apps Participant Guides.
+2. **Pick the static host with the team (OD-1, frontend part)** and deploy the frontend + 5 bundles: a public URL that
+   works with no backend (FR-14). Needs B's step 1 if the host uses a sub-path.
+3. `/api/spectrum` + `/api/lightcurve` with A (C owns the science, A the endpoint).
+4. FR-16 acceptance: one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25).
+5. README (what, how, screenshots/GIFs from the bundles, limitations, credits NFR-10), licence decision (OD-2),
+   pitch script and video, submission text.
 
-### Track D — P1 features & delivery
-- **D0 (first hour).** Settle OD-3 (exact deadline, submission format, AI-use disclosure, branding rules) and propose
-  OD-1 (hosting) to the team; deploy the static frontend with mock data as a walking skeleton — accounts and deploys
-  only with a human OK.
-- D1 (FR-19) context panel in B's slot, reusing `components/AladinPanel.tsx`; verify rendering in a real browser.
-- D2 (FR-16, FR-17) spectrum and light-curve charts on a mock `frontend/public/mock/spectrum.json` that matches the
-  `Spectrum` model, then real data from C / A.
-- D3 (FR-21) embed mode; (FR-18) Gaia markers in the player through B's state hook; (FR-22) AllWISE frame.
-- D4 README with credits (NFR-10), GIFs and screenshots from C's prebaked bundles, demo script, video, submission;
-  final deploy and clean-browser test (with a human OK).
+### Track D — round 2
+Work on `track-d-features`; develop against the bundles: `/?target=eps_ind_b` (spectrum in `meta.spectrum`).
+1. **Spectrum chart** (FR-16): flux vs λ from `spectrum.json` / `/api/spectrum`, errors, coloured by visit;
+   saturated points as hollow markers labelled "saturated", never as values (SR-6). One small chart library, lazy-loaded
+   (ask before adding it).
+2. **Light-curve chart** (FR-17): flux vs time per detector from the same points.
+3. **Context panel** (FR-19): Aladin Lite (`components/AladinPanel.tsx`) synced to target and FOV; SPHEREx colour HiPS,
+   AllWISE, 2MASS; Gaia DR3 via VizieR. Verify in a real browser (WebGL).
+4. **Embed** (FR-21): `/embed?…` minimal view + "copy embed code".
+5. P1 if time allows: Gaia markers in the player (FR-18, needs A's `/api/overlays`), AllWISE frame (FR-22).
 
-### Who waits for whom
-
-| Who | Waits for | When | Meanwhile |
-|---|---|---|---|
-| C | nothing (naive fetcher) | — | — |
-| A | C's `build_sequence` for M1 | Checkpoint C1 | jobs with a stand-in |
-| B | A's live API | M1 | mock bundle |
-| D | B's shell (B0) | +1 h | OD-3, OD-1, deploy skeleton |
-| D | C's spectrum data | M3 | mock spectrum |
-| everyone | C's prebaked bundles | M2 | mock bundle |
+### Who waits for whom — round 2
+| Who | Waits for | Meanwhile |
+|---|---|---|
+| B (live mode) | A4 | sub-path URLs, fixes, support D |
+| D | nothing — data are in the bundles | charts and Aladin on `/?target=…` |
+| C (static deploy) | OD-1 choice; B step 1 if sub-path | OD-3, README, FR-16 check |
+| C + A (`/api/spectrum`) | A3 | — |
+| Backend deploy (A + C) | A4 + Dockerfile | static deploy is already public |
 
 ### Integration and git
-- Each track works on its own branch. Integration into `main` via PR at M1, M2, M3 and the freeze; the integrator is
-  the team lead or Track D.
+- Each person works on their branch; **merge into `main` after every green checkpoint** (not only at milestones), so
+  the others get it within hours. The team lead merges PRs.
 - Start every work round with `git pull origin main` into your branch (merge; never rebase pushed commits).
-- Lockfile conflicts: regenerate (`uv lock`, `npm install`), never merge by hand.
-- Contract changes only by A, announced in the team chat; `domain.py` changes agreed by A and C.
+- Lockfile conflicts: regenerate (`uv lock`, `npm install`), never merge by hand. Ask before adding a dependency.
+- Contract changes only through A, announced in the team chat; `domain.py` changes agreed by A and C.
 - Pushes only when the human you work with explicitly says so (`CLAUDE.md` → Git).
 
-### Timeline
+### Timeline — round 2
 | When (2026-11-14/15) | Milestone |
 |---|---|
-| Sat afternoon | Phase 0.5 done; tracks start |
-| Sat evening | **M1** — live blink + diff for Barnard and ε Indi B in the browser |
-| Sat night | **M2** — all P0, 5 targets prebaked, static fallback works |
-| Sun morning | **M3** — P1 features, `VALIDATION.md` complete |
-| Sun midday | Feature freeze → deploy (with human OK) → clean-browser test → GIFs/screenshots |
-| Before deadline | Submission (Track D) |
+| Sat evening | OD-3 settled; static host chosen; A3 started; D charts started |
+| Sat night | **Static deploy public** (frontend + 5 bundles); **M1** live API for Barnard and ε Indi B |
+| Sun morning | Live mode in the UI; spectrum/light-curve charts and Aladin; backend deployed; README |
+| Sun midday | Feature freeze → clean-browser test of the public URL → GIFs/screenshots → video |
+| Before deadline | Submission (C) |
 
-If M1 slips by >2 h, drop P1 items in this order: FR-22 (AllWISE) → FR-17 (light curves) → FR-16 (spectrum) →
-FR-18 (Gaia). Never drop FR-3 / FR-14 (prebaked bundles).
+If time runs short, drop in this order: FR-22 (AllWISE) → FR-18 (Gaia markers) → FR-21 (embed) → FR-19 (Aladin) →
+FR-17 (light curves). Never drop FR-3 / FR-14 (prebaked bundles) or the static deploy.
 
 ## 6. Working rules
 - **Checkpoints:** stop and report in Ukrainian using: *Зроблено / Як перевірено (команди + реальний вивід) /
