@@ -21,7 +21,7 @@ from ..astrometry import position_at
 from ..domain import Cutout, FrameArrays, ProgressCallback, SequenceParams, SequenceResult, Target
 from ..flags import DEFAULT_FLAG_BITS, stack_mask_bits
 from ..grid import make_grid
-from ..models import Frame, PixelPos, SequenceMeta, Stretch
+from ..models import Frame, FrameWarning, PixelPos, SequenceMeta, Stretch
 from ..models import Sequence as SequenceModel
 from .exposure import GridExposure, to_grid
 from .stack import Stack, stack
@@ -71,7 +71,11 @@ def _frame(
     mjds = [e.cutout.mjd_avg for e in stacked.exposures]
     mjd_mid = fmean(mjds)
     expected = _expected_px(target, mjd_mid, grid_wcs)
-    warnings = ["target pixel saturated (OVERFLOW/NONLINEAR)"] if _target_saturated(stacked, expected, npix) else []
+    warnings = (
+        [FrameWarning(code="saturated", message="target pixel saturated (OVERFLOW/NONLINEAR)")]
+        if _target_saturated(stacked, expected, npix)
+        else []
+    )
     first, last = _date(min(mjds)), _date(max(mjds))
     frame = Frame(
         id=frame_id,
@@ -102,9 +106,15 @@ def _coverage_warnings(frames: list[Frame], stacks: dict[str, Stack]) -> None:
         for frame in group:
             span = frame.lambda_um[1] - frame.lambda_um[0]
             if frame.n_exposures < COVERAGE_WARNING_FRACTION * best_n:
-                frame.warnings.append(f"few exposures: {frame.n_exposures} of up to {best_n}")
+                frame.warnings.append(
+                    FrameWarning(code="few_exposures", message=f"few exposures: {frame.n_exposures} of up to {best_n}")
+                )
             if len(stacks[frame.id].lambdas_um) > 1 and span < COVERAGE_WARNING_FRACTION * best_span:
-                frame.warnings.append(f"incomplete λ coverage: {span:.2f} of {best_span:.2f} µm")
+                frame.warnings.append(
+                    FrameWarning(
+                        code="incomplete_lambda", message=f"incomplete λ coverage: {span:.2f} of {best_span:.2f} µm"
+                    )
+                )
 
 
 def _stretch(arrays: Sequence[FrameArrays]) -> Stretch:

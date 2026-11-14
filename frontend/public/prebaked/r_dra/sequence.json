@@ -216,8 +216,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.19 of 0.78 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.19 of 0.78 µm"
+    }
    ]
   },
   {
@@ -248,8 +254,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.16 of 0.43 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.16 of 0.43 µm"
+    }
    ]
   },
   {
@@ -281,9 +293,18 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18",
-    "incomplete λ coverage: 2.94 of 3.87 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 2.94 of 3.87 µm"
+    }
    ]
   },
   {
@@ -314,8 +335,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.07 of 0.34 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.07 of 0.34 µm"
+    }
    ]
   },
   {
@@ -346,8 +373,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.27 of 0.44 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.27 of 0.44 µm"
+    }
    ]
   },
   {
@@ -378,8 +411,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.33 of 0.78 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.33 of 0.78 µm"
+    }
    ]
   },
   {
@@ -410,8 +449,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.27 of 1.27 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.27 of 1.27 µm"
+    }
    ]
   },
   {
@@ -442,8 +487,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.31 of 0.47 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.31 of 0.47 µm"
+    }
    ]
   },
   {
@@ -474,8 +525,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.25 of 0.43 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.25 of 0.43 µm"
+    }
    ]
   },
   {
@@ -511,7 +568,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -542,8 +602,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.19 of 0.34 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.19 of 0.34 µm"
+    }
    ]
   },
   {
@@ -574,8 +640,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.21 of 0.44 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.21 of 0.44 µm"
+    }
    ]
   },
   {
@@ -606,8 +678,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.75 of 1.27 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.75 of 1.27 µm"
+    }
    ]
   },
   {
@@ -638,8 +716,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.05 of 0.47 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.05 of 0.47 µm"
+    }
    ]
   },
   {
@@ -673,8 +757,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 12 of up to 18"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 12 of up to 18"
+    }
    ]
   },
   {
@@ -705,8 +795,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.24 of 0.34 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.24 of 0.34 µm"
+    }
    ]
   },
   {
@@ -737,8 +833,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.93 of 1.27 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.93 of 1.27 µm"
+    }
    ]
   },
   {
@@ -770,9 +872,18 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18",
-    "incomplete λ coverage: 2.91 of 3.87 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 2.91 of 3.87 µm"
+    }
    ]
   },
   {
@@ -803,7 +914,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -834,7 +948,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -866,9 +983,18 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18",
-    "incomplete λ coverage: 2.96 of 3.87 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 2.96 of 3.87 µm"
+    }
    ]
   },
   {
@@ -899,7 +1025,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -930,8 +1059,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.10 of 0.44 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.10 of 0.44 µm"
+    }
    ]
   },
   {
@@ -962,7 +1097,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -993,8 +1131,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.11 of 0.47 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.11 of 0.47 µm"
+    }
    ]
   },
   {
@@ -1028,8 +1172,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 12 of up to 18"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 12 of up to 18"
+    }
    ]
   },
   {
@@ -1060,8 +1210,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.16 of 0.44 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.16 of 0.44 µm"
+    }
    ]
   },
   {
@@ -1092,8 +1248,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.16 of 0.47 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.16 of 0.47 µm"
+    }
    ]
   },
   {
@@ -1125,9 +1287,18 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18",
-    "incomplete λ coverage: 2.94 of 3.87 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 2.94 of 3.87 µm"
+    }
    ]
   },
   {
@@ -1158,8 +1329,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.53 of 0.78 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.53 of 0.78 µm"
+    }
    ]
   },
   {
@@ -1190,7 +1367,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -1222,8 +1402,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    }
    ]
   },
   {
@@ -1254,8 +1440,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.15 of 0.78 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.15 of 0.78 µm"
+    }
    ]
   },
   {
@@ -1286,8 +1478,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.14 of 0.43 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.14 of 0.43 µm"
+    }
    ]
   },
   {
@@ -1319,9 +1517,18 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18",
-    "incomplete λ coverage: 2.74 of 3.87 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 2.74 of 3.87 µm"
+    }
    ]
   },
   {
@@ -1352,8 +1559,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.55 of 0.78 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.55 of 0.78 µm"
+    }
    ]
   },
   {
@@ -1384,7 +1597,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -1416,8 +1632,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    }
    ]
   },
   {
@@ -1448,8 +1670,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.44 of 0.78 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.44 of 0.78 µm"
+    }
    ]
   },
   {
@@ -1480,8 +1708,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.32 of 0.43 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.32 of 0.43 µm"
+    }
    ]
   },
   {
@@ -1513,9 +1747,18 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18",
-    "incomplete λ coverage: 3.06 of 3.87 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 3.06 of 3.87 µm"
+    }
    ]
   },
   {
@@ -1546,8 +1789,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.18 of 0.78 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.18 of 0.78 µm"
+    }
    ]
   },
   {
@@ -1578,8 +1827,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.14 of 0.43 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.14 of 0.43 µm"
+    }
    ]
   },
   {
@@ -1611,9 +1866,18 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18",
-    "incomplete λ coverage: 2.91 of 3.87 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 2.91 of 3.87 µm"
+    }
    ]
   },
   {
@@ -1644,7 +1908,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -1675,8 +1942,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.32 of 0.43 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.32 of 0.43 µm"
+    }
    ]
   },
   {
@@ -1708,8 +1981,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    }
    ]
   },
   {
@@ -1740,7 +2019,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -1771,7 +2053,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -1802,7 +2087,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -1833,7 +2121,10 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -1867,8 +2158,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 12 of up to 18"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 12 of up to 18"
+    }
    ]
   },
   {
@@ -1899,8 +2196,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.15 of 0.34 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.15 of 0.34 µm"
+    }
    ]
   },
   {
@@ -1931,8 +2234,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.54 of 1.27 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.54 of 1.27 µm"
+    }
    ]
   },
   {
@@ -1964,9 +2273,18 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18",
-    "incomplete λ coverage: 2.22 of 3.87 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 2.22 of 3.87 µm"
+    }
    ]
   },
   {
@@ -1997,8 +2315,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.23 of 0.34 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.23 of 0.34 µm"
+    }
    ]
   },
   {
@@ -2029,8 +2353,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.75 of 1.27 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.75 of 1.27 µm"
+    }
    ]
   },
   {
@@ -2062,9 +2392,18 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18",
-    "incomplete λ coverage: 2.57 of 3.87 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 2.57 of 3.87 µm"
+    }
    ]
   },
   {
@@ -2095,8 +2434,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.22 of 0.34 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.22 of 0.34 µm"
+    }
    ]
   },
   {
@@ -2127,8 +2472,14 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "incomplete λ coverage: 0.80 of 1.27 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.80 of 1.27 µm"
+    }
    ]
   },
   {
@@ -2160,9 +2511,18 @@
     "y": 48.0
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)",
-    "few exposures: 6 of up to 18",
-    "incomplete λ coverage: 2.89 of 3.87 µm"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 6 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 2.89 of 3.87 µm"
+    }
    ]
   }
  ],
@@ -2175,7 +2535,7 @@
    "spherex_qr3_deep"
   ],
   "n_exposures_total": 132,
-  "generated_at": "2026-11-14T15:11:38+00:00",
+  "generated_at": "2026-11-14T15:57:30+00:00",
   "pipeline_tags": [
    "l2b-v27"
   ],

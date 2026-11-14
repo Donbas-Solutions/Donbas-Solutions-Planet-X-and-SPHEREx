@@ -130,7 +130,7 @@ def test_saturated_core_is_masked_but_source_flag_is_not() -> None:
     assert clean.expected_px is not None
     core = result.arrays[saturated.id].data[round(saturated.expected_px.y), round(saturated.expected_px.x)]
     assert np.isnan(core)
-    assert "target pixel saturated (OVERFLOW/NONLINEAR)" in saturated.warnings
+    assert [w.code for w in saturated.warnings] == ["saturated"]
     assert np.isfinite(result.arrays[clean.id].data[round(clean.expected_px.y), round(clean.expected_px.x)])
 
 
@@ -152,13 +152,13 @@ def test_detector_selection_and_few_exposure_warning() -> None:
     result = build_sequence(cutouts, MOVER, SequenceParams(fov_arcmin=4.0, detectors=(3,)))
     frames = {f.id: f for f in result.sequence.frames}
     assert set(frames) == {"v1-D3", "v1-all", "v2-D3", "v2-all"}
-    assert any(w.startswith("few exposures") for w in frames["v1-D3"].warnings)
+    assert "few_exposures" in {w.code for w in frames["v1-D3"].warnings}
 
 
 def test_visit_missing_a_detector_gets_a_warning_on_its_all_stack() -> None:
     cutouts = [c for c in two_visits() if not (c.visit_id == "v2" and c.meta.detector == 5)]
     frames = {f.id: f for f in build_sequence(cutouts, MOVER, SequenceParams(fov_arcmin=4.0)).sequence.frames}
-    assert any(w.startswith("few exposures") for w in frames["v2-all"].warnings)
+    assert "few_exposures" in {w.code for w in frames["v2-all"].warnings}
 
 
 def test_background_gradient_is_removed() -> None:

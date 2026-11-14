@@ -245,7 +245,10 @@
     "y": 40.0
    },
    "warnings": [
-    "incomplete λ coverage: 12 of 17 channels"
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 12 of 17 channels"
+    }
    ]
   },
   {
@@ -473,7 +476,7 @@
    "mock"
   ],
   "n_exposures_total": 112,
-  "generated_at": "2026-11-14T14:20:06+00:00",
+  "generated_at": "2026-11-14T15:50:27+00:00",
   "pipeline_tags": [
    "mock"
   ],

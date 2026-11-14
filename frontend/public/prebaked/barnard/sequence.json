@@ -216,7 +216,10 @@
     "y": 47.17
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -247,7 +250,10 @@
     "y": 47.13
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -278,7 +284,10 @@
     "y": 47.1
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -309,7 +318,10 @@
     "y": 47.17
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -340,7 +352,10 @@
     "y": 47.13
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -371,7 +386,10 @@
     "y": 47.1
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -407,7 +425,10 @@
     "y": 47.13
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -438,7 +459,10 @@
     "y": 48.03
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -469,7 +493,10 @@
     "y": 48.05
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -500,7 +527,10 @@
     "y": 48.11
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -531,7 +561,10 @@
     "y": 48.03
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -562,7 +595,10 @@
     "y": 48.05
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -593,7 +629,10 @@
     "y": 48.11
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -629,7 +668,10 @@
     "y": 48.06
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -660,7 +702,10 @@
     "y": 48.79
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -691,7 +736,10 @@
     "y": 48.78
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -722,7 +770,10 @@
     "y": 48.77
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -753,7 +804,10 @@
     "y": 48.79
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -784,7 +838,10 @@
     "y": 48.78
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -815,7 +872,10 @@
     "y": 48.77
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   },
   {
@@ -851,7 +911,10 @@
     "y": 48.78
    },
    "warnings": [
-    "target pixel saturated (OVERFLOW/NONLINEAR)"
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    }
    ]
   }
  ],
@@ -862,7 +925,7 @@
    "spherex_qr3"
   ],
   "n_exposures_total": 338,
-  "generated_at": "2026-11-14T15:03:59+00:00",
+  "generated_at": "2026-11-14T15:51:24+00:00",
   "pipeline_tags": [
    "l2b-v27"
   ],
