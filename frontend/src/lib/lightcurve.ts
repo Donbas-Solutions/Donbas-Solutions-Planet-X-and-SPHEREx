@@ -167,3 +167,120 @@ export function variability(means: readonly VisitMean[]): Variability[] {
   }
   return result.sort((a, b) => a.detector - b.detector)
 }
+
+/** LVF bands and channel count as in backend/app/pipeline/sequence.py; channels are equal steps in log λ. */
+const DETECTOR_BANDS_UM: Readonly<Record<number, readonly [number, number]>> = {
+  1: [0.75, 1.11],
+  2: [1.11, 1.64],
+  3: [1.64, 2.42],
+  4: [2.42, 3.82],
+  5: [3.82, 4.42],
+  6: [4.42, 5.0],
+}
+const LVF_CHANNELS = 17
+/** Per exposure, in quadrature: repeatability and aperture systematics the formal errors leave out. */
+const CALIBRATION_FLOOR = 0.05
+/** |d ln F / d ln λ| assumed for a point with no λ-neighbour in its own visit (a steep stellar continuum). */
+const DEFAULT_LOG_SLOPE = 4
+/** Matches backend/app/pipeline/variability.py; judge the strongest of several visit pairs against 5σ. */
+export const MATCHED_SIGNIFICANT_SIGMA = 5
+
+export interface MatchedChange {
+  detector: number
+  earlier: VisitInfo
+  later: VisitInfo
+  /** Later / earlier flux at matched λ. */
+  ratio: number
+  /** |ln ratio| over its error. */
+  significance: number
+  nPairs: number
+  lambdaMin: number
+  lambdaMax: number
+}
+
+interface Sample {
+  logLambda: number
+  flux: number
+  err: number
+}
+
+function localSlope(samples: readonly Sample[], i: number): number | null {
+  const own = samples[i]
+  if (!own) return null
+  const slopes = [samples[i - 1], samples[i + 1]].flatMap((n) =>
+    n && n.logLambda !== own.logLambda ? [Math.abs(Math.log(n.flux / own.flux) / (n.logLambda - own.logLambda))] : [],
+  )
+  return slopes.length > 0 ? Math.max(...slopes) : null
+}
+
+function compareVisits(detector: number, earlier: readonly Sample[], later: readonly Sample[]) {
+  const [lo, hi] = DETECTOR_BANDS_UM[detector] ?? [1, Math.E]
+  const width = Math.log(hi / lo) / LVF_CHANNELS
+  let sumW = 0
+  let sumWR = 0
+  const lambdas: number[] = []
+  earlier.forEach((a, i) => {
+    let j = -1
+    let best = Infinity
+    later.forEach((b, k) => {
+      const d = Math.abs(b.logLambda - a.logLambda)
+      if (d < best) {
+        best = d
+        j = k
+      }
+    })
+    const b = later[j]
+    if (!b || best > width) return
+    const slopes = [localSlope(earlier, i), localSlope(later, j)].flatMap((s) => (s === null ? [] : [s]))
+    const slope = slopes.length > 0 ? Math.max(...slopes) : DEFAULT_LOG_SLOPE
+    const variance = (a.err / a.flux) ** 2 + (b.err / b.flux) ** 2 + 2 * CALIBRATION_FLOOR ** 2 + (slope * best) ** 2
+    sumW += 1 / variance
+    sumWR += Math.log(b.flux / a.flux) / variance
+    lambdas.push(Math.exp(a.logLambda))
+  })
+  if (sumW === 0) return null
+  const mean = sumWR / sumW
+  return {
+    ratio: Math.exp(mean),
+    significance: Math.abs(mean) * Math.sqrt(sumW),
+    nPairs: lambdas.length,
+    lambdaMin: Math.min(...lambdas),
+    lambdaMax: Math.max(...lambdas),
+  }
+}
+
+/**
+ * Within a visit every exposure samples its own λ, so visit means mix the spectrum with variability. Each exposure
+ * is paired with the nearest-λ exposure of another visit (≤ 1 LVF channel apart) and only those ratios are compared.
+ * Returns the most significant visit pair per detector.
+ */
+export function strongestMatchedChanges(
+  points: readonly SpectrumPoint[],
+  visits: readonly VisitInfo[],
+): MatchedChange[] {
+  const byDetector = new Map<number, Map<string, Sample[]>>()
+  for (const p of points) {
+    const usable = pointStatus(p) === 'measured' && p.flux_ujy !== null && p.err_ujy !== null
+    if (!usable || p.flux_ujy === null || p.err_ujy === null || p.err_ujy <= 0 || p.flux_ujy <= 0) continue
+    const visitsOfDetector = byDetector.get(p.detector) ?? new Map<string, Sample[]>()
+    byDetector.set(p.detector, visitsOfDetector)
+    const list = visitsOfDetector.get(p.visit) ?? []
+    visitsOfDetector.set(p.visit, list)
+    list.push({ logLambda: Math.log(p.lambda_um), flux: p.flux_ujy, err: p.err_ujy })
+  }
+  const result: MatchedChange[] = []
+  for (const [detector, byVisit] of byDetector) {
+    const ordered = visits.filter((v) => byVisit.has(v.id))
+    const byLambda = (v: VisitInfo) => [...(byVisit.get(v.id) ?? [])].sort((a, b) => a.logLambda - b.logLambda)
+    const sorted = new Map(ordered.map((v) => [v.id, byLambda(v)]))
+    const changes = ordered.flatMap((earlier, i) =>
+      ordered.slice(i + 1).flatMap((later) => {
+        const c = compareVisits(detector, sorted.get(earlier.id) ?? [], sorted.get(later.id) ?? [])
+        return c ? [{ detector, earlier, later, ...c }] : []
+      }),
+    )
+    const best = changes.reduce<MatchedChange | null>((a, c) => (!a || c.significance > a.significance ? c : a), null)
+    if (best) result.push(best)
+  }
+  return result.sort((a, b) => a.detector - b.detector)
+}

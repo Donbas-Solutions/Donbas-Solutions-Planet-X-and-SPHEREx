@@ -1,7 +1,16 @@
 import { useMemo, useState } from 'react'
 import type { Spectrum, SpectrumPoint } from '../../api/types'
 import { extent, pad, type ScaleKind } from '../../lib/chart'
-import { detectorId, detectorsByMeasured, variability, visitMeans, type VisitMean } from '../../lib/lightcurve'
+import {
+  detectorId,
+  detectorsByMeasured,
+  MATCHED_SIGNIFICANT_SIGMA,
+  strongestMatchedChanges,
+  variability,
+  visitMeans,
+  type MatchedChange,
+  type VisitMean,
+} from '../../lib/lightcurve'
 import {
   detectorBands,
   MAX_VISIT_SERIES,
@@ -22,6 +31,20 @@ interface Props {
 }
 
 type Mode = 'exposures' | 'visits'
+
+function lambdaText(c: MatchedChange): string {
+  const lo = c.lambdaMin.toFixed(2)
+  const hi = c.lambdaMax.toFixed(2)
+  return lo === hi ? `${lo} µm` : `${lo}–${hi} µm`
+}
+
+function matchedText(c: MatchedChange): string {
+  const pairs = `${c.nPairs} exposure pair${c.nPairs > 1 ? 's' : ''} at ${lambdaText(c)}`
+  const ratio = `${c.later.label} / ${c.earlier.label} = ×${c.ratio.toFixed(2)}`
+  return c.significance >= MATCHED_SIGNIFICANT_SIGMA
+    ? `at matched λ, ${ratio} (${c.significance.toFixed(1)}σ, ${pairs}).`
+    : `no significant change at matched λ (largest: ${ratio}, ${c.significance.toFixed(1)}σ, ${pairs}).`
+}
 
 function formatP(p: number): string {
   return p < 0.001 ? 'p < 0.001' : `p = ${p.toPrecision(2)}`
@@ -77,6 +100,7 @@ export default function LightCurveChart({ spectrum, targetName }: Props) {
   const visits = useMemo(() => visitsOf(points), [points])
   const means = useMemo(() => visitMeans(points, visits), [points, visits])
   const stats = useMemo(() => variability(means), [means])
+  const matched = useMemo(() => strongestMatchedChanges(points, visits), [points, visits])
   const bandsByDetector = useMemo(() => new Map(detectorBands(points).map((b) => [b.detector, b])), [points])
   const detectorIds = useMemo(() => detectorsByMeasured(points), [points])
   const sortedDetectorIds = useMemo(() => [...detectorIds].sort((a, b) => a.localeCompare(b)), [detectorIds])
@@ -120,6 +144,7 @@ export default function LightCurveChart({ spectrum, targetName }: Props) {
   )
   const withStats = new Set(stats.map((s) => s.detector))
   const notComparable = [...new Set(incomplete.map((m) => m.detector))].filter((d) => !withStats.has(d))
+  const shownMatched = matched.filter((c) => selectedDetectors.has(detectorId(c.detector)))
   const isFull = !slots.includes(null)
   const noneMeasured = points.every((p) => pointStatus(p) !== 'measured')
 
@@ -194,11 +219,16 @@ export default function LightCurveChart({ spectrum, targetName }: Props) {
         ariaLabel={`Light curve of ${targetName}: ${counts.measured} ${mode === 'visits' ? 'visit means' : 'measured exposures'}, ${counts.saturated} saturated, ${counts.flagged} masked. The table below lists the visit means.`}
       />
       <StatusLegend {...counts} measuredLabel={mode === 'visits' ? 'visit means, with 1σ errors' : undefined} />
-      {(shownStats.length > 0 || notComparable.length > 0) && (
+      {(shownStats.length > 0 || notComparable.length > 0 || shownMatched.length > 0) && (
         <ul className="chart-stats" aria-label="Variability between visits">
           {notComparable.map((d) => (
             <li key={`nc${d}`}>
-              <strong>D{d}</strong>: no variability figure — fewer than two visits sampled a comparable λ range.
+              <strong>D{d}</strong>: no visit-mean χ² — fewer than two visits sampled a comparable λ range.
+            </li>
+          ))}
+          {shownMatched.map((c) => (
+            <li key={`m${c.detector}`}>
+              <strong>D{c.detector}</strong>: {matchedText(c)}
             </li>
           ))}
           {shownStats.map((s) => (
