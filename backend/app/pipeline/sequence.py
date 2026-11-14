@@ -91,11 +91,12 @@ def _frame(
 
 
 def _coverage_warnings(frames: list[Frame], stacks: dict[str, Stack]) -> None:
-    """SR-1: flag a visit whose exposures or λ span fall below 80 % of the best visit of the same detector set."""
-    by_detectors: dict[tuple[int, ...], list[Frame]] = defaultdict(list)
+    """SR-1: flag a visit whose exposures or λ span fall below 80 % of the best visit of the same stack type
+    (`D3`, `all`, ...): a visit missing whole detectors is compared with the full ones, not with itself."""
+    by_kind: dict[str, list[Frame]] = defaultdict(list)
     for frame in frames:
-        by_detectors[tuple(frame.detectors)].append(frame)
-    for group in by_detectors.values():
+        by_kind[frame.id.split("-", 1)[1]].append(frame)
+    for group in by_kind.values():
         best_n = max(f.n_exposures for f in group)
         best_span = max(f.lambda_um[1] - f.lambda_um[0] for f in group)
         for frame in group:

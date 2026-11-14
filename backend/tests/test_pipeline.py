@@ -153,6 +153,21 @@ def test_detector_selection_and_few_exposure_warning() -> None:
     assert any(w.startswith("few exposures") for w in frames["v1-D3"].warnings)
 
 
+def test_visit_missing_a_detector_gets_a_warning_on_its_all_stack() -> None:
+    cutouts = [c for c in two_visits() if not (c.visit_id == "v2" and c.meta.detector == 5)]
+    frames = {f.id: f for f in build_sequence(cutouts, MOVER, SequenceParams(fov_arcmin=4.0)).sequence.frames}
+    assert any(w.startswith("few exposures") for w in frames["v2-all"].warnings)
+
+
+def test_background_gradient_is_removed() -> None:
+    cutout = make_cutout(MJD_V1, "v1", 3, npix=80)
+    ramp = np.tile(np.linspace(0, 20, 80, dtype=np.float32), (80, 1))
+    halo = Cutout(**{**cutout.__dict__, "image": cutout.image + ramp})
+    data = build_sequence([halo], MOVER, SequenceParams(fov_arcmin=6.0)).arrays["v1-D3"].data
+    left, right = np.nanmedian(data[:, :15]), np.nanmedian(data[:, -15:])
+    assert abs(float(right - left)) < 0.5
+
+
 def test_no_matching_detector_is_an_error() -> None:
     with pytest.raises(SequenceError):
         build_sequence(two_visits(), MOVER, SequenceParams(detectors=(1,)))

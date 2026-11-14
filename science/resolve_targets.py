@@ -42,7 +42,7 @@ TARGETS = [
         "test": "motion",
         "doc_coords": ("22h04m10.5s", "-56d46m58s"),
         "notes": "Unresolved T1+T6 pair (0.6-0.7 arcsec). Not saturated: best target for measured proper motion. "
-        "eps Ind A (V 4.7) is ~24 arcmin away.",
+        "eps Ind A (V 4.7) is only 6.7 arcmin to the west: its halo enters a 10 arcmin field.",
     },
     {
         "id": "wise0855",

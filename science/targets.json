@@ -43,7 +43,7 @@
       ],
       "doc_offset_arcsec": 0.8,
       "doc_epoch_estimate": 1999.8,
-      "notes": "Unresolved T1+T6 pair (0.6-0.7 arcsec). Not saturated: best target for measured proper motion. eps Ind A (V 4.7) is ~24 arcmin away."
+      "notes": "Unresolved T1+T6 pair (0.6-0.7 arcsec). Not saturated: best target for measured proper motion. eps Ind A (V 4.7) is only 6.7 arcmin to the west: its halo enters a 10 arcmin field."
     },
     {
       "id": "wise0855",
