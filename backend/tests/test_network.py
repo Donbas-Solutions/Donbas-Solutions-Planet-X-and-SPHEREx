@@ -75,7 +75,13 @@ async def test_s3_and_ibe_range_reads_give_the_same_window(tmp_path: Path) -> No
 @pytest.mark.anyio
 @pytest.mark.parametrize(
     ("name", "pmra"),
-    [("Barnard's star", -801.551), ("eps Ind B", 3981.977), ("RW Aur", 7.23), ("R Dra", -20.643)],
+    [
+        ("Barnard's star", -801.551),
+        ("eps Ind B", 3981.977),
+        ("WISE 0855\u22120714", -8123.7),
+        ("RW Aur", 7.23),
+        ("R Dra", -20.643),
+    ],
 )
 async def test_simbad_resolves_test_targets(name: str, pmra: float) -> None:
     configure_ssl()
