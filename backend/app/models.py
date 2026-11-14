@@ -9,6 +9,9 @@ from pydantic import BaseModel, Field
 FrameKind = Literal["visit_stack", "exposure", "diff", "allwise"]
 FlagGroup = Literal["bad", "saturation", "artifact", "info"]
 JobState = Literal["queued", "running", "done", "error"]
+WarningCode = Literal["saturated", "few_exposures", "incomplete_lambda"]
+# Codes that mean the data of a frame is incomplete; `saturated` describes the source, not missing data.
+PARTIAL_DATA_CODES: frozenset[WarningCode] = frozenset({"few_exposures", "incomplete_lambda"})
 
 
 class CacheStats(BaseModel):
@@ -54,6 +57,11 @@ class PixelPos(BaseModel):
     y: float = Field(description="0-based row; row 0 = south (FITS order)")
 
 
+class FrameWarning(BaseModel):
+    code: WarningCode = Field(description="Stable machine-readable kind; clients group and count by it")
+    message: str = Field(description="Human-readable detail for display")
+
+
 class Frame(BaseModel):
     id: str
     kind: FrameKind
@@ -67,7 +75,7 @@ class Frame(BaseModel):
     flags: str | None = Field(None, description="URL of uint32 LE OR-combined FLAGS array, same shape")
     shape: tuple[int, int] = Field(description="[ny, nx]")
     expected_px: PixelPos | None = None
-    warnings: list[str] = []
+    warnings: list[FrameWarning] = []
 
 
 class FlagBit(BaseModel):

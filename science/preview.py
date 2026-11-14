@@ -118,7 +118,7 @@ def preview(target_id: str, max_per_detector: int) -> None:
         report_shift(name, first, last, arrays, seq.grid.pixscale_arcsec)
         for f in frames:
             if f.warnings:
-                print(f"    {f.id}: {'; '.join(f.warnings)}")
+                print(f"    {f.id}: {'; '.join(w.message for w in f.warnings)}")
     sheet = Image.new("RGB", (max(r.width for r in rows), sum(r.height for r in rows)), "black")
     y = 0
     for r in rows:

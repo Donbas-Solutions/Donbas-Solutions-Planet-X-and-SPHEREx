@@ -30,7 +30,16 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 from app.flags import DEFAULT_FLAG_BITS  # noqa: E402
 from app.grid import make_grid  # noqa: E402
-from app.models import Frame, PixelPos, Sequence, SequenceMeta, Spectrum, SpectrumPoint, Stretch  # noqa: E402
+from app.models import (  # noqa: E402
+    Frame,
+    FrameWarning,
+    PixelPos,
+    Sequence,
+    SequenceMeta,
+    Spectrum,
+    SpectrumPoint,
+    Stretch,
+)
 
 OUT = ROOT / "frontend" / "public" / "mock"
 BIT = {b.name: 1 << b.bit for b in DEFAULT_FLAG_BITS}
@@ -157,7 +166,7 @@ def main() -> None:
             flags[r < 2.0] |= BIT["OVERFLOW"]
             img[r < 2.0] = np.nan  # masked in the stack -> "black centre"
 
-            warnings: list[str] = []
+            warnings: list[FrameWarning] = []
             if vi == 1:
                 ghost = gaussian(shape, sx + 10, sy + 12, 80.0, sigma=2.5)
                 img += ghost
@@ -167,7 +176,9 @@ def main() -> None:
                     img[snow] = np.nan
                     flags[snow] |= BIT["SNOWBALL"]
             if vi == 0 and dkey == "D5":
-                warnings.append("incomplete λ coverage: 12 of 17 channels")
+                warnings.append(
+                    FrameWarning(code="incomplete_lambda", message="incomplete λ coverage: 12 of 17 channels")
+                )
 
             fid = f"{vid}-{dkey}"
             img.astype("<f4").tofile(frames_dir / f"{fid}.f32")

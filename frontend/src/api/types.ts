@@ -2,6 +2,7 @@
 
 export type FrameKind = 'visit_stack' | 'exposure' | 'diff' | 'allwise'
 export type FlagGroup = 'bad' | 'saturation' | 'artifact' | 'info'
+export type WarningCode = 'saturated' | 'few_exposures' | 'incomplete_lambda'
 
 export interface Grid {
   ra: number
@@ -41,7 +42,13 @@ export interface Frame {
   /** [ny, nx] */
   shape: [number, number]
   expected_px: PixelPos | null
-  warnings: string[]
+  warnings: FrameWarning[]
+}
+
+/** `code` is stable and meant for grouping and counting; `message` is for display. */
+export interface FrameWarning {
+  code: WarningCode
+  message: string
 }
 
 export interface FlagBit {

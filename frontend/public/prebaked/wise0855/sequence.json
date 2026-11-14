@@ -216,8 +216,14 @@
     "y": 47.93
    },
    "warnings": [
-    "few exposures: 4 of up to 18",
-    "incomplete λ coverage: 0.07 of 0.37 µm"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 4 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.07 of 0.37 µm"
+    }
    ]
   },
   {
@@ -248,8 +254,14 @@
     "y": 47.93
    },
    "warnings": [
-    "few exposures: 8 of up to 20",
-    "incomplete λ coverage: 0.35 of 0.53 µm"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 8 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.35 of 0.53 µm"
+    }
    ]
   },
   {
@@ -280,8 +292,14 @@
     "y": 47.93
    },
    "warnings": [
-    "few exposures: 3 of up to 20",
-    "incomplete λ coverage: 0.20 of 0.75 µm"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 3 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.20 of 0.75 µm"
+    }
    ]
   },
   {
@@ -312,8 +330,14 @@
     "y": 47.93
    },
    "warnings": [
-    "few exposures: 4 of up to 18",
-    "incomplete λ coverage: 0.28 of 1.39 µm"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 4 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.28 of 1.39 µm"
+    }
    ]
   },
   {
@@ -344,8 +368,14 @@
     "y": 47.93
    },
    "warnings": [
-    "few exposures: 8 of up to 20",
-    "incomplete λ coverage: 0.37 of 0.59 µm"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 8 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.37 of 0.59 µm"
+    }
    ]
   },
   {
@@ -376,8 +406,14 @@
     "y": 47.93
    },
    "warnings": [
-    "few exposures: 3 of up to 20",
-    "incomplete λ coverage: 0.14 of 0.56 µm"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 3 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 0.14 of 0.56 µm"
+    }
    ]
   },
   {
@@ -413,7 +449,10 @@
     "y": 47.93
    },
    "warnings": [
-    "few exposures: 30 of up to 116"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 30 of up to 116"
+    }
    ]
   },
   {
@@ -652,7 +691,10 @@
     "y": 48.04
    },
    "warnings": [
-    "few exposures: 14 of up to 18"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 14 of up to 18"
+    }
    ]
   },
   {
@@ -683,7 +725,10 @@
     "y": 48.04
    },
    "warnings": [
-    "few exposures: 15 of up to 20"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 15 of up to 20"
+    }
    ]
   },
   {
@@ -743,7 +788,10 @@
     "y": 48.04
    },
    "warnings": [
-    "few exposures: 14 of up to 18"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 14 of up to 18"
+    }
    ]
   },
   {
@@ -774,7 +822,10 @@
     "y": 48.04
    },
    "warnings": [
-    "few exposures: 15 of up to 20"
+    {
+     "code": "few_exposures",
+     "message": "few exposures: 15 of up to 20"
+    }
    ]
   },
   {
@@ -847,7 +898,7 @@
    "spherex_dr1"
   ],
   "n_exposures_total": 244,
-  "generated_at": "2026-11-14T15:07:38+00:00",
+  "generated_at": "2026-11-14T15:54:36+00:00",
   "pipeline_tags": [
    "l2b-v27"
   ],

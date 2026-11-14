@@ -61,13 +61,27 @@ Errors: FastAPI default `{"detail": "..."}`; `501` = not implemented yet.
     "mjd_mid": 61139.0, "date_range": ["2026-03-11", "2026-05-05"],
     "detectors": [5], "lambda_um": [3.82, 4.42], "n_exposures": 20,
     "data": "frames/v2-D5.f32", "flags": "frames/v2-D5.flags.u32", "shape": [97, 97],
-    "expected_px": {"x": 54.0, "y": 40.85}, "warnings": []
+    "expected_px": {"x": 54.0, "y": 40.85},
+    "warnings": [{"code": "incomplete_lambda", "message": "incomplete λ coverage: 0.28 of 0.51 µm"}]
   }],
   "meta": {"target_name": "Barnard's Star", "collections": ["spherex_dr1", "spherex_qr3"], "n_exposures_total": 363,
            "generated_at": "2026-11-14T12:00:00+00:00", "pipeline_tags": ["l2b-v27"], "mock": false,
            "spectrum": "spectrum.json"}
 }
 ```
+
+## Frame warnings
+
+`Frame.warnings` is a list of `{code, message}`. Clients group and count by `code`; `message` is display text and
+may change.
+
+| `code` | Meaning | Partial data? |
+|---|---|---|
+| `few_exposures` | the visit has < 80 % of the exposures of the best visit of the same stack type (SR-1) | yes |
+| `incomplete_lambda` | the visit's λ span at the target is < 80 % of the best visit's (SR-1) | yes |
+| `saturated` | the target pixel carries `OVERFLOW`/`NONLINEAR`: shown as saturated, never measured | no — a property of the source |
+
+Only the "partial data" codes mean the frame's data is incomplete (spec §5.2). New codes are a contract change.
 
 ## Static bundles (prebaked targets, mock)
 
