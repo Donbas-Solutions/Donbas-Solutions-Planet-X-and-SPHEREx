@@ -218,9 +218,10 @@ export function viewParamsToSearch(p: ViewParams): string {
 }
 
 export type SequenceSource =
+  | { kind: 'landing' }
   | { kind: 'manifest'; url: string; isPrebaked: boolean }
   | { kind: 'resolve'; name: string }
-  | { kind: 'live'; ra: number; dec: number }
+  | { kind: 'live'; ra: number; dec: number; fovArcmin: number; pm: ProperMotion | null }
 
 /**
  * Where the sequence comes from. A `name` that already has `ra`/`dec` next to it was resolved earlier, so the
@@ -229,18 +230,11 @@ export type SequenceSource =
 export function sequenceSource(p: ViewParams, base: string): SequenceSource {
   if (p.manifest) return { kind: 'manifest', url: p.manifest, isPrebaked: false }
   if (p.target) return { kind: 'manifest', url: `${base}prebaked/${p.target}/sequence.json`, isPrebaked: true }
-  if (p.ra !== null && p.dec !== null) return { kind: 'live', ra: p.ra, dec: p.dec }
+  if (p.ra !== null && p.dec !== null) return { kind: 'live', ra: p.ra, dec: p.dec, fovArcmin: p.fovArcmin, pm: p.pm }
   if (p.name) return { kind: 'resolve', name: p.name }
-  return { kind: 'manifest', url: `${base}mock/sequence.json`, isPrebaked: false }
+  return { kind: 'landing' }
 }
 
 export function sourceKey(s: SequenceSource): string {
-  switch (s.kind) {
-    case 'manifest':
-      return `m:${s.url}`
-    case 'resolve':
-      return `n:${s.name}`
-    case 'live':
-      return `l:${s.ra},${s.dec}`
-  }
+  return JSON.stringify(s)
 }

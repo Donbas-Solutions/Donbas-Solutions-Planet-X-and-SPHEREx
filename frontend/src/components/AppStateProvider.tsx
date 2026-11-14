@@ -3,11 +3,11 @@ import type { ResolveResult } from '../api/resolve'
 import type { PixelPos } from '../api/types'
 import type { LoadedFrame } from '../lib/frames'
 import { buildPlaylist } from '../lib/playlist'
-import { findPreset, PRESET_EPOCH } from '../lib/presets'
+import { findPreset, PRESET_EPOCH, presetNear } from '../lib/presets'
 import type { SequenceSource, ViewParams } from '../lib/urlState'
 import { AppStateContext, type AppState, type TargetInfo } from '../hooks/useAppState'
 import { useNameResolution } from '../hooks/useNameResolution'
-import { useSequence, type SequenceLoad } from '../hooks/useSequence'
+import { useSequence, type LoadableSource, type SequenceLoad } from '../hooks/useSequence'
 import type { SetViewParams } from '../hooks/useViewParams'
 
 interface Props {
@@ -29,8 +29,24 @@ function targetFromParams(p: ViewParams): TargetInfo | null {
   return null
 }
 
+function loadableSource(s: SequenceSource): LoadableSource | null {
+  switch (s.kind) {
+    case 'manifest':
+      return s
+    case 'live':
+      return {
+        kind: 'live',
+        query: { ra: s.ra, dec: s.dec, fovArcmin: s.fovArcmin, pm: s.pm },
+        fallbackPreset: presetNear(s.ra, s.dec)?.id ?? null,
+      }
+    case 'resolve':
+    case 'landing':
+      return null
+  }
+}
+
 export default function AppStateProvider({ params, setParams, source, children }: Props) {
-  const manifest = useSequence(source.kind === 'manifest' ? source.url : null)
+  const sequence = useSequence(loadableSource(source))
 
   const handleResolved = useCallback(
     (r: ResolveResult) =>
@@ -47,42 +63,29 @@ export default function AppStateProvider({ params, setParams, source, children }
   const [selectedPixel, setSelectedPixel] = useState<PixelPos | null>(null)
 
   const load = useMemo<SequenceLoad>(() => {
-    switch (source.kind) {
-      case 'manifest': {
-        const l = manifest.load ?? { status: 'loading', message: 'Loading…' }
-        if (l.status === 'error' && source.isPrebaked) {
-          return { status: 'error', message: `The prebaked bundle for this test target is not available (${l.message}).` }
-        }
-        return l
-      }
-      case 'resolve':
-        return resolution.status === 'failed'
-          ? { status: 'error', message: resolution.message }
-          : { status: 'loading', message: `Looking up “${source.name}”…` }
-      case 'live':
-        return {
-          status: 'error',
-          message: 'Live SPHEREx archive requests are not connected yet. Pick a test target to see real data.',
-        }
-    }
-  }, [source, manifest.load, resolution])
+    if (source.kind !== 'resolve') return sequence.load
+    return resolution.status === 'failed'
+      ? { status: 'error', message: resolution.message, canRetry: false }
+      : { status: 'loading', message: `Looking up “${source.name}”…`, progress: null, canCancel: false }
+  }, [source, sequence.load, resolution])
 
   const value = useMemo<AppState>(() => {
-    const sequence = load.status === 'ready' ? load.seq : null
+    const seq = load.status === 'ready' ? load.seq : null
     const frames = load.status === 'ready' ? load.frames : NO_FRAMES
     const playlist = buildPlaylist(frames, params.det)
     const list = playlist.frames
     const index = Math.min(Math.max(frameIndex, 0), Math.max(list.length - 1, 0))
-    const fromSequence: TargetInfo | null = sequence
-      ? { name: sequence.meta.target_name, ra: sequence.grid.ra, dec: sequence.grid.dec, pm: null }
+    const fromSequence: TargetInfo | null = seq
+      ? { name: seq.meta.target_name, ra: seq.grid.ra, dec: seq.grid.dec, pm: null }
       : null
     return {
       params,
       setParams,
       source,
       load,
-      retry: manifest.retry,
-      sequence,
+      retry: sequence.retry,
+      cancel: sequence.cancel,
+      sequence: seq,
       frames,
       playlist,
       target: targetFromParams(params) ?? fromSequence,
@@ -94,7 +97,7 @@ export default function AppStateProvider({ params, setParams, source, children }
       setFrameIndex,
       setSelectedPixel,
     }
-  }, [params, setParams, source, load, manifest.retry, frameIndex, selectedPixel])
+  }, [params, setParams, source, load, sequence.retry, sequence.cancel, frameIndex, selectedPixel])
 
   return <AppStateContext value={value}>{children}</AppStateContext>
 }

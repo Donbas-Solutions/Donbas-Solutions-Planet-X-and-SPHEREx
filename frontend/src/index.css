@@ -104,8 +104,53 @@ button[aria-pressed='true'] {
   outline: 2px solid var(--accent);
 }
 
-.notices {
+.banners {
   grid-area: notices;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.banners:empty {
+  display: none;
+}
+
+.offline-banner {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: #3a2a00;
+  color: var(--warn);
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.status p {
+  margin: 0;
+  flex-basis: 100%;
+}
+
+.status progress {
+  flex: 1 1 200px;
+  max-width: 400px;
+}
+
+.landing h2 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+
+.landing p {
+  max-width: 60ch;
+  line-height: 1.5;
+}
+
+.notices {
   display: flex;
   align-items: flex-start;
   gap: 8px;

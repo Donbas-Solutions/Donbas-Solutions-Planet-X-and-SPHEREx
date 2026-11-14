@@ -5,6 +5,7 @@ import BottomTabs from './BottomTabs'
 import FramePanel from './FramePanel'
 import LoadStatus from './LoadStatus'
 import Notices from './Notices'
+import OfflineBanner from './OfflineBanner'
 import Player from './Player'
 import TopBar from './TopBar'
 
@@ -25,7 +26,10 @@ export default function MainLayout({ notices, onDismissNotices }: Props) {
   return (
     <div className="layout">
       <TopBar />
-      <Notices notices={notices} onDismiss={onDismissNotices} />
+      <div className="banners">
+        <OfflineBanner />
+        <Notices notices={notices} onDismiss={onDismissNotices} />
+      </div>
       <main className="stage">
         <LoadStatus />
         <Player overlayMask={overlayMask} />

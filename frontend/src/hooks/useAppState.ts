@@ -22,6 +22,8 @@ export interface AppState {
   source: SequenceSource
   load: SequenceLoad
   retry: () => void
+  /** Stops a running live request (polling ends; there is no server-side cancel). */
+  cancel: () => void
   /** The ready sequence; null while loading or on error. */
   sequence: Sequence | null
   /** Every frame of the sequence, in manifest order. */

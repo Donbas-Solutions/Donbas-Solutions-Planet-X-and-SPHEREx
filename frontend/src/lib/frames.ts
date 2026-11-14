@@ -37,6 +37,32 @@ export async function loadFrame(frame: Frame, base: URL, signal?: AbortSignal): 
   return { frame, data: new Float32Array(data), flags: flags ? new Uint32Array(flags) : null }
 }
 
+const FRAME_CONCURRENCY = 6
+
+/** All frames of a sequence, at most FRAME_CONCURRENCY requests at a time, reporting how many are done. */
+export async function loadFrames(
+  seq: Sequence,
+  base: URL,
+  signal: AbortSignal,
+  onProgress: (done: number, total: number) => void,
+): Promise<LoadedFrame[]> {
+  const total = seq.frames.length
+  const out: LoadedFrame[] = new Array<LoadedFrame>(total)
+  let next = 0
+  let done = 0
+  const worker = async () => {
+    while (next < total) {
+      const i = next++
+      const frame = seq.frames[i]
+      if (!frame) continue
+      out[i] = await loadFrame(frame, base, signal)
+      onProgress(++done, total)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(FRAME_CONCURRENCY, total) }, worker))
+  return out
+}
+
 /** Bitmask of all planes in the given groups. */
 export function flagMask(bits: FlagBit[], groups: FlagGroup[]): number {
   let mask = 0
