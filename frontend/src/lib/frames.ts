@@ -6,15 +6,18 @@ export interface LoadedFrame {
   flags: Uint32Array | null
 }
 
-export async function loadSequence(manifestUrl: string): Promise<{ seq: Sequence; base: URL }> {
+export async function loadSequence(manifestUrl: string, signal?: AbortSignal): Promise<{ seq: Sequence; base: URL }> {
   const base = new URL(manifestUrl, window.location.href)
-  const res = await fetch(base)
+  const res = await fetch(base, { signal })
   if (!res.ok) throw new Error(`Manifest ${base.pathname}: HTTP ${res.status}`)
+  if (!res.headers.get('content-type')?.includes('json')) {
+    throw new Error(`Manifest ${base.pathname}: not found (the server did not return JSON)`)
+  }
   return { seq: (await res.json()) as Sequence, base }
 }
 
-async function fetchBinary(url: URL, expectedBytes: number): Promise<ArrayBuffer> {
-  const res = await fetch(url)
+async function fetchBinary(url: URL, expectedBytes: number, signal?: AbortSignal): Promise<ArrayBuffer> {
+  const res = await fetch(url, { signal })
   if (!res.ok) throw new Error(`${url.pathname}: HTTP ${res.status}`)
   const buf = await res.arrayBuffer()
   if (buf.byteLength !== expectedBytes) {
@@ -24,12 +27,12 @@ async function fetchBinary(url: URL, expectedBytes: number): Promise<ArrayBuffer
 }
 
 /** Typed arrays use platform byte order; every browser platform we target is little-endian. */
-export async function loadFrame(frame: Frame, base: URL): Promise<LoadedFrame> {
+export async function loadFrame(frame: Frame, base: URL, signal?: AbortSignal): Promise<LoadedFrame> {
   const [ny, nx] = frame.shape
   const bytes = ny * nx * 4
   const [data, flags] = await Promise.all([
-    fetchBinary(new URL(frame.data, base), bytes),
-    frame.flags ? fetchBinary(new URL(frame.flags, base), bytes) : Promise.resolve(null),
+    fetchBinary(new URL(frame.data, base), bytes, signal),
+    frame.flags ? fetchBinary(new URL(frame.flags, base), bytes, signal) : Promise.resolve(null),
   ])
   return { frame, data: new Float32Array(data), flags: flags ? new Uint32Array(flags) : null }
 }
