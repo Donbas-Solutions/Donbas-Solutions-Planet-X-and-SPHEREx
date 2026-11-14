@@ -34,6 +34,11 @@ class Settings:
     s3_base_url: str = field(
         default_factory=lambda: os.environ.get("SPHEREX_S3_URL", "https://nasa-irsa-spherex.s3.amazonaws.com/")
     )
+    live_cap_per_detector: int = field(default_factory=lambda: int(os.environ.get("LIVE_CAP_PER_DETECTOR", "8")))
+    max_running_jobs: int = field(default_factory=lambda: int(os.environ.get("MAX_RUNNING_JOBS", "2")))
+    pipeline_workers: int = field(default_factory=lambda: int(os.environ.get("PIPELINE_WORKERS", "2")))
+    processed_ttl_h: float = field(default_factory=lambda: float(os.environ.get("PROCESSED_TTL_H", "24")))
+    warm_collections: bool = field(default_factory=lambda: os.environ.get("WARM_COLLECTIONS", "1") != "0")
     user_agent: str = "spherex-blink/0.1"
 
     @property
