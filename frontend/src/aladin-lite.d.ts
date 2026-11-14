@@ -1,0 +1,6 @@
+// aladin-lite ships without TypeScript types.
+declare module 'aladin-lite' {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const A: any
+  export default A
+}

@@ -1,0 +1,482 @@
+{
+ "grid": {
+  "ra": 269.452077,
+  "dec": 4.693365,
+  "fov_arcmin": 10.0,
+  "npix": 97,
+  "pixscale_arcsec": 6.2,
+  "wcs": {
+   "WCSAXES": 2,
+   "CRPIX1": 49.0,
+   "CRPIX2": 49.0,
+   "CDELT1": -0.0017222222222222,
+   "CDELT2": 0.0017222222222222,
+   "CUNIT1": "deg",
+   "CUNIT2": "deg",
+   "CTYPE1": "RA---TAN",
+   "CTYPE2": "DEC--TAN",
+   "CRVAL1": 269.452077,
+   "CRVAL2": 4.693365,
+   "LONPOLE": 180.0,
+   "LATPOLE": 4.693365,
+   "MJDREF": 0.0,
+   "RADESYS": "ICRS",
+   "NAXIS1": 97,
+   "NAXIS2": 97
+  }
+ },
+ "stretch": {
+  "kind": "asinh",
+  "vmin": -2.681,
+  "vmax": 33.978,
+  "a": 0.1
+ },
+ "flag_bits": [
+  {
+   "bit": 0,
+   "name": "TRANSIENT",
+   "description": "Transient detected during SUR",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 1,
+   "name": "OVERFLOW",
+   "description": "Overflow detected during SUR",
+   "group": "saturation",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 2,
+   "name": "SUR_ERROR",
+   "description": "Error in onboard processing",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 6,
+   "name": "NONFUNC",
+   "description": "Permanently unusable",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 7,
+   "name": "DICHROIC",
+   "description": "Low efficiency due to dichroic",
+   "group": "info",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 9,
+   "name": "MISSING_DATA",
+   "description": "Onboard data lost",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 10,
+   "name": "HOT",
+   "description": "Hot pixel",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 11,
+   "name": "COLD",
+   "description": "Anomalously low signal",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 12,
+   "name": "FULLSAMPLE",
+   "description": "Pixel full sample history is available",
+   "group": "info",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 14,
+   "name": "PHANMISS",
+   "description": "Phantom correction was not applied",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 15,
+   "name": "NONLINEAR",
+   "description": "Nonlinearity correction cannot be applied reliably",
+   "group": "saturation",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 17,
+   "name": "PERSIST",
+   "description": "Persistent charge above threshold",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 19,
+   "name": "OUTLIER",
+   "description": "Pixel flagged by Detect Outliers",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 20,
+   "name": "CROSSTALK",
+   "description": "Pixel affected by crosstalk.",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 21,
+   "name": "SOURCE",
+   "description": "Pixel mapped to a known source",
+   "group": "info",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 22,
+   "name": "GHOST",
+   "description": "Affected by a bright source inside the exposure",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 23,
+   "name": "GHOST_FPA",
+   "description": "Affected by a bright source on another detector",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 24,
+   "name": "GHOST_EXT",
+   "description": "Pixel affected by a bright source outside FOV",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 25,
+   "name": "STREAK",
+   "description": "Pixel affected by a streak",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 26,
+   "name": "BLOOM",
+   "description": "Pixel part of a bloom artifact",
+   "group": "artifact",
+   "mask_in_stack": false
+  },
+  {
+   "bit": 27,
+   "name": "SNOWBALL",
+   "description": "Pixel part of a snowball artifact",
+   "group": "bad",
+   "mask_in_stack": true
+  },
+  {
+   "bit": 28,
+   "name": "HALO",
+   "description": "Pixel part of a transient halo",
+   "group": "artifact",
+   "mask_in_stack": false
+  }
+ ],
+ "frames": [
+  {
+   "id": "v1-D1",
+   "kind": "visit_stack",
+   "label": "2025-08 · D1",
+   "mjd_mid": 60925.5,
+   "date_range": [
+    "2025-08-15",
+    "2025-10-01"
+   ],
+   "detectors": [
+    1
+   ],
+   "lambda_um": [
+    0.75,
+    1.11
+   ],
+   "n_exposures": 20,
+   "data": "frames/v1-D1.f32",
+   "flags": "frames/v1-D1.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 54.0,
+    "y": 40.0
+   },
+   "warnings": []
+  },
+  {
+   "id": "v1-D5",
+   "kind": "visit_stack",
+   "label": "2025-08 · D5",
+   "mjd_mid": 60925.5,
+   "date_range": [
+    "2025-08-15",
+    "2025-10-01"
+   ],
+   "detectors": [
+    5
+   ],
+   "lambda_um": [
+    3.82,
+    4.42
+   ],
+   "n_exposures": 12,
+   "data": "frames/v1-D5.f32",
+   "flags": "frames/v1-D5.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 54.0,
+    "y": 40.0
+   },
+   "warnings": [
+    "incomplete λ coverage: 12 of 17 channels"
+   ]
+  },
+  {
+   "id": "v1-all",
+   "kind": "visit_stack",
+   "label": "2025-08 · all",
+   "mjd_mid": 60925.5,
+   "date_range": [
+    "2025-08-15",
+    "2025-10-01"
+   ],
+   "detectors": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "lambda_um": [
+    0.75,
+    5.0
+   ],
+   "n_exposures": 120,
+   "data": "frames/v1-all.f32",
+   "flags": "frames/v1-all.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 54.0,
+    "y": 40.0
+   },
+   "warnings": []
+  },
+  {
+   "id": "v2-D1",
+   "kind": "visit_stack",
+   "label": "2026-03 · D1",
+   "mjd_mid": 61137.5,
+   "date_range": [
+    "2026-03-11",
+    "2026-05-05"
+   ],
+   "detectors": [
+    1
+   ],
+   "lambda_um": [
+    0.75,
+    1.11
+   ],
+   "n_exposures": 20,
+   "data": "frames/v2-D1.f32",
+   "flags": "frames/v2-D1.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 54.0,
+    "y": 40.85
+   },
+   "warnings": []
+  },
+  {
+   "id": "v2-D5",
+   "kind": "visit_stack",
+   "label": "2026-03 · D5",
+   "mjd_mid": 61137.5,
+   "date_range": [
+    "2026-03-11",
+    "2026-05-05"
+   ],
+   "detectors": [
+    5
+   ],
+   "lambda_um": [
+    3.82,
+    4.42
+   ],
+   "n_exposures": 20,
+   "data": "frames/v2-D5.f32",
+   "flags": "frames/v2-D5.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 54.0,
+    "y": 40.85
+   },
+   "warnings": []
+  },
+  {
+   "id": "v2-all",
+   "kind": "visit_stack",
+   "label": "2026-03 · all",
+   "mjd_mid": 61137.5,
+   "date_range": [
+    "2026-03-11",
+    "2026-05-05"
+   ],
+   "detectors": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "lambda_um": [
+    0.75,
+    5.0
+   ],
+   "n_exposures": 120,
+   "data": "frames/v2-all.f32",
+   "flags": "frames/v2-all.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 54.0,
+    "y": 40.85
+   },
+   "warnings": []
+  },
+  {
+   "id": "v3-D1",
+   "kind": "visit_stack",
+   "label": "2026-08 · D1",
+   "mjd_mid": 61286.5,
+   "date_range": [
+    "2026-08-16",
+    "2026-09-22"
+   ],
+   "detectors": [
+    1
+   ],
+   "lambda_um": [
+    0.75,
+    1.11
+   ],
+   "n_exposures": 20,
+   "data": "frames/v3-D1.f32",
+   "flags": "frames/v3-D1.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 54.0,
+    "y": 41.7
+   },
+   "warnings": []
+  },
+  {
+   "id": "v3-D5",
+   "kind": "visit_stack",
+   "label": "2026-08 · D5",
+   "mjd_mid": 61286.5,
+   "date_range": [
+    "2026-08-16",
+    "2026-09-22"
+   ],
+   "detectors": [
+    5
+   ],
+   "lambda_um": [
+    3.82,
+    4.42
+   ],
+   "n_exposures": 20,
+   "data": "frames/v3-D5.f32",
+   "flags": "frames/v3-D5.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 54.0,
+    "y": 41.7
+   },
+   "warnings": []
+  },
+  {
+   "id": "v3-all",
+   "kind": "visit_stack",
+   "label": "2026-08 · all",
+   "mjd_mid": 61286.5,
+   "date_range": [
+    "2026-08-16",
+    "2026-09-22"
+   ],
+   "detectors": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "lambda_um": [
+    0.75,
+    5.0
+   ],
+   "n_exposures": 120,
+   "data": "frames/v3-all.f32",
+   "flags": "frames/v3-all.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 54.0,
+    "y": 41.7
+   },
+   "warnings": []
+  }
+ ],
+ "meta": {
+  "target_name": "MOCK (synthetic scene)",
+  "collections": [
+   "mock"
+  ],
+  "n_exposures_total": 112,
+  "generated_at": "2026-11-14T12:12:46+00:00",
+  "pipeline_tags": [
+   "mock"
+  ],
+  "mock": true
+ }
+}

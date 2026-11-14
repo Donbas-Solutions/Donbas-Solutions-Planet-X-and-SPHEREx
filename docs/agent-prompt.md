@@ -59,7 +59,7 @@ browser (React + Aladin Lite)            backend (FastAPI)                      
 ```
 
 Key design decision: frames travel as **raw little-endian Float32 arrays** (≤290×290 px, ≤340 KB each) plus
-uint16/uint32 flag arrays and a JSON manifest. Stretch, colormap, diff and sums run **client-side** on a canvas, so
+uint32 flag arrays and a JSON manifest. Stretch, colormap, diff and sums run **client-side** on a canvas, so
 contrast sliders are instant and the same files work for the live API and the static prebaked bundles.
 
 ### Backend pipeline (the 5 steps)
@@ -78,7 +78,10 @@ contrast sliders are instant and the same files work for the live API and the st
 5. **Serve.** Float32 frame files + flag files + manifest; suggested shared stretch (percentiles over all frames);
    cache processed results (small) separately from raw cutouts (large).
 
-## 3. API contract (Phase 0 writes it to `docs/api.md` and `backend/app/models.py`)
+## 3. API contract
+
+**Done in Phase 0 — the authoritative version is `docs/api.md`** (+ `backend/app/models.py`, `frontend/src/api/types.ts`).
+It adds `flag_bits` to `Sequence` and uses uint32 `.flags.u32` files. The sketch below is kept for orientation.
 
 ```
 GET /api/health                    → {status, collections:[...], cache:{raw_mb, processed_items}}
@@ -100,7 +103,7 @@ GET /files/...                     → Float32 / flag binaries
   "frames": [{
     "id": "v2-D5", "kind": "visit_stack|exposure|diff|allwise", "label": "2026-03 · D5",
     "mjd_mid": 0, "date_range": ["iso", "iso"], "detectors": [5], "lambda_um": [3.82, 4.42],
-    "n_exposures": 20, "data": "/files/.../v2-D5.f32", "flags": "/files/.../v2-D5.flags.u16",
+    "n_exposures": 20, "data": "/files/.../v2-D5.f32", "flags": "/files/.../v2-D5.flags.u32",
     "shape": [97, 97], "expected_px": {"x": 48.1, "y": 49.7}, "warnings": ["incomplete λ coverage"]
   }],
   "meta": {"collections": ["spherex_dr1", "spherex_qr3"], "n_exposures_total": 363, "generated_at": "iso", "pipeline_tags": ["l2b-v27"]}
@@ -115,7 +118,7 @@ Verify every catalog value via SIMBAD in Phase 0 and store it with its source an
 |---|---|---|---|
 | Barnard's Star | 269.4521, +4.6934 (J2000) | −802, +10362 | diff last−first visit shows a dipole ~north (PA ≈ 356°); shift ≈ 10.3″/yr × Δt (≈1.7–1.8 px); saturation flagged, centroid treated as unreliable |
 | ε Indi Ba/Bb | 331.0438, −56.7828 (2MASS, ep. 1999.9) | +3966, −2536 | shift ≈ 4.7″/yr × Δt (≈1.1 px) toward PA ≈ 122°; **best target for measured PM** (not saturated); ε Indi A is ~24′ away |
-| WISE 0855−0714 | 133.7951, −7.2451 (WISE designation, ep. ≈2010.4 — confirm what SIMBAD's epoch is) | ≈ −8100, +700 | DR1 only; check D5–D6 stacks at the expected position; report S/N or 5σ upper limit; no detection claim below 5σ |
+| WISE 0855−0714 | SIMBAD J2000: 133.81891, −7.24705. Challenge coords 133.7951, −7.2451 are **epoch ≈2010.5** (85″ off J2000) | −8123.7, +673.2 | DR1 only; check D5–D6 stacks at the expected position; report S/N or 5σ upper limit; no detection claim below 5σ |
 | RW Aur | 76.9561, +30.4013 | small | per-detector light curve over 3 visits; saturation marked |
 | R Dra | 248.1679, +66.7550 | small | deep field, 2,514 exposures → binned light curve; likely saturated → flagged, not fake numbers |
 

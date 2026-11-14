@@ -13,8 +13,10 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - Scope cuts, hosting, accounts, anything public-facing or irreversible → ask the team, don't guess.
 
 ## Stack and layout
-- `backend/` — Python ≥3.11, FastAPI, astropy, astroquery, pyvo, reproject, photutils, numpy, Pillow. Env: `uv` (fallback: venv + pip).
-- `frontend/` — React + Vite + TypeScript, Aladin Lite v3 (npm `aladin-lite`, pinned to an exact version).
+- `backend/` — Python ≥3.11 (dev machine: 3.13), FastAPI, astropy 8, astroquery, pyvo, reproject, photutils, numpy.
+  Env: `backend/.venv` + pip from `backend/pyproject.toml` (uv works with the same file).
+- `frontend/` — React 19 + Vite 8 + TypeScript, npm. Aladin Lite pinned to **3.8.2** (npm `latest` is a beta).
+  Aladin Lite is GPL/LGPL-3 — keep in mind when choosing the repo license.
 - `science/` — validation scripts/notebooks, `targets.json`, `VALIDATION.md`.
 - `scripts/prebake.py` — builds static bundles for the 5 test targets into `frontend/public/prebaked/`.
 - `docs/api.md` — API contract shared by all tracks. Changing it = tell the team.
@@ -42,6 +44,11 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   | RW Aur | 336 | 2025-09 · 2026-02/03 · 2026-09 | brightness test |
   | R Dra | 2,514 (deep field near NEP) | continuous 2025-04 … 2026-09 | brightness test; dense sampling |
 
+- **FLAGS** is int32; bit names are in the FLAGS header (`MSKNnnnn`/`MSKDnnnn`). No dedicated saturation bit
+  (use `OVERFLOW`, `NONLINEAR`). Bit 21 `SOURCE` = pixel of a known source → **never mask it**. Policy: `backend/app/flags.py`, `docs/api.md`.
+- **WISE 0855 challenge coordinates are epoch ≈2010.5**, 85″ from the SIMBAD J2000 position. Use `science/targets.json`
+  (SIMBAD J2000 + PM) for propagation, never the challenge coordinates as J2000.
+- SIMBAD Strasbourg was down on 2026-11-14 (404); the mirror `simbad.harvard.edu` worked → always have a fallback.
 - **HiPS for Aladin** (CDS): `CDS/P/SPHEREx/QR2/D1`…`D6`, `CDS/P/SPHEREx/QR2/color` (order 7, png).
 - Pixel 6.2″; 6 detectors = 6 bands (D1 0.75–1.11 µm … D6 4.42–5.00 µm); λ varies across each frame (LVF).
 - macOS python.org Python fails HTTPS to IRSA with `CERTIFICATE_VERIFY_FAILED` → run `Install Certificates.command` or use `certifi`.
@@ -76,4 +83,21 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - Stay inside your track's directories; contract changes go through `docs/api.md` + a note to the team.
 
 ## Commands
-<!-- Phase 0 fills this in: install, run backend, run frontend, tests, prebake. -->
+Setup once (macOS / Linux):
+```bash
+cd backend && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" && cd ..
+cd frontend && npm install && cd ..
+```
+Windows (PowerShell): `cd backend; py -m venv .venv; .venv\Scripts\pip install -e ".[dev]"; cd ..` and the same
+`npm install`. Below, `PY` = `backend/.venv/bin/python` (Windows: `backend\.venv\Scripts\python`).
+
+| Task | Command (from repo root unless noted) |
+|---|---|
+| Backend dev server (:8000) | `cd backend && .venv/bin/uvicorn app.main:app --reload --port 8000` |
+| Frontend dev server (:5173, proxies `/api` + `/files` to :8000) | `cd frontend && npm run dev` |
+| Backend tests | `cd backend && .venv/bin/python -m pytest -q` |
+| Frontend build / lint | `cd frontend && npm run build` · `npm run lint` |
+| Regenerate mock bundle | `PY scripts/make_mock.py` → `frontend/public/mock/` |
+| Re-resolve test targets (SIMBAD) | `PY science/resolve_targets.py` → `science/targets.json` |
+| View a bundle | `http://localhost:5173/?manifest=/mock/sequence.json` (default) |
+| Prebake real targets | `PY scripts/prebake.py` (Track C, not written yet) |

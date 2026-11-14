@@ -1,0 +1,112 @@
+{
+  "generated_at": "2026-11-14T12:11:50+00:00",
+  "source": "SIMBAD (simbad.harvard.edu) via astroquery 0.4.11",
+  "conventions": "ra/dec: ICRS degrees at ref_epoch (Julian year). pmra includes cos(dec). pm in mas/yr, parallax in mas. doc_epoch_estimate = epoch at which doc_coords match the PM track.",
+  "targets": [
+    {
+      "id": "barnard",
+      "name": "Barnard's Star",
+      "test": "motion",
+      "simbad_query": "Barnard's star",
+      "simbad_main_id": "NAME Barnard's star",
+      "ra": 269.452077,
+      "dec": 4.693365,
+      "ref_epoch": 2000.0,
+      "pmra": -801.551,
+      "pmdec": 10362.394,
+      "parallax": 546.9759,
+      "coo_bibcode": "2020yCat.1350....0G",
+      "doc_coords": [
+        "17h57m48.50s",
+        "+04d41m36.1s"
+      ],
+      "doc_offset_arcsec": 0.0,
+      "doc_epoch_estimate": 2000.0,
+      "notes": "Saturated in SPHEREx; motion visible as a shifted saturated blob. Centroid unreliable."
+    },
+    {
+      "id": "eps_ind_b",
+      "name": "Epsilon Indi B (Ba/Bb)",
+      "test": "motion",
+      "simbad_query": "eps Ind B",
+      "simbad_main_id": "* eps Ind B",
+      "ra": 331.0441466,
+      "dec": -56.7828442,
+      "ref_epoch": 2000.0,
+      "pmra": 3981.977,
+      "pmdec": -2466.832,
+      "parallax": 270.658,
+      "coo_bibcode": "2020yCat.1350....0G",
+      "doc_coords": [
+        "22h04m10.5s",
+        "-56d46m58s"
+      ],
+      "doc_offset_arcsec": 0.8,
+      "doc_epoch_estimate": 1999.8,
+      "notes": "Unresolved T1+T6 pair (0.6-0.7 arcsec). Not saturated: best target for measured proper motion. eps Ind A (V 4.7) is ~24 arcmin away."
+    },
+    {
+      "id": "wise0855",
+      "name": "WISE 0855-0714",
+      "test": "motion",
+      "simbad_query": "WISE J085510.83-071442.5",
+      "simbad_main_id": "WISEA J085510.74-071442.5",
+      "ra": 133.8189082,
+      "dec": -7.247048,
+      "ref_epoch": 2000.0,
+      "pmra": -8123.7,
+      "pmdec": 673.2,
+      "parallax": 439.0,
+      "coo_bibcode": "2021ApJS..253....7K",
+      "doc_coords": [
+        "08h55m10.831s",
+        "-07d14m42.53s"
+      ],
+      "doc_offset_arcsec": 85.2,
+      "doc_epoch_estimate": 2010.5,
+      "notes": "Y dwarf, J ~ 25: invisible at short wavelengths; only D5-D6 stacks have a chance. Report S/N or an upper limit, never claim a detection below 5 sigma."
+    },
+    {
+      "id": "rw_aur",
+      "name": "RW Aurigae",
+      "test": "brightness",
+      "simbad_query": "RW Aur",
+      "simbad_main_id": "V* RW Aur",
+      "ra": 76.956526,
+      "dec": 30.4014382,
+      "ref_epoch": 2000.0,
+      "pmra": 7.23,
+      "pmdec": -20.33,
+      "parallax": 15.42,
+      "coo_bibcode": "2007A&A...474..653V",
+      "doc_coords": [
+        "05h07m49.46s",
+        "+30d24m04.8s"
+      ],
+      "doc_offset_arcsec": 1.4,
+      "doc_epoch_estimate": null,
+      "notes": "T Tauri star with irregular dimming events: light-curve test."
+    },
+    {
+      "id": "r_dra",
+      "name": "R Draconis",
+      "test": "brightness",
+      "simbad_query": "R Dra",
+      "simbad_main_id": "V* R Dra",
+      "ra": 248.1676108,
+      "dec": 66.7549794,
+      "ref_epoch": 2000.0,
+      "pmra": -20.643,
+      "pmdec": 6.149,
+      "parallax": 1.2509,
+      "coo_bibcode": "2020yCat.1350....0G",
+      "doc_coords": [
+        "16h32m40.3s",
+        "+66d45m18s"
+      ],
+      "doc_offset_arcsec": 0.4,
+      "doc_epoch_estimate": null,
+      "notes": "Mira variable (~246 d). In the SPHEREx deep field near the NEP (dense time sampling). Likely saturated: mark, don't measure."
+    }
+  ]
+}
