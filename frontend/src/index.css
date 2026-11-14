@@ -466,3 +466,52 @@ h1 {
   max-width: 600px;
   height: 400px;
 }
+
+.term {
+  position: relative;
+  display: inline;
+}
+
+.term-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+.term-tip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 10;
+  width: max-content;
+  max-width: min(280px, 80vw);
+  padding: 6px 8px;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.8rem;
+  font-weight: normal;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  visibility: hidden;
+}
+
+.term:hover .term-tip,
+.term-button:focus-visible + .term-tip {
+  visibility: visible;
+}
+
+.glossary dt {
+  font-weight: 600;
+}
+
+.glossary dd {
+  margin: 0 0 8px;
+}

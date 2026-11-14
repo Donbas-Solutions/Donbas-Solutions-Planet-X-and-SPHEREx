@@ -1,4 +1,5 @@
 import type { Frame } from '../api/types'
+import Term from './Term'
 
 interface Props {
   frame: Frame
@@ -12,11 +13,15 @@ export default function FrameMeta({ frame, title }: Props) {
         {title}: {frame.label}
       </h3>
       <dl className="meta">
-        <dt>Dates (UTC)</dt>
+        <dt>
+          <Term id="visit">Visit</Term> dates (UTC)
+        </dt>
         <dd>{frame.date_range.join(' … ')}</dd>
         <dt>MJD (mid)</dt>
         <dd>{frame.mjd_mid.toFixed(2)}</dd>
-        <dt>Detectors</dt>
+        <dt>
+          <Term id="detector">Detectors</Term>
+        </dt>
         <dd>{frame.detectors.map((d) => `D${d}`).join(', ')}</dd>
         <dt>λ</dt>
         <dd>

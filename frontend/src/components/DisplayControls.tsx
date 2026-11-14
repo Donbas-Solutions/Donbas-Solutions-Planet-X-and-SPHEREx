@@ -1,6 +1,7 @@
 import { useAppState } from '../hooks/useAppState'
 import type { StretchKind, ViewMode } from '../lib/urlState'
 import { MAX_ZOOM, type Zoom } from './Viewer'
+import Term from './Term'
 
 export interface Range {
   vmin: number
@@ -64,6 +65,9 @@ export default function DisplayControls(props: Props) {
         <input type="checkbox" checked={showMarkers} onChange={(e) => onShowMarkersChange(e.target.checked)} /> Expected
         position
       </label>
+      <span className="muted small">
+        from <Term id="proper_motion">proper motion</Term>
+      </span>
       {isDiff ? (
         <label>
           Range ±
