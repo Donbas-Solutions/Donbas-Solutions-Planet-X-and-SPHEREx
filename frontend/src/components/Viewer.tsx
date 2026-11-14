@@ -2,6 +2,7 @@ import { useEffect, useRef, type CSSProperties, type MouseEvent } from 'react'
 import type { PixelPos, Stretch } from '../api/types'
 import { useAppState } from '../hooks/useAppState'
 import type { Colormap } from '../lib/colormap'
+import type { OverlayLayer } from '../lib/flags'
 import { displayToPixel, pixelToDisplay, type DisplayFraction } from '../lib/pixels'
 import { renderImage, type GridImage } from '../lib/render'
 
@@ -19,7 +20,7 @@ interface Props {
   image: GridImage
   stretch: Stretch
   colormap: Colormap
-  overlayMask: number
+  overlays: readonly OverlayLayer[]
   zoom: Zoom
   markers: readonly Marker[]
   ariaLabel: string
@@ -29,15 +30,15 @@ function percent(f: DisplayFraction): CSSProperties {
   return { left: `${f.left * 100}%`, top: `${f.top * 100}%` }
 }
 
-export default function Viewer({ image, stretch, colormap, overlayMask, zoom, markers, ariaLabel }: Props) {
+export default function Viewer({ image, stretch, colormap, overlays, zoom, markers, ariaLabel }: Props) {
   const { selectedPixel, setSelectedPixel } = useAppState()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [ny, nx] = image.shape
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d')
-    if (ctx) renderImage(ctx, image, stretch, colormap, { overlayMask })
-  }, [image, stretch, colormap, overlayMask])
+    if (ctx) renderImage(ctx, image, stretch, colormap, { overlays })
+  }, [image, stretch, colormap, overlays])
 
   const handleClick = (e: MouseEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()

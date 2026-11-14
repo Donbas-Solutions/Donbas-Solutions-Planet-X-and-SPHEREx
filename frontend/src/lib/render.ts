@@ -1,5 +1,6 @@
 import type { Stretch } from '../api/types'
-import { NAN_COLOR, type Colormap, type Rgb } from './colormap'
+import { NAN_COLOR, type Colormap } from './colormap'
+import type { OverlayLayer } from './flags'
 
 /** A float image on the common grid: row-major [ny, nx], row 0 = south. */
 export interface GridImage {
@@ -23,9 +24,11 @@ export function stretchValue(v: number, s: Stretch): number {
 }
 
 export interface RenderOptions {
-  overlayMask?: number
-  overlayColor?: Rgb
+  /** Flag layers blended over the image; the first layer that matches a pixel wins. */
+  overlays?: readonly OverlayLayer[]
 }
+
+const OVERLAY_ALPHA = 0.6
 
 /**
  * Draw at 1 canvas pixel per data pixel (scale up with CSS + image-rendering: pixelated).
@@ -36,8 +39,9 @@ export function renderImage(
   img: GridImage,
   stretch: Stretch,
   lut: Colormap,
-  { overlayMask = 0, overlayColor = [255, 60, 60] }: RenderOptions = {},
+  { overlays = [] }: RenderOptions = {},
 ): void {
+  const anyMask = overlays.reduce((m, l) => (m | l.mask) >>> 0, 0)
   const [ny, nx] = img.shape
   const out = ctx.createImageData(nx, ny)
   const px = out.data
@@ -56,10 +60,15 @@ export function renderImage(
       } else {
         ;[r, g, b] = NAN_COLOR
       }
-      if (overlayMask && flags && ((flags[src + col] ?? 0) & overlayMask) !== 0) {
-        r = (r + overlayColor[0]) >> 1
-        g = (g + overlayColor[1]) >> 1
-        b = (b + overlayColor[2]) >> 1
+      const f = flags ? (flags[src + col] ?? 0) : 0
+      if ((f & anyMask) !== 0) {
+        const layer = overlays.find((l) => (f & l.mask) !== 0)
+        if (layer) {
+          const [lr, lg, lb] = layer.color
+          r += (lr - r) * OVERLAY_ALPHA
+          g += (lg - g) * OVERLAY_ALPHA
+          b += (lb - b) * OVERLAY_ALPHA
+        }
       }
       px[o] = r
       px[o + 1] = g

@@ -1,49 +1,30 @@
 import { useAppState } from '../hooks/useAppState'
+import FlagsPanel from './FlagsPanel'
+import FrameMeta from './FrameMeta'
+import PixelReadout from './PixelReadout'
 
-interface Props {
-  showFlags: boolean
-  onShowFlagsChange: (show: boolean) => void
-}
-
-export default function FramePanel({ showFlags, onShowFlagsChange }: Props) {
-  const { currentFrame, selectedPixel } = useAppState()
-  if (!currentFrame) return null
-  const { frame } = currentFrame
+export default function FramePanel() {
+  const { sequence, currentFrame, frameA, frameB, params } = useAppState()
+  if (!sequence || !currentFrame) return null
+  const isDiff = params.view === 'diff'
 
   return (
     <aside className="side" aria-label="Frame details">
-      <h2>Frame</h2>
-      <dl className="meta">
-        <dt>Dates (UTC)</dt>
-        <dd>{frame.date_range.join(' … ')}</dd>
-        <dt>Detectors</dt>
-        <dd>{frame.detectors.map((d) => `D${d}`).join(', ')}</dd>
-        <dt>λ</dt>
-        <dd>{frame.lambda_um.join('–')} µm</dd>
-        <dt>Exposures</dt>
-        <dd>{frame.n_exposures}</dd>
-        {selectedPixel && (
-          <>
-            <dt>Pixel</dt>
-            <dd>
-              x {selectedPixel.x}, y {selectedPixel.y}
-            </dd>
-          </>
-        )}
-      </dl>
-      {frame.warnings.length > 0 && (
-        <ul className="warnings">
-          {frame.warnings.map((w) => (
-            <li key={w} className="warn">
-              {w}
-            </li>
-          ))}
-        </ul>
+      <h2>{isDiff ? 'Difference operands' : 'Frame'}</h2>
+      {isDiff ? (
+        <>
+          {frameA && <FrameMeta frame={frameA.frame} title="A" />}
+          {frameB && <FrameMeta frame={frameB.frame} title="B" />}
+        </>
+      ) : (
+        <FrameMeta frame={currentFrame.frame} title="Current" />
       )}
-      <label>
-        <input type="checkbox" checked={showFlags} onChange={(e) => onShowFlagsChange(e.target.checked)} /> Flags
-        overlay (bad, saturation)
-      </label>
+      <PixelReadout />
+      <FlagsPanel />
+      <p className="muted small">
+        {sequence.meta.n_exposures_total} exposures · {sequence.meta.collections.join(', ') || 'no collections'}
+        {sequence.meta.pipeline_tags.length > 0 && ` · pipeline ${sequence.meta.pipeline_tags.join(', ')}`}
+      </p>
     </aside>
   )
 }

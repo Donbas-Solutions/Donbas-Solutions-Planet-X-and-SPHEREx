@@ -5,6 +5,7 @@ import { prefersReducedMotion, usePlayback } from '../hooks/usePlayback'
 import { usePlayerKeys } from '../hooks/usePlayerKeys'
 import { BLUE_ORANGE, GREY } from '../lib/colormap'
 import { diffFrames } from '../lib/diff'
+import { overlayLayers } from '../lib/flags'
 import { detectorLabel } from '../lib/playlist'
 import { finitePercentiles } from '../lib/stats'
 import DiffLegend from './DiffLegend'
@@ -13,11 +14,10 @@ import TransportControls from './TransportControls'
 import Viewer, { type Marker, type Zoom } from './Viewer'
 
 interface Props {
-  overlayMask: number
   isCompact?: boolean
 }
 
-export default function Player({ overlayMask, isCompact = false }: Props) {
+export default function Player({ isCompact = false }: Props) {
   const { sequence, frames, playlist, frameIndex, setFrameIndex, currentFrame, frameA, frameB, params } =
     useAppState()
   const [isPlaying, setIsPlaying] = useState(() => !prefersReducedMotion())
@@ -65,6 +65,11 @@ export default function Player({ overlayMask, isCompact = false }: Props) {
     const [lo = 0, hi = 1] = finitePercentiles(frames.map((f) => f.data), [0.5, 99.9]) ?? []
     return { vmin: Math.min(lo, sequence.stretch.vmin), vmax: Math.max(hi, sequence.stretch.vmax) }
   }, [sequence, frames])
+
+  const overlays = useMemo(
+    () => (sequence ? overlayLayers(sequence.flag_bits, params.flags) : []),
+    [sequence, params.flags],
+  )
 
   const diff = useMemo(() => (isDiff && frameA && frameB ? diffFrames(frameA, frameB) : null), [isDiff, frameA, frameB])
 
@@ -114,7 +119,7 @@ export default function Player({ overlayMask, isCompact = false }: Props) {
           image={diff.diff}
           stretch={diffStretch}
           colormap={BLUE_ORANGE}
-          overlayMask={overlayMask}
+          overlays={overlays}
           zoom={zoom}
           markers={markers}
           ariaLabel={`${name}: difference ${diff.diff.later.frame.label} minus ${diff.diff.earlier.frame.label}`}
@@ -124,7 +129,7 @@ export default function Player({ overlayMask, isCompact = false }: Props) {
           image={{ data: currentFrame.data, flags: currentFrame.flags, shape: frame.shape }}
           stretch={intensityStretch}
           colormap={GREY}
-          overlayMask={overlayMask}
+          overlays={overlays}
           zoom={zoom}
           markers={markers}
           ariaLabel={`${name}: ${frame.label}, ${frame.date_range.join(' to ')} UTC`}

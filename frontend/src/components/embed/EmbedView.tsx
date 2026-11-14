@@ -7,7 +7,7 @@ export default function EmbedView() {
   return (
     <main className="embed">
       <LoadStatus />
-      <Player overlayMask={0} isCompact />
+      <Player isCompact />
       <p className="embed-links">
         <a href={routeHref('main', search)} target="_blank" rel="noopener noreferrer">
           Open in SPHEREx Blink

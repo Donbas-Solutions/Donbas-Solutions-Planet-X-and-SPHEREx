@@ -1,4 +1,4 @@
-import type { FlagBit, FlagGroup, Frame, Sequence } from '../api/types'
+import type { Frame, Sequence } from '../api/types'
 
 export interface LoadedFrame {
   frame: Frame
@@ -61,11 +61,4 @@ export async function loadFrames(
   }
   await Promise.all(Array.from({ length: Math.min(FRAME_CONCURRENCY, total) }, worker))
   return out
-}
-
-/** Bitmask of all planes in the given groups. */
-export function flagMask(bits: FlagBit[], groups: FlagGroup[]): number {
-  let mask = 0
-  for (const b of bits) if (groups.includes(b.group)) mask = (mask | (1 << b.bit)) >>> 0
-  return mask
 }
