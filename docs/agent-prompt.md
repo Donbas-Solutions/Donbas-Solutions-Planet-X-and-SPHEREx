@@ -105,6 +105,8 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
 - **D:** OD-3 settled and hosting proposed in `docs/deploy.md` (PR #6): deadline **Sun 2026-11-15 23:59 Kyiv
   (21:59 UTC)**, demo = video ≤ 30 s or ≤ 7 slides, AI-use disclosure, no NASA branding; hosting = **Netlify**
   (frontend + bundles at the domain root, proxies `/api/*` and `/files/*`) + **Hugging Face Spaces, Docker** (backend).
+  **Then decided: no deploy for the submission** (not required) — local runs only; the public GitHub repo is the
+  "link to final project" (OD-1 deferred).
   Spectrum / Light curve / Context tabs are still placeholders.
 - Milestones: **M1 ✗** (no live API), **M2 🟡** (offline part works end to end), **M3 ✗**.
 
@@ -112,10 +114,10 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
 
 | Role | Who | Feature branches (in order) | Owns | Mission now |
 |---|---|---|---|---|
-| **A — Archive & API** | the A person | `feat/live-sequence-api` → `feat/spectrum-api` → `chore/backend-docker` → `feat/gaia-overlays` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`, Dockerfile; contract files | Live API (M1) and the backend deploy |
-| **B — Frontend core** | the B person | `fix/subpath-safe-urls` → `feat/live-mode` → `fix/diff-default-and-about` | app shell, state, URL, player, panels, `package.json` | Live mode, fixes, sub-path-safe URLs for the deploy |
-| **C — Science & delivery** | the team lead | `chore/static-deploy` → `test/fr16-spectrophotometry` → `docs/readme-and-pitch` | `backend/app/pipeline/`, `science/`, `scripts/prebake.py`, `frontend/public/prebaked/`, README, deploy config, pitch | Spectrum endpoint with A, FR-16 acceptance, **submission and static deploy** |
-| **D — P1 features** | the new person | `feat/spectrum-chart` → `feat/light-curve-chart` → `feat/aladin-context` → `feat/embed-view` | `frontend/src/components/{charts,context,embed}/` (+ their `lib/` helpers) | Spectrum and light-curve charts, Aladin context panel, embed, Gaia markers |
+| **A — Archive & API** | the A person | `feat/live-sequence-api` → `feat/spectrum-api` → `feat/gaia-overlays` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`; contract files | Live API (M1) |
+| **B — Frontend core** | the B person | `feat/live-mode` → `fix/diff-default-and-about` | app shell, state, URL, player, panels, `package.json` | Live mode, fixes, support D |
+| **C — Science & delivery** | the team lead | `test/fr16-spectrophotometry` → `docs/readme-and-pitch` | `backend/app/pipeline/`, `science/`, `scripts/prebake.py`, `frontend/public/prebaked/`, README, pitch | Spectrum endpoint with A, FR-16 acceptance, **README (local run) and submission** |
+| **D — P1 features** | the new person | `feat/spectrum-chart` → `feat/light-curve-chart` → `feat/aladin-context` | `frontend/src/components/{charts,context,embed}/` (+ their `lib/` helpers) | Spectrum and light-curve charts, Aladin context panel, embed, Gaia markers |
 
 Shared: `domain.py` (A + C), `CLAUDE.md`, `docs/spec.md`, `docs/api.md` (announce changes). B and D share the
 frontend: D only touches its component folders and reads app state through B's hooks; anything else goes through B.
@@ -127,29 +129,23 @@ frontend: D only touches its component folders and reads app state through B's h
    FR-2), `/api/health` with discovered collections. **Checkpoint A (M1):** live Barnard and ε Indi B over HTTP.
 3. `feat/spectrum-api` — **`/api/spectrum` and `/api/lightcurve`** with C: call `pipeline.photometry.measure_spectrum` on the cutouts of the
    job's plan.
-4. `chore/backend-docker` — **Dockerfile + backend hosting** (with C, OD-1): persistent disk for `cache/`, health check, LRU cap.
-5. `feat/gaia-overlays` (P1) — `/api/overlays` (Gaia DR3 propagated to the frame epoch) for D's Gaia markers (FR-18).
+4. `feat/gaia-overlays` (P1) — `/api/overlays` (Gaia DR3 propagated to the frame epoch) for D's Gaia markers (FR-18).
 
 ### Track B — round 2
-1. `fix/subpath-safe-urls` — **skip if the team picks Netlify** (it serves at the root and proxies `/api`); needed
-   only for a sub-path host. **Sub-path-safe URLs** (blocks C's static deploy if the host serves the site under `/<repo>/`, e.g. GitHub Pages):
-   every `/prebaked/…`, `/mock/…`, `/api/…`, `/files/…` URL built from `import.meta.env.BASE_URL` / one API base.
-2. `feat/live-mode` — **Live mode** once A4 lands: `/?ra=&dec=` and `/?name=` end to end, job progress, errors (FR-2, FR-13).
-3. `fix/diff-default-and-about` — the default diff of ε Indi B uses visit 2026-04 instead of the last visit 2026-09; About says WISE 0855 is
+1. `feat/live-mode` — **Live mode** once A4 lands: `/?ra=&dec=` and `/?name=` end to end, job progress, errors (FR-2, FR-13).
+2. `fix/diff-default-and-about` — the default diff of ε Indi B uses visit 2026-04 instead of the last visit 2026-09; About says WISE 0855 is
    "not a detection" — update to "motion seen in D5–D6, flux blended with a field star" (`science/VALIDATION.md` T-3).
-4. No branch — support D: expose the selected pixel / current frame / sequence through the state hook; review D's PRs.
+3. No branch — support D: expose the selected pixel / current frame / sequence through the state hook; review D's PRs.
 
 ### Track C — round 2
-1. **Decisions (no branch), first:** approve the hosting in `docs/deploy.md` and create the accounts (human OK);
-   decide whether the repo becomes public and its licence (OD-2, GPL/LGPL-3-compatible because of Aladin); confirm the
-   Team Owner who clicks "Submit" and whether the Kyiv Local Lead set an earlier cutoff. OD-3 itself is done
-   (`docs/deploy.md`).
-2. `chore/static-deploy` — **pick the static host with the team (OD-1, frontend part)** and deploy the frontend + 5 bundles: a public URL that
-   works with no backend (FR-14). Needs B's step 1 if the host uses a sub-path.
-3. On A's `feat/spectrum-api` — `/api/spectrum` + `/api/lightcurve` (C owns the science, A the endpoint).
-4. `test/fr16-spectrophotometry` — FR-16 acceptance: one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25).
-5. `docs/readme-and-pitch` — README (what, how, screenshots/GIFs from the bundles, limitations, credits NFR-10), licence decision (OD-2),
-   pitch script and video, submission text.
+1. **Decisions (no branch), first:** the repo becomes public before submission (it is the "link to final project")
+   and its licence (OD-2, GPL/LGPL-3-compatible because of Aladin); confirm the Team Owner who clicks "Submit" and
+   whether the Kyiv Local Lead set an earlier cutoff. OD-3 is done and OD-1 deferred: no deploy (`docs/deploy.md`).
+2. On A's `feat/spectrum-api` — `/api/spectrum` + `/api/lightcurve` (C owns the science, A the endpoint).
+3. `test/fr16-spectrophotometry` — FR-16 acceptance: one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25).
+4. `docs/readme-and-pitch` — README (what, how, **local run on macOS and Windows**, screenshots/GIFs from the bundles,
+   limitations, credits NFR-10), licence (OD-2), pitch script and video recorded from a local run, submission text.
+   Acceptance: a teammate on another machine (ideally Windows) clones the repo and runs it from the README alone.
 
 ### Track D — round 2
 One branch per feature, from a fresh `main`; develop against the bundles: `/?target=eps_ind_b` (spectrum in `meta.spectrum`).
@@ -160,17 +156,16 @@ One branch per feature, from a fresh `main`; develop against the bundles: `/?tar
 3. `feat/aladin-context` — **Context panel** (FR-19), with a HiPS mirror fallback (CDS `alasky` was down on
    2026-11-14; `irsa.ipac.caltech.edu/data/hips/CDS/…` answered): Aladin Lite (`components/AladinPanel.tsx`) synced to target and FOV; SPHEREx colour HiPS,
    AllWISE, 2MASS; Gaia DR3 via VizieR. Verify in a real browser (WebGL).
-4. `feat/embed-view` — **Embed** (FR-21): `/embed?…` minimal view + "copy embed code".
-5. P1 if time allows: Gaia markers in the player (FR-18, needs A's `/api/overlays`), AllWISE frame (FR-22).
+4. P1 if time allows: Gaia markers in the player (FR-18, needs A's `/api/overlays`), AllWISE frame (FR-22).
+   Embed (FR-21, `feat/embed-view`) is last: without a hosted URL nobody can embed it.
 
 ### Who waits for whom — round 2
 | Who | Waits for | Meanwhile |
 |---|---|---|
-| B (live mode) | A4 | sub-path URLs, fixes, support D |
+| B (live mode) | A4 | fixes, support D |
 | D | nothing — data are in the bundles | charts and Aladin on `/?target=…` |
-| C (static deploy) | OD-1 choice; B step 1 if sub-path | OD-3, README, FR-16 check |
+| C (README, local-run test) | features merged | FR-16 check, README draft, decisions |
 | C + A (`/api/spectrum`) | A3 | — |
-| Backend deploy (A + C) | A4 + Dockerfile | static deploy is already public |
 
 ### Integration and git
 - **One short-lived branch per feature**, named like a commit (`feat/…`, `fix/…`, `chore/…`, `docs/…`, `test/…`) and
@@ -185,14 +180,14 @@ One branch per feature, from a fresh `main`; develop against the bundles: `/?tar
 ### Timeline — round 2
 | When (2026-11-14/15) | Milestone |
 |---|---|
-| Sat evening | OD-3 settled; static host chosen; A3 started; D charts started |
-| Sat night | **Static deploy public** (frontend + 5 bundles); **M1** live API for Barnard and ε Indi B |
-| Sun morning | Live mode in the UI; spectrum/light-curve charts and Aladin; backend deployed; README |
-| Sun midday | Feature freeze → clean-browser test of the public URL → GIFs/screenshots → video |
+| Sat evening | OD-3 settled; no deploy (OD-1); A3 started; D charts started |
+| Sat night | **M1** live API for Barnard and ε Indi B |
+| Sun morning | Live mode in the UI; spectrum/light-curve charts and Aladin; README |
+| Sun midday | Feature freeze → clean-clone test from the README on another machine → GIFs/screenshots → video → repo public |
 | Sun 23:59 Kyiv (21:59 UTC) | Submission by the Team Owner — aim for well before |
 
-If time runs short, drop in this order: FR-22 (AllWISE) → FR-18 (Gaia markers) → FR-21 (embed) → FR-19 (Aladin) →
-FR-17 (light curves). Never drop FR-3 / FR-14 (prebaked bundles) or the static deploy.
+If time runs short, drop in this order: FR-21 (embed) → FR-22 (AllWISE) → FR-18 (Gaia markers) → FR-19 (Aladin) →
+FR-17 (light curves). Never drop FR-3 / FR-14 (prebaked bundles) or the README local-run instructions.
 
 ## 6. Working rules
 - **Checkpoints:** stop and report in Ukrainian using: *Зроблено / Як перевірено (команди + реальний вивід) /

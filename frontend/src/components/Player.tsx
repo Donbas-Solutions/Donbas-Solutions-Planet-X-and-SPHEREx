@@ -6,7 +6,7 @@ import { usePlayerKeys } from '../hooks/usePlayerKeys'
 import { BLUE_ORANGE, GREY } from '../lib/colormap'
 import { diffFrames } from '../lib/diff'
 import { overlayLayers } from '../lib/flags'
-import { detectorLabel } from '../lib/playlist'
+import { detectorKey, detectorLabel, missingDetectors } from '../lib/playlist'
 import { finitePercentiles } from '../lib/stats'
 import DiffLegend from './DiffLegend'
 import DisplayControls, { type Range } from './DisplayControls'
@@ -104,6 +104,7 @@ export default function Player({ isCompact = false }: Props) {
 
   const name = sequence.meta.target_name ?? 'Field'
   const { frame } = currentFrame
+  const missing = missingDetectors(frame.detectors, playlist.key)
   const abTag = frame.id === frameA?.frame.id ? ' · A' : frame.id === frameB?.frame.id ? ' · B' : ''
 
   return (
@@ -138,7 +139,10 @@ export default function Player({ isCompact = false }: Props) {
       {!isDiff && (
         <p className="frame-caption" aria-live={isPlaying ? 'off' : 'polite'}>
           <strong>{frame.label}</strong>
-          {abTag} · {frame.date_range.join(' … ')} UTC · {detectorLabel(playlist.key)}
+          {abTag} · {frame.date_range.join(' … ')} UTC · {detectorLabel(detectorKey(frame.detectors))}
+          {missing.length > 0 && (
+            <span className="warn"> · no {missing.map((d) => `D${d}`).join(', ')} in this visit</span>
+          )}
         </p>
       )}
       {isDiff && diff?.ok && <DiffLegend diff={diff.diff} range={diffHalf} />}
