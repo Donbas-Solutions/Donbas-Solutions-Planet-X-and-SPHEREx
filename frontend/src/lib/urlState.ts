@@ -230,7 +230,12 @@ export type SequenceSource =
 export function sequenceSource(p: ViewParams, base: string): SequenceSource {
   if (p.manifest) return { kind: 'manifest', url: p.manifest, isPrebaked: false }
   if (p.target) return { kind: 'manifest', url: `${base}prebaked/${p.target}/sequence.json`, isPrebaked: true }
-  if (p.ra !== null && p.dec !== null) return { kind: 'live', ra: p.ra, dec: p.dec, fovArcmin: p.fovArcmin, pm: p.pm }
+  if (p.ra !== null && p.dec !== null) {
+    // Same precision as the URL: the backend caches by exact position, so a reload must ask for the same numbers.
+    const ra = Number(formatDegrees(p.ra))
+    const dec = Number(formatDegrees(p.dec))
+    return { kind: 'live', ra, dec, fovArcmin: p.fovArcmin, pm: p.pm }
+  }
   if (p.name) return { kind: 'resolve', name: p.name }
   return { kind: 'landing' }
 }

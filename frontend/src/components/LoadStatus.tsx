@@ -72,7 +72,13 @@ export default function LoadStatus() {
       return (
         <div className="status warn" aria-live="polite">
           {load.notice && <p>{load.notice}</p>}
-          {partial > 0 && (
+          {partial > 0 && partial === frames.length && (
+            <p>
+              Every frame has few exposures or incomplete wavelength coverage: live requests stack only a few
+              exposures per detector and visit. Motion still shows; compare brightness with care.
+            </p>
+          )}
+          {partial > 0 && partial < frames.length && (
             <p>
               Partial data: {partial} of {frames.length} frames have few exposures or incomplete wavelength coverage
               (see the frame details).
