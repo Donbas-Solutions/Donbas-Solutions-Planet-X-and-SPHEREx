@@ -10,7 +10,7 @@ from app.models import Sequence
 MOCK = REPO_ROOT / "frontend" / "public" / "mock"
 
 
-def test_mock_manifest_matches_contract():
+def test_mock_manifest_matches_contract() -> None:
     seq = Sequence.model_validate_json((MOCK / "sequence.json").read_text(encoding="utf-8"))
     assert seq.meta.mock
     assert seq.frames
@@ -18,18 +18,21 @@ def test_mock_manifest_matches_contract():
         ny, nx = frame.shape
         data = np.fromfile(MOCK / frame.data, dtype="<f4")
         assert data.size == ny * nx, frame.id
+        assert frame.flags is not None, frame.id
         flags = np.fromfile(MOCK / frame.flags, dtype="<u4")
         assert flags.size == ny * nx, frame.id
         if frame.expected_px:
-            assert 0 <= frame.expected_px.x < nx and 0 <= frame.expected_px.y < ny
+            assert 0 <= frame.expected_px.x < nx
+            assert 0 <= frame.expected_px.y < ny
 
 
-def test_targets_file():
+def test_targets_file() -> None:
     payload = json.loads((REPO_ROOT / "science" / "targets.json").read_text(encoding="utf-8"))
     ids = {t["id"] for t in payload["targets"]}
     assert ids == {"barnard", "eps_ind_b", "wise0855", "rw_aur", "r_dra"}
     for t in payload["targets"]:
-        assert 0 <= t["ra"] < 360 and -90 <= t["dec"] <= 90
+        assert 0 <= t["ra"] < 360
+        assert -90 <= t["dec"] <= 90
         assert t["ref_epoch"] == 2000.0
     wise = next(t for t in payload["targets"] if t["id"] == "wise0855")
     # The challenge coordinates are the WISE-epoch position, not J2000.

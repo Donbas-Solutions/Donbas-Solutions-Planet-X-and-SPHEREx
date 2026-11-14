@@ -73,7 +73,7 @@ TARGETS = [
 ]
 
 
-def _num(value) -> float | None:
+def _num(value: object) -> float | None:
     if value is None or np.ma.is_masked(value):
         return None
     value = float(value)
@@ -93,9 +93,10 @@ def _simbad() -> tuple[Simbad, str]:
         try:
             simbad = Simbad()
             simbad.add_votable_fields("pmra", "pmdec", "plx_value", "coo_bibcode")
-            return simbad, server
-        except Exception as exc:  # pyvo raises several exception types for an unreachable TAP
+        except Exception as exc:  # noqa: BLE001 - pyvo raises many unrelated types for an unreachable TAP
             errors.append(f"{server}: {exc.__class__.__name__}")
+        else:
+            return simbad, server
     raise SystemExit("No SIMBAD server reachable: " + "; ".join(errors))
 
 

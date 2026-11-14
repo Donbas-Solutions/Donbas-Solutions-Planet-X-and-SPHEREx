@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+from typing import Annotated, Literal
+
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .config import configure_ssl, settings
-from .models import CacheStats, Health
+from .models import CacheStats, Health, JobAccepted, JobStatus, Overlays, ResolveResult, Sequence, Spectrum
 
 configure_ssl()
 
@@ -40,26 +42,43 @@ def _not_yet(track: str) -> HTTPException:
     return HTTPException(status_code=501, detail=f"Not implemented yet ({track})")
 
 
-@app.get("/api/resolve")
-def resolve(name: str):
+Ra = Annotated[float, Query(ge=0, lt=360, description="ICRS degrees")]
+Dec = Annotated[float, Query(ge=-90, le=90, description="ICRS degrees")]
+Pm = Annotated[float | None, Query(description="mas/yr; pmra includes cos(dec)")]
+RefEpoch = Annotated[float, Query(description="Julian year of ra/dec")]
+Fov = Annotated[float, Query(ge=2, le=30, description="arcmin")]
+
+
+@app.get("/api/resolve", response_model=ResolveResult)
+def resolve(name: Annotated[str, Query(min_length=1, max_length=100)]) -> ResolveResult:
     raise _not_yet("Track A")
 
 
-@app.get("/api/sequence")
-def sequence(ra: float, dec: float, fov: float = 10.0, det: str = "all", mode: str = "visit_stack"):
+@app.get("/api/sequence", response_model=Sequence | JobAccepted)
+def sequence(
+    ra: Ra,
+    dec: Dec,
+    fov: Fov = 10.0,
+    det: Annotated[str, Query(pattern=r"^(all|[1-6](,[1-6])*)$")] = "all",
+    mode: Annotated[Literal["visit_stack", "exposures"], Query()] = "visit_stack",
+    pmra: Pm = None,
+    pmdec: Pm = None,
+    ref_epoch: RefEpoch = 2000.0,
+    allwise: bool = False,
+) -> Sequence | JobAccepted:
     raise _not_yet("Track A")
 
 
-@app.get("/api/jobs/{job_id}")
-def job(job_id: str):
+@app.get("/api/jobs/{job_id}", response_model=JobStatus)
+def job(job_id: str) -> JobStatus:
     raise _not_yet("Track A")
 
 
-@app.get("/api/spectrum")
-def spectrum(ra: float, dec: float):
+@app.get("/api/spectrum", response_model=Spectrum)
+def spectrum(ra: Ra, dec: Dec, pmra: Pm = None, pmdec: Pm = None, ref_epoch: RefEpoch = 2000.0) -> Spectrum:
     raise _not_yet("Track A, P1")
 
 
-@app.get("/api/overlays")
-def overlays(ra: float, dec: float, fov: float, mjd: float):
+@app.get("/api/overlays", response_model=Overlays)
+def overlays(ra: Ra, dec: Dec, fov: Fov, mjd: float) -> Overlays:
     raise _not_yet("Track A, P1")

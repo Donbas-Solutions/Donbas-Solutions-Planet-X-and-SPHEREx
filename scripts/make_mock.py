@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 from astropy.time import Time
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,7 +45,9 @@ DETECTORS = {  # key: (detector list, lambda range um)
 }
 
 
-def gaussian(shape, x, y, flux, sigma=PSF_SIGMA):
+def gaussian(
+    shape: tuple[int, int], x: float, y: float, flux: float, sigma: float = PSF_SIGMA
+) -> npt.NDArray[np.float64]:
     yy, xx = np.mgrid[0 : shape[0], 0 : shape[1]]
     return flux / (2 * np.pi * sigma**2) * np.exp(-((xx - x) ** 2 + (yy - y) ** 2) / (2 * sigma**2))
 

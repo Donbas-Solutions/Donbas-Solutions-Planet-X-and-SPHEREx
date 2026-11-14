@@ -6,10 +6,42 @@ src = ["backend", "scripts", "science"]
 extend-exclude = ["frontend"]
 
 [lint]
-select = ["E", "W", "F", "I", "UP", "B", "SIM", "NPY", "RUF"]
+select = [
+  "E", "W",  # pycodestyle
+  "F",       # pyflakes
+  "I",       # isort
+  "UP",      # pyupgrade (modern syntax for py311)
+  "B",       # bugbear
+  "SIM",     # simplify
+  "NPY",     # numpy
+  "RUF",     # ruff-specific
+  "ANN",     # type annotations on every signature
+  "ASYNC",   # blocking calls (time.sleep, open, requests, subprocess...) inside async def
+  "BLE",     # no blind `except Exception`
+  "TRY",     # exception handling (raise from, no return in try...)
+  "S",       # bandit security checks
+  "DTZ",     # naive datetimes
+  "LOG", "G", # logging: no f-strings in log calls, correct logger usage
+  "T20",     # no print() in app code
+  "PTH",     # pathlib instead of os.path
+  "PT",      # pytest style
+  "C4",      # comprehensions
+  "PIE", "RET", "PERF",
+  "PGH",     # no blanket `# type: ignore` / `# noqa`
+]
 ignore = [
   "RUF001", "RUF002", "RUF003", # λ, ·, —, × in strings/comments are intentional
+  "TRY003",  # long messages in exceptions are fine (HTTPException detail)
+  "ANN401",  # Any is allowed where unavoidable (astropy headers); mypy still checks it
 ]
+
+[lint.per-file-ignores]
+"backend/tests/**" = ["S101"]  # assert is the point of a test
+"scripts/**" = ["T20"]   # command-line scripts report via print
+"science/**" = ["T20"]
+
+[lint.flake8-pytest-style]
+fixture-parentheses = false
 
 [format]
 quote-style = "double"

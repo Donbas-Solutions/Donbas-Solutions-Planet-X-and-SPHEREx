@@ -10,12 +10,18 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 
 ## Communication
 - Reports to the team: **Ukrainian**. Code, comments, identifiers, commit messages, API: English.
+
+## Code comments
+- Keep comments to a minimum: names, types and small functions should explain *what* the code does.
+- Comment only a non-obvious *why*: a science/instrument fact, an upstream workaround, a deliberate trade-off.
+- No comments that restate the code, no commented-out code, no section banners or changelog notes.
 - Scope cuts, hosting, accounts, anything public-facing or irreversible → ask the team, don't guess.
 
 ## Stack and layout
 - `backend/` — Python ≥3.11 (dev machine: 3.13), FastAPI, astropy 8, astroquery, pyvo, reproject, photutils, numpy.
   Env: **uv** — `backend/pyproject.toml` + `backend/uv.lock`, Python pinned by `backend/.python-version` (3.13).
   Lint/format: **ruff** — `ruff.toml` at the repo root covers `backend/`, `scripts/`, `science/`.
+  Types: **mypy --strict** (`backend/pyproject.toml`). Python conventions: skill `.claude/skills/fastapi-backend`.
 - `frontend/` — React 19 + Vite 8 + TypeScript, npm. Aladin Lite pinned to **3.8.2** (npm `latest` is a beta).
   Aladin Lite is GPL/LGPL-3 — keep in mind when choosing the repo license.
 - `science/` — validation scripts/notebooks, `targets.json`, `VALIDATION.md`.
@@ -71,7 +77,7 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - Commit messages are **exactly one line**: English, imperative, ≤72 chars, no body, no trailers.
   Example: `Add visit grouping for SIA results`.
 - Commits are **local only**: commit at green checkpoints on your track branch.
-- Before every commit, everything you touched is clean: Python — `ruff check`, `ruff format --check`, `pytest`;
+- Before every commit, everything you touched is clean: Python — `ruff check`, `ruff format --check`, `mypy`, `pytest`;
   frontend — `npm run build`, `npm run lint` (see Commands).
 - **Never push** (`git push`, PRs, remote branches, tags) unless the person you are working with explicitly tells you
   to push in the current conversation. One "push" covers that one push, not later ones.
@@ -95,7 +101,8 @@ All commands below are the same on macOS and Windows.
 |---|---|
 | Backend dev server (:8000) | `cd backend && uv run uvicorn app.main:app --reload --port 8000` |
 | Frontend dev server (:5173, proxies `/api` + `/files` to :8000) | `cd frontend && npm run dev` |
-| Backend tests | `cd backend && uv run pytest -q` |
+| Backend tests | `cd backend && uv run pytest -q` (live IRSA/SIMBAD tests: `uv run pytest -m network`) |
+| Backend type check | `cd backend && uv run mypy app tests` |
 | Python lint + format (whole repo, from root) | `uv run --project backend ruff check --fix .` · `uv run --project backend ruff format .` |
 | Frontend build / lint | `cd frontend && npm run build` · `npm run lint` |
 | Regenerate mock bundle (from root) | `uv run --project backend python scripts/make_mock.py` → `frontend/public/mock/` |

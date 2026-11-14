@@ -17,9 +17,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from .models import FlagBit
+from .models import FlagBit, FlagGroup
 
-_DEFAULTS: tuple[tuple[int, str, str, str], ...] = (
+_DEFAULTS: tuple[tuple[int, str, str, FlagGroup], ...] = (
     (0, "TRANSIENT", "Transient detected during SUR", "bad"),
     (1, "OVERFLOW", "Overflow detected during SUR", "saturation"),
     (2, "SUR_ERROR", "Error in onboard processing", "bad"),
@@ -44,11 +44,11 @@ _DEFAULTS: tuple[tuple[int, str, str, str], ...] = (
     (28, "HALO", "Pixel part of a transient halo", "artifact"),
 )
 
-_MASKED_GROUPS = {"bad", "saturation"}
-_GROUP_BY_NAME = {name: group for _, name, _, group in _DEFAULTS}
+_MASKED_GROUPS: frozenset[FlagGroup] = frozenset({"bad", "saturation"})
+_GROUP_BY_NAME: dict[str, FlagGroup] = {name: group for _, name, _, group in _DEFAULTS}
 
 
-def _bit(bit: int, name: str, description: str, group: str) -> FlagBit:
+def _bit(bit: int, name: str, description: str, group: FlagGroup) -> FlagBit:
     return FlagBit(bit=bit, name=name, description=description, group=group, mask_in_stack=group in _MASKED_GROUPS)
 
 
