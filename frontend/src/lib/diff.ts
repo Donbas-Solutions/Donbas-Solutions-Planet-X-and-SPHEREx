@@ -1,5 +1,5 @@
 import type { LoadedFrame } from './frames'
-import { missingDetectors } from './playlist'
+import { detectorKey, detectorLabel } from './playlist'
 import type { GridImage } from './render'
 import { finitePercentiles } from './stats'
 
@@ -37,11 +37,12 @@ export function diffFrames(a: LoadedFrame, b: LoadedFrame): DiffResult {
   const abs = data.map(Math.abs)
   const [p] = finitePercentiles([abs], [99.5]) ?? [1]
   const warnings = [...new Set([...earlier.frame.warnings, ...later.frame.warnings].map((w) => w.message))]
-  for (const f of [earlier, later]) {
-    const missing = missingDetectors(f.frame.detectors)
-    if (missing.length > 0) {
-      warnings.push(`${f.frame.label} has no ${missing.map((d) => `D${d}`).join(', ')}: the two stacks differ in λ.`)
-    }
+  const earlierKey = detectorKey(earlier.frame.detectors)
+  const laterKey = detectorKey(later.frame.detectors)
+  if (earlierKey !== laterKey) {
+    warnings.push(
+      `The two stacks use different detectors (${detectorLabel(earlierKey)} vs ${detectorLabel(laterKey)}): they differ in λ.`,
+    )
   }
   if (earlier.frame.lambda_um.join() !== later.frame.lambda_um.join()) {
     warnings.push('The two frames cover different wavelength ranges: part of the difference may be spectral.')

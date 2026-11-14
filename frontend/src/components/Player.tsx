@@ -104,7 +104,7 @@ export default function Player({ isCompact = false }: Props) {
 
   const name = sequence.meta.target_name ?? 'Field'
   const { frame } = currentFrame
-  const missing = missingDetectors(frame.detectors)
+  const missing = missingDetectors(frame.detectors, playlist.key)
   const abTag = frame.id === frameA?.frame.id ? ' · A' : frame.id === frameB?.frame.id ? ' · B' : ''
 
   return (
