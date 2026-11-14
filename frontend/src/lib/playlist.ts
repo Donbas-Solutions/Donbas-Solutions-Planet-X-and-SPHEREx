@@ -3,6 +3,7 @@ import type { LoadedFrame } from './frames'
 import type { DetectorChoice } from './urlState'
 
 const ALL_DETECTORS = '1,2,3,4,5,6'
+const DETECTORS = [1, 2, 3, 4, 5, 6] as const
 const BLINKABLE: readonly Frame['kind'][] = ['visit_stack', 'exposure']
 
 export function detectorKey(detectors: readonly number[]): string {
@@ -13,9 +14,22 @@ export function detectorLabel(key: string): string {
   return key === ALL_DETECTORS ? 'all detectors' : key.split(',').map((d) => `D${d}`).join('+')
 }
 
+/** Detectors a combined (multi-detector) stack lacks, e.g. a visit with no D1 and D4 exposures. */
+export function missingDetectors(detectors: readonly number[]): number[] {
+  return detectors.length > 1 ? DETECTORS.filter((d) => !detectors.includes(d)) : []
+}
+
+/**
+ * Combined stacks share one playlist even when a visit lacks some detectors, so the last visit is not dropped;
+ * the gap is shown as a warning instead (different λ coverage).
+ */
+function playlistKey(frame: Frame): string {
+  return frame.detectors.length > 1 ? ALL_DETECTORS : detectorKey(frame.detectors)
+}
+
 export interface Playlist {
   frames: readonly LoadedFrame[]
-  /** Detector set of every frame in the playlist. */
+  /** Detector set of every frame in the playlist; for combined stacks, the full set (frames may lack some). */
   key: string
   /** False when the requested detectors are not in this sequence and another set is shown instead. */
   isRequested: boolean
@@ -28,12 +42,12 @@ export interface Playlist {
  */
 export function buildPlaylist(all: readonly LoadedFrame[], det: DetectorChoice): Playlist {
   const blinkable = all.filter((f) => BLINKABLE.includes(f.frame.kind))
-  const availableKeys = [...new Set(blinkable.map((f) => detectorKey(f.frame.detectors)))]
+  const availableKeys = [...new Set(blinkable.map((f) => playlistKey(f.frame)))]
   const wanted = det === 'all' ? ALL_DETECTORS : detectorKey(det)
   const isRequested = availableKeys.includes(wanted)
   const key = isRequested ? wanted : (availableKeys.find((k) => k === ALL_DETECTORS) ?? availableKeys[0] ?? wanted)
   const frames = blinkable
-    .filter((f) => detectorKey(f.frame.detectors) === key)
+    .filter((f) => playlistKey(f.frame) === key)
     .sort((a, b) => a.frame.mjd_mid - b.frame.mjd_mid)
   return { frames, key, isRequested, availableKeys }
 }

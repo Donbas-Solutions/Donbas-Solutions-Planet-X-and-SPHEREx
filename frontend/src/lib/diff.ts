@@ -1,4 +1,5 @@
 import type { LoadedFrame } from './frames'
+import { missingDetectors } from './playlist'
 import type { GridImage } from './render'
 import { finitePercentiles } from './stats'
 
@@ -18,7 +19,8 @@ export function diffFrames(a: LoadedFrame, b: LoadedFrame): DiffResult {
   const [ny, nx] = earlier.frame.shape
   const [lny, lnx] = later.frame.shape
   if (ny !== lny || nx !== lnx) return { ok: false, error: 'The two frames are not on the same grid.' }
-  if (earlier.frame.detectors.join() !== later.frame.detectors.join()) {
+  const isCombined = earlier.frame.detectors.length > 1 && later.frame.detectors.length > 1
+  if (!isCombined && earlier.frame.detectors.join() !== later.frame.detectors.join()) {
     return { ok: false, error: 'Difference needs two frames from the same detectors.' }
   }
 
@@ -35,6 +37,12 @@ export function diffFrames(a: LoadedFrame, b: LoadedFrame): DiffResult {
   const abs = data.map(Math.abs)
   const [p] = finitePercentiles([abs], [99.5]) ?? [1]
   const warnings = [...new Set([...earlier.frame.warnings, ...later.frame.warnings].map((w) => w.message))]
+  for (const f of [earlier, later]) {
+    const missing = missingDetectors(f.frame.detectors)
+    if (missing.length > 0) {
+      warnings.push(`${f.frame.label} has no ${missing.map((d) => `D${d}`).join(', ')}: the two stacks differ in λ.`)
+    }
+  }
   if (earlier.frame.lambda_um.join() !== later.frame.lambda_um.join()) {
     warnings.push('The two frames cover different wavelength ranges: part of the difference may be spectral.')
   }
