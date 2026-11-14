@@ -7,7 +7,7 @@ import logging
 import random
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, NoReturn
 from urllib.parse import urlsplit
 
 import httpx
@@ -27,6 +27,14 @@ class ArchiveError(Exception):
     def __init__(self, message: str, status: int | None = None) -> None:
         super().__init__(message)
         self.status = status
+
+
+def raise_first(failures: BaseExceptionGroup[ArchiveError]) -> NoReturn:
+    """Turn a TaskGroup's ExceptionGroup back into one ArchiveError of the same type, so callers can catch it."""
+    first = failures.exceptions[0]
+    while isinstance(first, BaseExceptionGroup):
+        first = first.exceptions[0]
+    raise type(first)(str(first), first.status) from failures
 
 
 @dataclass(frozen=True)

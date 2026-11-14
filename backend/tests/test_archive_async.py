@@ -35,11 +35,6 @@ EMPTY_SIA = "obs_collection,obs_id,access_url,t_min,t_max,energy_bandpassname,em
 Handler = Callable[[httpx.Request], httpx.Response]
 
 
-@pytest.fixture
-def anyio_backend() -> str:
-    return "asyncio"
-
-
 @pytest.fixture(autouse=True)
 def no_backoff(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(archive_http, "backoff_s", lambda attempt, response: 0.0)
@@ -241,6 +236,6 @@ async def test_query_exposures_fails_when_one_collection_fails() -> None:
 
     http = mock_http(handler)
     async with http.client:
-        with pytest.raises(ArchiveError, match="SIA query failed") as info:
+        with pytest.raises(ArchiveError, match="HTTP 400") as info:
             await query_exposures(http, BARNARD, ("spherex_dr1", "spherex_qr3"))
     assert info.value.status == 400

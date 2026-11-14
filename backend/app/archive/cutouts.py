@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import re
+import uuid
 from pathlib import Path
 from typing import Final
 
@@ -18,6 +19,7 @@ KEPT_HDUS: Final = ("IMAGE", "FLAGS", "VARIANCE", "ZODI", "WCS-WAVE")
 FOV_MARGIN: Final = 1.3
 _SIP_KEY = re.compile(r"^(A|B|AP|BP)_(ORDER|DMAX|\d+_\d+)$")
 _UNSAFE = re.compile(r"[^A-Za-z0-9_-]")
+_CRPIX_KEY = re.compile(r"^CRPIX[12][A-Z]?$")
 
 
 def cutout_url(access_url: str, ra_deg: float, dec_deg: float, size_deg: float) -> str:
@@ -35,12 +37,29 @@ def cache_name(meta: ExposureMeta, ra_deg: float, dec_deg: float, size_deg: floa
 
 
 def strip_to_file(fits_bytes: bytes, path: Path) -> None:
-    """Keep only the HDUs the pipeline needs; write atomically so a crash never leaves a valid-looking file."""
+    """Keep only the HDUs the pipeline needs."""
     with fits.open(io.BytesIO(fits_bytes)) as hdul:
         kept = fits.HDUList([fits.PrimaryHDU(header=hdul[0].header)] + [hdul[name].copy() for name in KEPT_HDUS])
-        tmp = path.with_name(path.name + ".tmp")
-        kept.writeto(tmp, overwrite=True)
-    tmp.replace(path)
+        write_atomic(kept, path)
+
+
+def write_atomic(hdul: fits.HDUList, path: Path) -> None:
+    """A crash never leaves a valid-looking file, and concurrent writers of one exposure never share a temp file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        hdul.writeto(tmp)
+        tmp.replace(path)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def shift_crpix(header: fits.Header, x0: int, y0: int) -> fits.Header:
+    """Header of a window starting at 0-based pixel (x0, y0): every CRPIX of every WCS key moves, as IRSA does."""
+    shifted = header.copy()
+    for key in [k for k in shifted if _CRPIX_KEY.match(k)]:
+        shifted[key] = shifted[key] - (x0 if key[5] == "1" else y0)
+    return shifted
 
 
 def _without_sip(header: fits.Header) -> fits.Header:
