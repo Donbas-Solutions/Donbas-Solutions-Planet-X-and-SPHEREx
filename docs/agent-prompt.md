@@ -1,10 +1,10 @@
 # Промпт для Claude Code: SPHEREx Blink
 
-**Як користуватися.** Phase 0, Phase 0.5 і перша хвиля треків уже в `main` (PR #1–#4). Команда з 4 людей, кожен бере
+**Як користуватися.** Phase 0, Phase 0.5 і перші дві хвилі треків уже в `main` (PR #1–#15). Команда з 4 людей, кожен бере
 одну роль і робить її фічі по черзі, кожну в окремій короткій гілці від свіжого `main` (див. «Roles and ownership —
-round 2»), з PR одразу по завершенні. У своїй сесії Claude Code пишіть:
+round 3»), з PR одразу по завершенні. У своїй сесії Claude Code пишіть:
 
-> Read `CLAUDE.md` and `docs/agent-prompt.md`, then execute **Track X, round 2**. Stop at every checkpoint.
+> Read `CLAUDE.md` and `docs/agent-prompt.md`, then execute **Track X, round 3**. Stop at every checkpoint.
 
 Сам промпт нижче — англійською. Звіти агент пише українською.
 
@@ -93,79 +93,78 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
 2 workers and patient retries a cutout takes **~6 s**, so the full depth of one target (360–470 exposures) is
 **~20 min**. A real Barnard sample (3 visits × 6 detectors × 2) came back with shapes 129×128, 106×129, 56×128.
 
-### Status after round 1 (2026-11-14, 18:20) — what is already in `main`
-- **A:** A0 spike (`docs/a0-fetch-spike.md`), A1 SIA + TAP collection discovery, A2 async fetcher (S3 → `ibe` →
-  cutout service), bundled-spectrum contract (`meta.spectrum`). Not yet: jobs, and all five API endpoints still answer
-  **501**.
-- **B:** app shell, URL state, presets, search box, blink player (A/B, diff, stretch, zoom, expected position), flags
-  overlay, frame metadata, pixel readout, job polling, offline fallback, About page.
-- **C:** pipeline (`build_sequence`, positions, photometry), 5 static bundles with spectra and GIFs,
-  `science/VALIDATION.md` (T-1 ✓, T-2 ✓, FR-16 vs 2MASS ✓, T-3 motion ✓ / flux blended, T-4/T-5 saturated),
-  structured frame warnings (`{code, message}`, PR #4).
-- **D:** OD-3 settled and hosting proposed in `docs/deploy.md` (PR #6): deadline **Sun 2026-11-15 23:59 Kyiv
-  (21:59 UTC)**, demo = video ≤ 30 s or ≤ 7 slides, AI-use disclosure, no NASA branding; hosting = **Netlify**
-  (frontend + bundles at the domain root, proxies `/api/*` and `/files/*`) + **Hugging Face Spaces, Docker** (backend).
-  **Then decided: no deploy for the submission** (not required) — local runs only; the public GitHub repo is the
-  "link to final project" (OD-1 deferred).
-  Spectrum / Light curve / Context tabs are still placeholders.
-- Milestones: **M1 ✗** (no live API), **M2 🟡** (offline part works end to end), **M3 ✗**.
+### Status after round 2 (2026-11-14, 20:30) — what is already in `main`
+- **A:** live API (#9): background jobs, `/api/sequence` (200 cached | 202 job), `/api/jobs/{id}`, `/api/resolve`
+  (SIMBAD + Harvard mirror, short designations like `WISE 0855-0714`), `/api/health`; 30 s collection-discovery limit.
+  Target spectra (#15): every job measures the target's photometry; `/api/spectrum` and `/api/lightcurve` serve it
+  (`404` until a sequence of that target has finished). Only `/api/overlays` still answers **501**.
+  M1 checked off-line: recorded SIA → S3 → process pool → bundle reproduced Barnard 1.65 px / ε Indi B 1.07 px
+  (expected 1.67 / 1.05) in 117 s / 88 s from an empty cache; A ran Barnard live end to end (368 s).
+- **B:** live mode (#13: cached jobs on reload, no-coverage state, partial-data wording), About + glossary tooltips
+  (#14, FR-15, spec §5.5), combined playlist keeps visits missing detectors (#7).
+- **C:** absolute LVF-channel coverage warning (#11: capped live stacks always get `incomplete_lambda`);
+  matched-λ variability between visits (#12: `pipeline/variability.py`, light-curve line, RW Aur D1 ×2.43 at
+  12.5σ; ε Indi B and WISE 0855 ≤ 2σ).
+- **D:** spectrum chart (#8, FR-16) and light-curve chart (#10, FR-17: visit means, χ² against constant).
+- Milestones: **M1 ✓** (live API; SIA live check depends on IRSA uptime), **M2 ✓** (offline end to end with charts),
+  **M3 🟡** (Aladin context, Gaia markers, README and submission open).
+- IRSA was unstable on 2026-11-14 (SIA/TAP `502` or hanging for minutes): prebaked bundles are the demo path.
 
-### Roles and ownership — round 2
+### Roles and ownership — round 3
 
 | Role | Who | Feature branches (in order) | Owns | Mission now |
 |---|---|---|---|---|
-| **A — Archive & API** | the A person | `feat/live-sequence-api` → `feat/spectrum-api` → `feat/gaia-overlays` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`; contract files | Live API (M1) |
-| **B — Frontend core** | the B person | `feat/live-mode` → `fix/diff-default-and-about` | app shell, state, URL, player, panels, `package.json` | Live mode, fixes, support D |
-| **C — Science & delivery** | the team lead | `test/fr16-spectrophotometry` → `docs/readme-and-pitch` | `backend/app/pipeline/`, `science/`, `scripts/prebake.py`, `frontend/public/prebaked/`, README, pitch | Spectrum endpoint with A, FR-16 acceptance, **README (local run) and submission** |
-| **D — P1 features** | the new person | `feat/spectrum-chart` → `feat/light-curve-chart` → `feat/aladin-context` | `frontend/src/components/{charts,context,embed}/` (+ their `lib/` helpers) | Spectrum and light-curve charts, Aladin context panel, embed, Gaia markers |
+| **A — Archive & API** | the A person | `fix/spectrum-store` → `feat/gaia-overlays` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`; contract files | Spectrum-store fixes, Gaia overlays, live M1 numbers |
+| **B — Frontend core** | the B person | no new feature branch; `docs/…` screenshots with C | app shell, state, URL, player, panels, `package.json` | Support D (Aladin), Windows clean-clone test, screenshots/GIFs |
+| **C — Science & delivery** | the team lead | `fix/prebake-discovery-timeout` → `test/fr16-spectrophotometry` → `docs/readme-and-pitch` | `backend/app/pipeline/`, `science/`, `scripts/prebake.py`, `frontend/public/prebaked/`, README, pitch | Decisions, README and submission |
+| **D — P1 features** | the new person | `feat/aladin-context` → `feat/gaia-markers` | `frontend/src/components/{charts,context,embed}/` (+ their `lib/` helpers) | Aladin context panel, then Gaia markers |
 
 Shared: `domain.py` (A + C), `CLAUDE.md`, `docs/spec.md`, `docs/api.md` (announce changes). B and D share the
 frontend: D only touches its component folders and reads app state through B's hooks; anything else goes through B.
 
-### Track A — round 2
-1. `feat/live-sequence-api` — **A3 `jobs.py`** (FR-13): registry keyed by request; background task query → plan → `fetch_cutouts` →
-   `build_sequence` in a process pool (`progress=None`) → `write_bundle` into `cache/processed/<key>/`, served at `/files`.
-2. same branch — **A4 endpoints**: `/api/sequence` (200 cached | 202 job), `/api/jobs/{id}`, `/api/resolve` (SIMBAD + Harvard mirror,
-   FR-2), `/api/health` with discovered collections. **Checkpoint A (M1):** live Barnard and ε Indi B over HTTP.
-3. `feat/spectrum-api` — **`/api/spectrum` and `/api/lightcurve`** with C: call `pipeline.photometry.measure_spectrum` on the cutouts of the
-   job's plan.
-4. `feat/gaia-overlays` (P1) — `/api/overlays` (Gaia DR3 propagated to the frame epoch) for D's Gaia markers (FR-18).
+### Track A — round 3
+1. `fix/spectrum-store` — follow-ups from the #15 review: overwrite the per-target spectrum when the existing file is
+   older than the TTL (today an expired, larger spectrum blocks a fresh smaller one → `404`); give `_write_atomic` a
+   unique temp name (two jobs of one target share `<target>.part`).
+2. When IRSA is stable: run M1 live for Barnard and ε Indi B and post the numbers, including the `/api/spectrum`
+   response (Barnard: every point `saturated: true`, `flux_ujy: null`).
+3. `feat/gaia-overlays` (P1) — `/api/overlays` (Gaia DR3 propagated to the frame epoch) for D's Gaia markers (FR-18).
+4. Optional (contract change, announce it): an error `code` in `JobStatus`, so the frontend stops matching the
+   "no coverage" message by text.
 
-### Track B — round 2
-1. `feat/live-mode` — **Live mode** once A4 lands: `/?ra=&dec=` and `/?name=` end to end, job progress, errors (FR-2, FR-13).
-2. `fix/diff-default-and-about` — the default diff of ε Indi B uses visit 2026-04 instead of the last visit 2026-09; About says WISE 0855 is
-   "not a detection" — update to "motion seen in D5–D6, flux blended with a field star" (`science/VALIDATION.md` T-3).
-3. No branch — support D: expose the selected pixel / current frame / sequence through the state hook; review D's PRs.
+### Track B — round 3
+1. Review and support D's Aladin PR (state hooks, layout).
+2. **Clean-clone test on Windows** from the README alone (acceptance of C's `docs/readme-and-pitch`): report every
+   step that fails.
+3. Screenshots and GIFs for the README and the video (prebaked targets: ε Indi B diff, Barnard blink, RW Aur light
+   curve), with C.
 
-### Track C — round 2
+### Track C — round 3
 1. **Decisions (no branch), first:** the repo becomes public before submission (it is the "link to final project")
    and its licence (OD-2, GPL/LGPL-3-compatible because of Aladin); confirm the Team Owner who clicks "Submit" and
-   whether the Kyiv Local Lead set an earlier cutoff. OD-3 is done and OD-1 deferred: no deploy (`docs/deploy.md`).
-2. On A's `feat/spectrum-api` — `/api/spectrum` + `/api/lightcurve` (C owns the science, A the endpoint).
-3. `test/fr16-spectrophotometry` — FR-16 acceptance: one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25).
-4. `docs/readme-and-pitch` — README (what, how, **local run on macOS and Windows**, screenshots/GIFs from the bundles,
-   limitations, credits NFR-10), licence (OD-2), pitch script and video recorded from a local run, submission text.
-   Acceptance: a teammate on another machine (ideally Windows) clones the repo and runs it from the README alone.
+   whether the Kyiv Local Lead set an earlier cutoff.
+2. `fix/prebake-discovery-timeout` (ready locally) — 30 s TAP limit in `scripts/prebake.py`, `validate.py` keeps a
+   target's last section when IRSA fails, regenerated `science/VALIDATION.md` (matched-λ table for T-4).
+3. `test/fr16-spectrophotometry` — FR-16 acceptance: one unsaturated star against IRSA's Spectrophotometry Tool
+   (ratio 0.8–1.25).
+4. `docs/readme-and-pitch` — README (what, how, **local run on macOS and Windows**, screenshots/GIFs, limitations,
+   credits NFR-10, AI-use disclosure), licence (OD-2), pitch script, video ≤ 30 s from a local run, submission text.
+5. Optional, when IRSA is stable: regenerate the RW Aur and R Dra bundles so they carry the #11 warnings.
 
-### Track D — round 2
-One branch per feature, from a fresh `main`; develop against the bundles: `/?target=eps_ind_b` (spectrum in `meta.spectrum`).
-1. `feat/spectrum-chart` — **Spectrum chart** (FR-16): flux vs λ from `spectrum.json` / `/api/spectrum`, errors, coloured by visit;
-   saturated points as hollow markers labelled "saturated", never as values (SR-6). One small chart library, lazy-loaded
-   (ask before adding it).
-2. `feat/light-curve-chart` — **Light-curve chart** (FR-17): flux vs time per detector from the same points.
-3. `feat/aladin-context` — **Context panel** (FR-19), with a HiPS mirror fallback (CDS `alasky` was down on
-   2026-11-14; `irsa.ipac.caltech.edu/data/hips/CDS/…` answered): Aladin Lite (`components/AladinPanel.tsx`) synced to target and FOV; SPHEREx colour HiPS,
-   AllWISE, 2MASS; Gaia DR3 via VizieR. Verify in a real browser (WebGL).
-4. P1 if time allows: Gaia markers in the player (FR-18, needs A's `/api/overlays`), AllWISE frame (FR-22).
-   Embed (FR-21, `feat/embed-view`) is last: without a hosted URL nobody can embed it.
+### Track D — round 3
+1. `feat/aladin-context` — **Context panel** (FR-19), with a HiPS mirror fallback (CDS `alasky` was down on
+   2026-11-14; `irsa.ipac.caltech.edu/data/hips/CDS/…` answered): Aladin Lite (`components/AladinPanel.tsx`) synced
+   to target and FOV; SPHEREx colour HiPS, AllWISE, 2MASS; Gaia DR3 via VizieR. Verify in a real browser (WebGL).
+2. `feat/gaia-markers` (P1, needs A's `/api/overlays`) — Gaia sources in the player (FR-18).
+3. AllWISE frame (FR-22) and embed (FR-21) only if everything else is done.
 
-### Who waits for whom — round 2
+### Who waits for whom — round 3
 | Who | Waits for | Meanwhile |
 |---|---|---|
-| B (live mode) | A4 | fixes, support D |
-| D | nothing — data are in the bundles | charts and Aladin on `/?target=…` |
-| C (README, local-run test) | features merged | FR-16 check, README draft, decisions |
-| C + A (`/api/spectrum`) | A3 | — |
+| D (Gaia markers) | A's `/api/overlays` | Aladin panel |
+| B (clean-clone test) | C's README draft | review D, screenshots |
+| C (repo public, submission) | team decisions; features frozen | README, FR-16 check, video script |
+| A (live M1 numbers) | IRSA uptime | spectrum-store fixes, overlays |
 
 ### Integration and git
 - **One short-lived branch per feature**, named like a commit (`feat/…`, `fix/…`, `chore/…`, `docs/…`, `test/…`) and
@@ -177,17 +176,16 @@ One branch per feature, from a fresh `main`; develop against the bundles: `/?tar
 - Contract changes only through A, announced in the team chat; `domain.py` changes agreed by A and C.
 - Pushes only when the human you work with explicitly says so (`CLAUDE.md` → Git).
 
-### Timeline — round 2
+### Timeline — round 3
 | When (2026-11-14/15) | Milestone |
 |---|---|
-| Sat evening | OD-3 settled; no deploy (OD-1); A3 started; D charts started |
-| Sat night | **M1** live API for Barnard and ε Indi B |
-| Sun morning | Live mode in the UI; spectrum/light-curve charts and Aladin; README |
-| Sun midday | Feature freeze → clean-clone test from the README on another machine → GIFs/screenshots → video → repo public |
+| Sat night | ✓ M1 live API, live mode, spectrum and light-curve charts, matched-λ variability |
+| Sun morning | Aladin panel; Gaia overlays/markers if on time; README draft; team decisions (repo public, licence, Team Owner) |
+| Sun midday | **Feature freeze** → clean-clone test on Windows from the README → GIFs/screenshots → video |
+| Sun afternoon | Repo public, submission text final, links tested in a private window |
 | Sun 23:59 Kyiv (21:59 UTC) | Submission by the Team Owner — aim for well before |
 
-If time runs short, drop in this order: FR-21 (embed) → FR-22 (AllWISE) → FR-18 (Gaia markers) → FR-19 (Aladin) →
-FR-17 (light curves). Never drop FR-3 / FR-14 (prebaked bundles) or the README local-run instructions.
+If time runs short, drop in this order: FR-21 (embed) → FR-22 (AllWISE) → FR-18 (Gaia markers) → FR-19 (Aladin). Never drop FR-3 / FR-14 (prebaked bundles) or the README local-run instructions.
 
 ## 6. Working rules
 - **Checkpoints:** stop and report in Ukrainian using: *Зроблено / Як перевірено (команди + реальний вивід) /
