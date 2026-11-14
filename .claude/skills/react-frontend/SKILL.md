@@ -1,6 +1,6 @@
 ---
 name: react-frontend
-description: React 19 + TypeScript + Vite conventions for this repo's frontend/. Use before writing or changing anything in frontend/ - components, hooks, state, URL sync, data fetching and job polling, the canvas blink player, Aladin Lite, charts, CSS, accessibility - and before committing frontend changes. Covers strict TypeScript, Rules of React and hooks, effects and cleanup, performance of typed-array rendering, a11y (WCAG 2.2, flashing content), security, oxlint, npm and comments.
+description: React 19 + TypeScript + Vite conventions for this repo's frontend/. Use before writing or changing anything in frontend/ - components, hooks, state, URL sync, data fetching and job polling, the canvas blink player, diff mode, flags overlay, coordinate input, Aladin Lite, charts, CSS, accessibility - and before committing frontend changes. Covers strict TypeScript, Rules of React and hooks, effects and cleanup, pixel/sky conventions, shared stretch, diff and flag rules, performance of typed-array rendering, a11y (WCAG 2.2, flashing content), security, oxlint, npm and comments.
 ---
 
 # React frontend conventions
@@ -50,6 +50,8 @@ src/
 - Strict mode is mandatory (TS ≥ 6 enables it by default; never turn any strict flag off). `noUnusedLocals`,
   `noUnusedParameters` and `erasableSyntaxOnly` are on: no `enum`, no `namespace`, no parameter properties —
   use union literal types and `as const` objects instead.
+- `noUncheckedIndexedAccess` is on: `arr[i]` is `T | undefined`, typed arrays included. In pixel loops write
+  `data[i] ?? Number.NaN` / `flags[i] ?? 0`; elsewhere destructure or check. Never reach for `!` to get past it.
 - **No `any`.** Use `unknown` and narrow. The only sanctioned `any` is the untyped `aladin-lite` module
   declaration; wrap Aladin in a small typed interface at the boundary instead of spreading `any`.
 - Data from the network is `unknown` until checked. `res.json() as Sequence` is acceptable only for our own
@@ -120,6 +122,12 @@ src/
   last timestamp). Don't read or write `ref.current` during render.
 - Imperative libraries (canvas, Aladin Lite) live behind one component that owns them: create in an effect, update
   through the instance on prop change (`aladin.gotoRaDec`, `setFoV`) instead of recreating, destroy in cleanup.
+- Aladin Lite 3.8.2: `await A.init` (WASM) before `A.aladin(el, options)`; keep `cooFrame: 'ICRS'`; survey ids
+  are the HiPS ids in `CLAUDE.md`. Present in the 3.8.2 bundle: `gotoRaDec`, `setFoV`, `setBaseImageLayer`,
+  `newImageSurvey`, `A.catalogFromVizieR`. The package ships no types — check signatures against the 3.8.2 API
+  docs and add each method you use to a typed interface in `src/aladin-lite.d.ts`.
+  `components/AladinPanel.tsx` is still the Phase 0 skeleton (it recreates the instance on every prop change);
+  B5 brings it in line with the rule above.
 
 ## Performance
 
@@ -135,11 +143,74 @@ src/
   dependency — measure (React DevTools Profiler) before adding them everywhere.
 - Fetch frames in parallel but bounded; show progress; never refetch what is already loaded.
 
+## Domain rules: frames, pixels, science
+
+The conventions come from `docs/api.md` and the science rules in `CLAUDE.md`. Getting them wrong produces a
+plausible-looking but scientifically wrong picture, so they are not optional.
+
+### Pixel and sky geometry
+- Arrays are row-major `[ny, nx]`, **row 0 = south**, x grows to the **west**; displayed north up, east left.
+  Rows are flipped once, when drawing (`renderFrame`); never flip the data arrays themselves.
+- Pixel positions (`expected_px`) are 0-based with the integer at the pixel **center**. Data → CSS position:
+  `left = (x + 0.5) * zoom`, `top = (ny - 1 - y + 0.5) * zoom`. Screen → data is the exact inverse. Keep both
+  directions as one pair of functions in `lib/`; markers, crosshair, click handling and overlays all use it.
+- Pixel ↔ RA/Dec goes through `grid.wcs` (TAN, FITS cards, 1-based `CRPIX`) with a real gnomonic (de)projection
+  in `lib/` — not `dec + dy * scale`, which ignores cos(dec) and breaks near the poles (R Dra is at +66.8°).
+- The marker shows the **expected** position from proper motion, not a detection. Label it that way.
+
+### Stretch and colormaps
+- One shared stretch for every frame of a sequence (`seq.stretch` or the user's sliders). Never autoscale per
+  frame: it would fake or hide brightness changes.
+- `NaN` = no data. Draw it in a distinct color, never as 0 or black, and exclude it from any statistics.
+- Guard `vmin === vmax` (division by zero) and keep `vmin < vmax` when sliders move.
+
+### Diff mode
+- Computed client-side from two `visit_stack` frames: **later − earlier** (by `mjd_mid`).
+- Only like with like: same `detectors` in both frames. If `lambda_um` coverage differs, or either frame carries
+  a warning, show the warning on the diff too.
+- `NaN` in either input → `NaN` in the diff. Flags of the diff = bitwise OR of both inputs.
+- The diff has its own stretch: symmetric around 0 (`vmin = -vmax`), diverging colormap, with a legend saying
+  which color means "brighter later". It never reuses the intensity stretch.
+- Help text explains the reading: dipole = moving source, single blob = variable source.
+
+### Flags
+- Build masks from `seq.flag_bits` by `group`; never hardcode bit numbers in the frontend.
+- Flag arrays are uint32: `1 << 31` is negative in JS, so build masks with `>>> 0` and test with `!== 0`.
+- Overlay `bad` and `saturation` (and optionally `artifact`) as separate, legend-labeled layers. `info` bits
+  (including `SOURCE`, bit 21 — every known star) are hidden by default and never shown as "bad".
+- Any number derived from pixels flagged `saturation` is displayed as "saturated", not as a value.
+
+### Coordinate input
+- Decimal RA is **degrees**; sexagesimal RA (`17 57 48.5`, `17:57:48.5`, `17h57m48.5s`) is **hours** → ×15.
+  Dec is always degrees.
+- Take the Dec sign from the string, not from the parsed degrees: `-00 30 00` is −0.5°, and `-0` loses the sign.
+- Reject out-of-range input (RA 0–360, Dec −90…90, minutes/seconds < 60) with a message; don't clamp silently.
+- The WISE 0855 preset uses `science/targets.json` (SIMBAD J2000 + PM), never the challenge-text coordinates.
+
+### URL state
+- Canonical params: `ra`, `dec` (ICRS degrees), `fov` (arcmin, 2–30, default 10), `det` (`all` or a comma list
+  of `1..6`), `mode`, `name`, plus `manifest` for static bundles. `ra/dec/fov/det/mode` mirror
+  `GET /api/sequence`. Adding a param = tell the team (shared links and `/embed` depend on it).
+- Omit params that hold their default; an unknown or invalid value falls back to the default, never crashes.
+
+### Honest wording
+- No "detected" for anything below 5σ: show S/N or a 5σ upper limit (WISE 0855 is at the detection limit).
+- No Planet Nine / Planet X discovery claims anywhere in UI copy.
+- The Limitations text stays reachable from every view, including `/embed`.
+- Dates are UTC (`date_range` ISO, `mjd_mid` MJD); never format them in the local timezone.
+
 ## Data layer
 
-- All URLs are relative (`/api/...`, `/files/...`, `/prebaked/...`, `/mock/...`); the Vite proxy makes them
-  same-origin in dev. Config via `import.meta.env.VITE_*` only, typed in `vite-env.d.ts`; no secrets in the
-  frontend — everything in the bundle is public.
+- App URLs are root-absolute (`/api/...`, `/files/...`, `/prebaked/...`, `/mock/...`); the Vite proxy makes them
+  same-origin in dev. They break if the site is served from a sub-path, so build static-asset URLs from
+  `import.meta.env.BASE_URL` in one place in `api/`. Frame `data`/`flags` URLs resolve against the manifest URL
+  (`new URL(frame.data, manifestUrl)`), never against the page.
+- Config via `import.meta.env.VITE_*` only (types come from `"types": ["vite/client"]` in `tsconfig.app.json`;
+  declare custom vars in a `src/vite-env.d.ts` when the first one is added). No secrets in the frontend —
+  everything in the bundle is public.
+- `GET /api/sequence` returns `200 Sequence` or `202` with a job id → poll `/api/jobs/{id}` and show
+  `progress.stage` with `done/total`.
+- Check the byte length of every binary against `shape` (`ny * nx * 4`) before wrapping it in a typed array.
 - Check `res.ok`, turn HTTP failures into a readable message (status + what failed), and surface it in the UI.
   Fallback order (Track B): live API → `/prebaked/<target>/` → clear error message. Never fail silently.
 - Every async UI state is explicit: loading (with progress where available), empty, error (with a retry), ready.
@@ -180,7 +251,10 @@ src/
 
 ## Code style
 
-- oxlint (`frontend/.oxlintrc.json`) is the authority. Disable a rule only on one line with a reason:
+- oxlint (`frontend/.oxlintrc.json`) is the authority. It enforces hooks rules, `react/exhaustive-deps`,
+  `typescript/no-explicit-any`, `no-console` (only `console.error` allowed) and the `jsx-a11y` plugin
+  (a11y findings are warnings — still fix them). A clean run prints nothing. Disable a rule only on one line
+  with a reason:
   `// oxlint-disable-next-line <rule> -- reason`; never file-wide.
 - Naming: `PascalCase` components/types, `camelCase` functions/variables, `useX` hooks, `UPPER_SNAKE` module
   constants, event handlers `handleX` and their props `onX`. Booleans read as questions (`isPlaying`, `hasFlags`).
