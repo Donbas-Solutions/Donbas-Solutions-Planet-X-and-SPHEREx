@@ -34,7 +34,7 @@ export function diffFrames(a: LoadedFrame, b: LoadedFrame): DiffResult {
 
   const abs = data.map(Math.abs)
   const [p] = finitePercentiles([abs], [99.5]) ?? [1]
-  const warnings = [...new Set([...earlier.frame.warnings, ...later.frame.warnings])]
+  const warnings = [...new Set([...earlier.frame.warnings, ...later.frame.warnings].map((w) => w.message))]
   if (earlier.frame.lambda_um.join() !== later.frame.lambda_um.join()) {
     warnings.push('The two frames cover different wavelength ranges: part of the difference may be spectral.')
   }

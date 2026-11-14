@@ -28,8 +28,8 @@ export default function FrameMeta({ frame, title }: Props) {
       {frame.warnings.length > 0 && (
         <ul className="warnings" aria-label={`Warnings for ${frame.label}`}>
           {frame.warnings.map((w) => (
-            <li key={w} className="warn">
-              ⚠ {w}
+            <li key={`${w.code}:${w.message}`} className="warn">
+              ⚠ {w.message}
             </li>
           ))}
         </ul>

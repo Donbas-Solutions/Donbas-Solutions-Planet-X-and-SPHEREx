@@ -1,4 +1,5 @@
 import { useAppState } from '../hooks/useAppState'
+import { hasPartialData } from '../lib/warnings'
 import Landing from './Landing'
 
 function stageLabel(stage: string): string {
@@ -66,14 +67,15 @@ export default function LoadStatus() {
         </div>
       )
     case 'ready': {
-      const warned = frames.filter((f) => f.frame.warnings.length > 0).length
-      if (!load.notice && warned === 0) return null
+      const partial = frames.filter((f) => hasPartialData(f.frame)).length
+      if (!load.notice && partial === 0) return null
       return (
         <div className="status warn" aria-live="polite">
           {load.notice && <p>{load.notice}</p>}
-          {warned > 0 && (
+          {partial > 0 && (
             <p>
-              Partial data: {warned} of {frames.length} frames carry warnings (see the frame details).
+              Partial data: {partial} of {frames.length} frames have few exposures or incomplete wavelength coverage
+              (see the frame details).
             </p>
           )}
         </div>
