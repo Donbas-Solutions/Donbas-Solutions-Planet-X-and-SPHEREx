@@ -11,12 +11,12 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 
 ## Communication
 - Reports to the team: **Ukrainian**. Code, comments, identifiers, commit messages, API: English.
+- Scope cuts, hosting, accounts, anything public-facing or irreversible → ask the team, don't guess.
 
 ## Code comments
 - Keep comments to a minimum: names, types and small functions should explain *what* the code does.
 - Comment only a non-obvious *why*: a science/instrument fact, an upstream workaround, a deliberate trade-off.
 - No comments that restate the code, no commented-out code, no section banners or changelog notes.
-- Scope cuts, hosting, accounts, anything public-facing or irreversible → ask the team, don't guess.
 
 ## Stack and layout
 - `backend/` — Python ≥3.11 (dev machine: 3.13), FastAPI, astropy 8, astroquery, pyvo, reproject, photutils, numpy.
@@ -111,7 +111,7 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 
 ## Commands
 Install tools once: macOS `brew install uv ruff` · Windows `winget install astral-sh.uv` (ruff then comes with the
-dev dependencies). Setup: `cd backend && uv sync && cd ..` and `cd frontend && npm install && cd ..`.
+dev dependencies). Setup: `cd backend && uv sync && cd ..` and `cd frontend && npm ci && cd ..`.
 uv reads `.python-version` + `uv.lock`, so everyone gets identical versions (it downloads Python 3.13 if missing).
 All commands below are the same on macOS and Windows.
 
