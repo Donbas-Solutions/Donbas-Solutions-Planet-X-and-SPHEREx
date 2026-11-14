@@ -95,8 +95,16 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   below 5σ. No Planet Nine claims.
 
 ## Git: commits and pushes
-- Commit messages are **exactly one line**: English, imperative, ≤72 chars, no body, no trailers.
-  Example: `Add visit grouping for SIA results`.
+- Commit messages follow **Conventional Commits** and are **exactly one line**: `<type>(<scope>): <summary>`.
+  English, imperative, lower-case summary, no trailing period, ≤72 chars in total, no body, no trailers.
+  - `type`: `feat` (new behaviour) · `fix` (bug fix) · `docs` · `test` · `refactor` (no behaviour change) · `perf` ·
+    `build` (deps, packaging) · `ci` · `chore` (tooling, config, housekeeping) · `style` (formatting only).
+  - `scope` (optional, one word): the area — `archive`, `api`, `jobs`, `pipeline`, `science`, `prebake`, `frontend`,
+    `player`, `charts`, `deploy`, `docs`.
+  - A change that breaks the API contract or `domain.py` gets `!`: `feat(api)!: add spectrum.json to static bundles`.
+  - Examples: `feat(pipeline): add per-visit inverse-variance stacks` · `fix(archive): dedupe sia rows by obs_id and
+    detector` · `docs: correct eps ind a distance` · `chore: ignore python caches of root scripts`.
+  - Merge commits created by `git pull` / PRs keep git's default message.
 - Commits are **local only**: commit at green checkpoints on your track branch.
 - Before every commit, everything you touched is clean: Python — `ruff check`, `ruff format --check`, `mypy`, `pytest`;
   frontend — `npm run build`, `npm run lint` (see Commands).

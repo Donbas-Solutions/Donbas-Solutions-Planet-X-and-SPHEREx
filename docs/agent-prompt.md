@@ -205,7 +205,7 @@ FR-18 (Gaia). Never drop FR-3 / FR-14 (prebaked bundles).
   Відхилення від плану / Ризики та питання / Наступний крок.* Wait for "go".
 - Verify against real data, not just mocks; paste real numbers. If something cannot be verified, say so plainly.
 - Commit locally at each green checkpoint on your track branch, following the Git section of `CLAUDE.md`
-  (one-line messages; push only when explicitly told to). Never deploy or create accounts without a human OK.
+  (one-line Conventional Commits, e.g. `feat(pipeline): …`; push only when explicitly told to). Never deploy or create accounts without a human OK.
 - Before each commit: ruff check + ruff format + mypy + pytest clean for Python, `npm run build` + `npm run lint` for
   the frontend. Python deps only via `uv add` (commit `uv.lock`); never `pip install` into the env by hand.
 - Ask before: changing the API contract or `domain.py`, adding a heavy dependency, cutting a P0 item, anything public-facing.
