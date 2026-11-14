@@ -64,6 +64,11 @@ class CollectionDiscovery:
     def source(self) -> CollectionSource:
         return self._source
 
+    @property
+    def current(self) -> tuple[str, ...]:
+        """The last known list without querying TAP: the fallback until the first discovery has finished."""
+        return self._collections or self._fallback
+
     async def collections(self, http: Http) -> tuple[str, ...]:
         async with self._lock:
             if self._clock() < self._expires_at:

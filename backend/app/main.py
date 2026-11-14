@@ -2,28 +2,86 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
+from collections.abc import AsyncIterator
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 from typing import Annotated, Literal
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from .archive.collections import CollectionDiscovery
+from .archive.http import Http, make_http
+from .archive.resolve import ResolveError, Resolver
 from .config import configure_ssl, settings
+from .domain import DETECTORS, SequenceParams, Target
+from .jobs import JobRunner, SequenceRequest, fetch_for_request
 from .models import CacheStats, Health, JobAccepted, JobStatus, Overlays, ResolveResult, Sequence, Spectrum
 
 configure_ssl()
 
-app = FastAPI(title="SPHEREx Blink API", version="0.1.0")
+settings.processed_dir.mkdir(parents=True, exist_ok=True)
+settings.raw_dir.mkdir(parents=True, exist_ok=True)
+
+
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    http = make_http()
+    discovery = CollectionDiscovery()
+    warm_up = asyncio.create_task(discovery.collections(http)) if settings.warm_collections else None
+    pool = ProcessPoolExecutor(max_workers=settings.pipeline_workers)
+    runner = JobRunner(partial(fetch_for_request, http, discovery), settings.processed_dir, executor=pool)
+    app.state.http = http
+    app.state.resolver = Resolver()
+    app.state.discovery = discovery
+    app.state.runner = runner
+    try:
+        yield
+    finally:
+        if warm_up is not None:
+            warm_up.cancel()
+        await runner.aclose()
+        await http.client.aclose()
+        pool.shutdown(wait=False, cancel_futures=True)
+
+
+app = FastAPI(title="SPHEREx Blink API", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(settings.cors_origins),
     allow_methods=["GET"],
     allow_headers=["*"],
 )
-
-settings.processed_dir.mkdir(parents=True, exist_ok=True)
-settings.raw_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/files", StaticFiles(directory=settings.processed_dir), name="files")
+
+
+def get_runner(request: Request) -> JobRunner:
+    runner: JobRunner = request.app.state.runner
+    return runner
+
+
+def get_discovery(request: Request) -> CollectionDiscovery:
+    discovery: CollectionDiscovery = request.app.state.discovery
+    return discovery
+
+
+def get_http(request: Request) -> Http:
+    http: Http = request.app.state.http
+    return http
+
+
+def get_resolver(request: Request) -> Resolver:
+    resolver: Resolver = request.app.state.resolver
+    return resolver
+
+
+Runner = Annotated[JobRunner, Depends(get_runner)]
+SharedHttp = Annotated[Http, Depends(get_http)]
+NameResolver = Annotated[Resolver, Depends(get_resolver)]
+Discovery = Annotated[CollectionDiscovery, Depends(get_discovery)]
 
 
 def _cache_stats() -> CacheStats:
@@ -33,9 +91,8 @@ def _cache_stats() -> CacheStats:
 
 
 @app.get("/api/health", response_model=Health)
-def health() -> Health:
-    # Track A replaces the static list with TAP discovery (cached, fallback to settings).
-    return Health(status="ok", collections=list(settings.fallback_collections), cache=_cache_stats())
+def health(discovery: Discovery) -> Health:
+    return Health(status="ok", collections=list(discovery.current), cache=_cache_stats())
 
 
 def _not_yet(track: str) -> HTTPException:
@@ -47,15 +104,30 @@ Dec = Annotated[float, Query(ge=-90, le=90, description="ICRS degrees")]
 Pm = Annotated[float | None, Query(description="mas/yr; pmra includes cos(dec)")]
 RefEpoch = Annotated[float, Query(description="Julian year of ra/dec")]
 Fov = Annotated[float, Query(ge=2, le=30, description="arcmin")]
+JobId = Annotated[str, Path(pattern=r"^[0-9a-f]{32}$")]
 
 
 @app.get("/api/resolve", response_model=ResolveResult)
-def resolve(name: Annotated[str, Query(min_length=1, max_length=100)]) -> ResolveResult:
-    raise _not_yet("Track A")
+async def resolve(
+    http: SharedHttp, resolver: NameResolver, name: Annotated[str, Query(min_length=1, max_length=100)]
+) -> ResolveResult:
+    try:
+        result = await resolver.resolve(http, name)
+    except ResolveError as exc:
+        raise HTTPException(status_code=503, detail="SIMBAD is unreachable; enter coordinates instead.") from exc
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"{name!r} is not known to SIMBAD")
+    return result
+
+
+def _detectors(det: str) -> tuple[int, ...]:
+    return DETECTORS if det == "all" else tuple(sorted({int(d) for d in det.split(",")}))
 
 
 @app.get("/api/sequence", response_model=Sequence | JobAccepted)
-def sequence(
+async def sequence(
+    runner: Runner,
+    response: Response,
     ra: Ra,
     dec: Dec,
     fov: Fov = 10.0,
@@ -66,12 +138,25 @@ def sequence(
     ref_epoch: RefEpoch = 2000.0,
     allwise: bool = False,
 ) -> Sequence | JobAccepted:
-    raise _not_yet("Track A")
+    """200 with the cached sequence, or 202 with a job to poll at `/api/jobs/{job_id}`."""
+    request = SequenceRequest(
+        target=Target(ra_deg=ra, dec_deg=dec, ref_epoch=ref_epoch, pmra_masyr=pmra, pmdec_masyr=pmdec),
+        params=SequenceParams(fov_arcmin=fov, detectors=_detectors(det), mode=mode, include_allwise=allwise),
+    )
+    cached = await runner.cached(request)
+    if cached is not None:
+        return cached
+    job = runner.submit(request)
+    response.status_code = 202
+    return JobAccepted(job_id=job.id)
 
 
 @app.get("/api/jobs/{job_id}", response_model=JobStatus)
-def job(job_id: str) -> JobStatus:
-    raise _not_yet("Track A")
+async def job(runner: Runner, job_id: JobId) -> JobStatus:
+    found = runner.get(job_id)
+    if found is None:
+        raise HTTPException(status_code=404, detail="Unknown or expired job")
+    return found.status()
 
 
 @app.get("/api/spectrum", response_model=Spectrum)

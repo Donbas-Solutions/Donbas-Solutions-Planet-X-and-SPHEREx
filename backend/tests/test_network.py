@@ -12,6 +12,7 @@ from app.archive.fetch import fetch_one as async_fetch_one
 from app.archive.fetch import query_exposures as async_query_exposures
 from app.archive.http import make_http
 from app.archive.naive import fetch_one, make_client, query_exposures
+from app.archive.resolve import Resolver
 from app.archive.visits import group_visits
 from app.astrometry import position_at
 from app.config import configure_ssl, settings
@@ -69,3 +70,23 @@ async def test_s3_and_ibe_range_reads_give_the_same_window(tmp_path: Path) -> No
         from_ibe = await async_fetch_one(http, meta, "v1", center, 0.05, tmp_path / "ibe", sources=("ibe",))
     for name in ("image", "variance", "zodi", "flags", "wavelength_um"):
         np.testing.assert_array_equal(getattr(from_s3, name), getattr(from_ibe, name), err_msg=name)
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("name", "pmra"),
+    [
+        ("Barnard's star", -801.551),
+        ("eps Ind B", 3981.977),
+        ("WISE 0855\u22120714", -8123.7),
+        ("RW Aur", 7.23),
+        ("R Dra", -20.643),
+    ],
+)
+async def test_simbad_resolves_test_targets(name: str, pmra: float) -> None:
+    configure_ssl()
+    http = make_http()
+    async with http.client:
+        result = await Resolver().resolve(http, name)
+    assert result is not None
+    assert result.pmra == pytest.approx(pmra)

@@ -6,6 +6,7 @@ import pytest
 
 # Must run before `app` is imported: keep tests away from the real cache.
 os.environ.setdefault("SPHEREX_CACHE_DIR", tempfile.mkdtemp(prefix="spherex-test-cache-"))
+os.environ["WARM_COLLECTIONS"] = "0"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
