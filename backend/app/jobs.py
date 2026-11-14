@@ -9,11 +9,13 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import threading
 import time
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from concurrent.futures import Executor
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from statistics import fmean
 from typing import Final
@@ -41,6 +43,7 @@ DISCOVERY_WAIT_S: Final = 30.0
 FILES_PREFIX: Final = "/files"
 SPECTRUM: Final = "spectrum.json"
 SPECTRA_DIR: Final = "spectra"
+_SPECTRA_LOCK: Final = threading.Lock()
 ARCHIVE_DOWN: Final = (
     "The IRSA archive is unreachable or overloaded right now. Try again in a few minutes or open a preset target."
 )
@@ -173,23 +176,37 @@ def with_file_urls(sequence: SequenceModel, key: str) -> SequenceModel:
 
 def _write_atomic(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    partial = path.with_suffix(".part")
-    partial.write_text(text, encoding="utf-8")
-    partial.replace(path)
+    temp = path.with_name(f"{path.name}.{uuid.uuid4().hex}.part")
+    try:
+        temp.write_text(text, encoding="utf-8")
+        temp.replace(path)
+    finally:
+        temp.unlink(missing_ok=True)
 
 
-def store_spectrum(processed_dir: Path, bundle_key: str, target_id: str, spectrum: Spectrum) -> None:
-    """The bundle's copy always; the per-target copy unless an earlier job measured more exposures (all detectors,
-    where this job had a selection)."""
+def store_spectrum(
+    processed_dir: Path, bundle_key: str, target_id: str, spectrum: Spectrum, *, stale_before: float
+) -> None:
+    """The bundle's copy always; the per-target copy unless a fresh earlier job measured more exposures (all
+    detectors, where this job had a selection). A per-target copy last written before `stale_before` (Unix time)
+    has outlived the TTL and is replaced whatever its size."""
     text = spectrum.model_dump_json(indent=1) + "\n"
     _write_atomic(processed_dir / bundle_key / SPECTRUM, text)
     per_target = processed_dir / SPECTRA_DIR / f"{target_id}.json"
+    # Jobs of one target with different FOV or detectors finish in parallel worker threads.
+    with _SPECTRA_LOCK:
+        existing = _fresh_spectrum(per_target, stale_before)
+        if existing is None or len(spectrum.points) >= len(existing.points):
+            _write_atomic(per_target, text)
+
+
+def _fresh_spectrum(path: Path, stale_before: float) -> Spectrum | None:
     try:
-        existing: Spectrum | None = Spectrum.model_validate_json(per_target.read_text(encoding="utf-8"))
+        if path.stat().st_mtime < stale_before:
+            return None
+        return Spectrum.model_validate_json(path.read_text(encoding="utf-8"))
     except (FileNotFoundError, ValueError):
-        existing = None
-    if existing is None or len(spectrum.points) >= len(existing.points):
-        _write_atomic(per_target, text)
+        return None
 
 
 @dataclass
@@ -320,9 +337,15 @@ class JobRunner:
             request.params,
         )
         if spectrum is not None:
-            await anyio.to_thread.run_sync(
-                store_spectrum, self._processed_dir, job.key, target_key(request.target), spectrum
+            store = partial(
+                store_spectrum,
+                self._processed_dir,
+                job.key,
+                target_key(request.target),
+                spectrum,
+                stale_before=self._clock() - self._ttl_s,
             )
+            await anyio.to_thread.run_sync(store)
             result = with_spectrum_link(result)
         await anyio.to_thread.run_sync(write_bundle, result, self._processed_dir / job.key)
         job.report("stacking", len(fetched.cutouts), len(fetched.cutouts))

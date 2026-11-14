@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import gzip
+import os
+import time
 from collections import Counter
 from collections.abc import Sequence
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
 
 import httpx
@@ -229,18 +231,60 @@ async def test_spectrum_expires_with_the_ttl(tmp_path: Path) -> None:
     assert await runner.spectrum(MOVER) is None
 
 
+def stored_points(processed_dir: Path, target_id: str) -> int:
+    text = (processed_dir / SPECTRA_DIR / f"{target_id}.json").read_text(encoding="utf-8")
+    return len(Spectrum.model_validate_json(text).points)
+
+
 def test_per_target_spectrum_keeps_the_fuller_measurement(tmp_path: Path) -> None:
-    store_spectrum(tmp_path, "all-detectors", "t", spectrum_of(6))
-    store_spectrum(tmp_path, "one-detector", "t", spectrum_of(2))
-    kept = Spectrum.model_validate_json((tmp_path / SPECTRA_DIR / "t.json").read_text(encoding="utf-8"))
-    assert len(kept.points) == 6
+    store_spectrum(tmp_path, "all-detectors", "t", spectrum_of(6), stale_before=0.0)
+    store_spectrum(tmp_path, "one-detector", "t", spectrum_of(2), stale_before=0.0)
+    assert stored_points(tmp_path, "t") == 6
+
+
+def test_expired_fuller_spectrum_is_replaced(tmp_path: Path) -> None:
+    store_spectrum(tmp_path, "all-detectors", "t", spectrum_of(6), stale_before=0.0)
+    expired_at = (tmp_path / SPECTRA_DIR / "t.json").stat().st_mtime + 1
+    store_spectrum(tmp_path, "one-detector", "t", spectrum_of(2), stale_before=expired_at)
+    assert stored_points(tmp_path, "t") == 2
 
 
 def test_bundle_keeps_its_own_spectrum(tmp_path: Path) -> None:
-    store_spectrum(tmp_path, "all-detectors", "t", spectrum_of(6))
-    store_spectrum(tmp_path, "one-detector", "t", spectrum_of(2))
+    store_spectrum(tmp_path, "all-detectors", "t", spectrum_of(6), stale_before=0.0)
+    store_spectrum(tmp_path, "one-detector", "t", spectrum_of(2), stale_before=0.0)
     own = Spectrum.model_validate_json((tmp_path / "one-detector" / SPECTRUM).read_text(encoding="utf-8"))
     assert len(own.points) == 2
+
+
+def test_parallel_jobs_of_one_target_keep_the_fuller_spectrum(tmp_path: Path) -> None:
+    sizes = range(1, 17)
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(
+            pool.map(
+                lambda n: store_spectrum(tmp_path, f"job-{n}", "t", spectrum_of(n), stale_before=0.0),
+                sizes,
+            )
+        )
+    assert stored_points(tmp_path, "t") == max(sizes)
+
+
+def test_atomic_writes_leave_no_temporary_files(tmp_path: Path) -> None:
+    store_spectrum(tmp_path, "job", "t", spectrum_of(2), stale_before=0.0)
+    assert list(tmp_path.rglob("*.part")) == []
+
+
+async def test_new_job_replaces_an_expired_spectrum(tmp_path: Path) -> None:
+    per_target = tmp_path / SPECTRA_DIR / f"{target_key(MOVER)}.json"
+    per_target.parent.mkdir()
+    per_target.write_text(spectrum_of(len(two_visits()) + 10).model_dump_json(), encoding="utf-8")
+    expired = time.time() - 7200
+    os.utime(per_target, (expired, expired))
+    runner = JobRunner(fetch_synthetic, tmp_path, ttl_s=3600)
+    assert await runner.spectrum(MOVER) is None
+    await finished(runner, runner.submit(REQUEST))
+    spectrum = await runner.spectrum(MOVER)
+    assert spectrum is not None
+    assert len(spectrum.points) == len(two_visits())
 
 
 async def test_job_runs_build_and_photometry_in_a_process_pool(tmp_path: Path) -> None:
