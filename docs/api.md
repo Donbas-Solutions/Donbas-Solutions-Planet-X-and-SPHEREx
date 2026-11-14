@@ -40,7 +40,7 @@ bit — saturation shows up as `OVERFLOW` / `NONLINEAR`.
 | `GET /api/resolve?name=` | `ResolveResult` | SIMBAD with mirror fallback (`simbad.harvard.edu`); 404 if unknown |
 | `GET /api/sequence?ra=&dec=&fov=&det=&mode=&pmra=&pmdec=&ref_epoch=&allwise=` | `200 Sequence` or `202 JobAccepted` | `fov` arcmin (2–30, default 10); `det` = `all` or `1..6` (comma list); `mode` = `visit_stack` (default) \| `exposures` |
 | `GET /api/jobs/{job_id}` | `JobStatus` | poll every 1–2 s; `result` present when `done` |
-| `GET /api/spectrum?ra=&dec=&pmra=&pmdec=&ref_epoch=` | `Spectrum` | P1 |
+| `GET /api/spectrum?ra=&dec=&pmra=&pmdec=&ref_epoch=` | `Spectrum` | P1; offline fallback: `meta.spectrum` of the bundle (target only) |
 | `GET /api/lightcurve?…same…` | `Spectrum` | P1; client groups by detector / λ bin |
 | `GET /api/overlays?ra=&dec=&fov=&mjd=` | `Overlays` | P1; failed sources listed in `unavailable` |
 | `GET /files/...` | binary | processed frames |
@@ -64,7 +64,8 @@ Errors: FastAPI default `{"detail": "..."}`; `501` = not implemented yet.
     "expected_px": {"x": 54.0, "y": 40.85}, "warnings": []
   }],
   "meta": {"target_name": "Barnard's Star", "collections": ["spherex_dr1", "spherex_qr3"], "n_exposures_total": 363,
-           "generated_at": "2026-11-14T12:00:00+00:00", "pipeline_tags": ["l2b-v27"], "mock": false}
+           "generated_at": "2026-11-14T12:00:00+00:00", "pipeline_tags": ["l2b-v27"], "mock": false,
+           "spectrum": "spectrum.json"}
 }
 ```
 
@@ -73,9 +74,17 @@ Errors: FastAPI default `{"detail": "..."}`; `501` = not implemented yet.
 ```
 frontend/public/<bundle>/
   sequence.json          # a Sequence, URLs relative to this file
+  spectrum.json          # optional: a Spectrum of the target, linked from meta.spectrum
   frames/<id>.f32
   frames/<id>.flags.u32
 ```
+
+`meta.spectrum` (optional, `null` = none) points to a `Spectrum` of the **target** at its proper-motion-propagated
+position: forced photometry on every exposure, one point per exposure. One file serves both the spectrum
+(flux vs `lambda_um`) and the light curve (flux vs `mjd`, grouped by `detector`). Same rules as the API: saturated
+points have `flux_ujy: null`, `err_ujy: null`, `saturated: true`. Frontend order for the spectrum and light-curve tabs:
+live `/api/spectrum` / `/api/lightcurve` → `meta.spectrum` → "unavailable offline". Sources other than the target
+need the live backend.
 
 `frontend/public/mock/` is synthetic (`scripts/make_mock.py`). Prebaked real targets go to
 `frontend/public/prebaked/<target_id>/` (`scripts/prebake.py`, Track C). The viewer loads any bundle via
