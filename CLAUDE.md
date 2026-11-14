@@ -24,6 +24,7 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   Types: **mypy --strict** (`backend/pyproject.toml`). Python conventions: skill `.claude/skills/fastapi-backend`.
 - `frontend/` — React 19 + Vite 8 + TypeScript, npm. Aladin Lite pinned to **3.8.2** (npm `latest` is a beta).
   Aladin Lite is GPL/LGPL-3 — keep in mind when choosing the repo license.
+  Lint: **oxlint**. Frontend conventions: skill `.claude/skills/react-frontend`.
 - `science/` — validation scripts/notebooks, `targets.json`, `VALIDATION.md`.
 - `scripts/prebake.py` — builds static bundles for the 5 test targets into `frontend/public/prebaked/`.
 - `docs/api.md` — API contract shared by all tracks. Changing it = tell the team.

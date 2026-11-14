@@ -72,7 +72,7 @@ export function renderFrame(ctx: CanvasRenderingContext2D, lf: LoadedFrame, s: S
   for (let row = 0; row < ny; row++) {
     const src = (ny - 1 - row) * nx
     for (let col = 0; col < nx; col++) {
-      const v = lf.data[src + col]
+      const v = lf.data[src + col] ?? Number.NaN
       const o = (row * nx + col) * 4
       let r: number, g: number, b: number
       if (Number.isFinite(v)) {
@@ -80,7 +80,7 @@ export function renderFrame(ctx: CanvasRenderingContext2D, lf: LoadedFrame, s: S
       } else {
         ;[r, g, b] = nanColor
       }
-      if (overlayMask && lf.flags && (lf.flags[src + col] & overlayMask) !== 0) {
+      if (overlayMask && lf.flags && ((lf.flags[src + col] ?? 0) & overlayMask) !== 0) {
         r = (r + overlayColor[0]) >> 1
         g = (g + overlayColor[1]) >> 1
         b = (b + overlayColor[2]) >> 1
