@@ -3,9 +3,9 @@
 import json
 
 import numpy as np
+from conftest import REPO_ROOT
 
 from app.models import Sequence
-from conftest import REPO_ROOT
 
 MOCK = REPO_ROOT / "frontend" / "public" / "mock"
 

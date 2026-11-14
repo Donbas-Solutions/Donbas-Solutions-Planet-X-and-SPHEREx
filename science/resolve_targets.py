@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import astroquery
@@ -145,7 +145,7 @@ def main() -> None:
         )
 
     payload = {
-        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "source": f"SIMBAD ({server}) via astroquery {astroquery.__version__}",
         "conventions": "ra/dec: ICRS degrees at ref_epoch (Julian year). pmra includes cos(dec). "
         "pm in mas/yr, parallax in mas. doc_epoch_estimate = epoch at which doc_coords match the PM track.",
@@ -156,7 +156,7 @@ def main() -> None:
     for t in out:
         print(
             f"{t['id']:10s} {t['simbad_main_id']:28s} ra={t['ra']:.5f} dec={t['dec']:+.5f} "
-            f"pm=({t['pmra']}, {t['pmdec']}) plx={t['parallax']} doc_offset={t['doc_offset_arcsec']}\" "
+            f'pm=({t["pmra"]}, {t["pmdec"]}) plx={t["parallax"]} doc_offset={t["doc_offset_arcsec"]}" '
             f"doc_epoch~{t['doc_epoch_estimate']}"
         )
     print(f"wrote {path.relative_to(ROOT)}")

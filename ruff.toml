@@ -1,0 +1,15 @@
+# Shared ruff config for all Python in the repo: backend/, scripts/, science/.
+# Run from the repo root: uv run --project backend ruff check . && uv run --project backend ruff format .
+line-length = 120
+target-version = "py311"
+src = ["backend", "scripts", "science"]
+extend-exclude = ["frontend"]
+
+[lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "NPY", "RUF"]
+ignore = [
+  "RUF001", "RUF002", "RUF003", # λ, ·, —, × in strings/comments are intentional
+]
+
+[format]
+quote-style = "double"

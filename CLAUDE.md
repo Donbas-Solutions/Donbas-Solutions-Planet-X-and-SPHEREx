@@ -14,7 +14,8 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 
 ## Stack and layout
 - `backend/` — Python ≥3.11 (dev machine: 3.13), FastAPI, astropy 8, astroquery, pyvo, reproject, photutils, numpy.
-  Env: `backend/.venv` + pip from `backend/pyproject.toml` (uv works with the same file).
+  Env: **uv** — `backend/pyproject.toml` + `backend/uv.lock`, Python pinned by `backend/.python-version` (3.13).
+  Lint/format: **ruff** — `ruff.toml` at the repo root covers `backend/`, `scripts/`, `science/`.
 - `frontend/` — React 19 + Vite 8 + TypeScript, npm. Aladin Lite pinned to **3.8.2** (npm `latest` is a beta).
   Aladin Lite is GPL/LGPL-3 — keep in mind when choosing the repo license.
 - `science/` — validation scripts/notebooks, `targets.json`, `VALIDATION.md`.
@@ -70,6 +71,8 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - Commit messages are **exactly one line**: English, imperative, ≤72 chars, no body, no trailers.
   Example: `Add visit grouping for SIA results`.
 - Commits are **local only**: commit at green checkpoints on your track branch.
+- Before every commit, everything you touched is clean: Python — `ruff check`, `ruff format --check`, `pytest`;
+  frontend — `npm run build`, `npm run lint` (see Commands).
 - **Never push** (`git push`, PRs, remote branches, tags) unless the person you are working with explicitly tells you
   to push in the current conversation. One "push" covers that one push, not later ones.
 - Never force-push or rewrite history that is already on the remote.
@@ -83,21 +86,23 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - Stay inside your track's directories; contract changes go through `docs/api.md` + a note to the team.
 
 ## Commands
-Setup once (macOS / Linux):
-```bash
-cd backend && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" && cd ..
-cd frontend && npm install && cd ..
-```
-Windows (PowerShell): `cd backend; py -m venv .venv; .venv\Scripts\pip install -e ".[dev]"; cd ..` and the same
-`npm install`. Below, `PY` = `backend/.venv/bin/python` (Windows: `backend\.venv\Scripts\python`).
+Install tools once: macOS `brew install uv ruff` · Windows `winget install astral-sh.uv` (ruff then comes with the
+dev dependencies). Setup: `cd backend && uv sync && cd ..` and `cd frontend && npm install && cd ..`.
+uv reads `.python-version` + `uv.lock`, so everyone gets identical versions (it downloads Python 3.13 if missing).
+All commands below are the same on macOS and Windows.
 
-| Task | Command (from repo root unless noted) |
+| Task | Command |
 |---|---|
-| Backend dev server (:8000) | `cd backend && .venv/bin/uvicorn app.main:app --reload --port 8000` |
+| Backend dev server (:8000) | `cd backend && uv run uvicorn app.main:app --reload --port 8000` |
 | Frontend dev server (:5173, proxies `/api` + `/files` to :8000) | `cd frontend && npm run dev` |
-| Backend tests | `cd backend && .venv/bin/python -m pytest -q` |
+| Backend tests | `cd backend && uv run pytest -q` |
+| Python lint + format (whole repo, from root) | `uv run --project backend ruff check --fix .` · `uv run --project backend ruff format .` |
 | Frontend build / lint | `cd frontend && npm run build` · `npm run lint` |
-| Regenerate mock bundle | `PY scripts/make_mock.py` → `frontend/public/mock/` |
-| Re-resolve test targets (SIMBAD) | `PY science/resolve_targets.py` → `science/targets.json` |
+| Regenerate mock bundle (from root) | `uv run --project backend python scripts/make_mock.py` → `frontend/public/mock/` |
+| Re-resolve test targets (from root) | `uv run --project backend python science/resolve_targets.py` → `science/targets.json` |
+| Add a Python dependency | `cd backend && uv add <pkg>` (dev: `uv add --dev <pkg>`); commit `pyproject.toml` + `uv.lock` |
 | View a bundle | `http://localhost:5173/?manifest=/mock/sequence.json` (default) |
-| Prebake real targets | `PY scripts/prebake.py` (Track C, not written yet) |
+| Prebake real targets (from root) | `uv run --project backend python scripts/prebake.py` (Track C, not written yet) |
+
+Use `uv run ... ruff` for checks: it is the locked version. A brew/editor ruff may differ by a patch release
+(on 2026-11-14: brew 0.17.4, lock 0.17.5). VS Code Ruff extension: set `"ruff.importStrategy": "fromEnvironment"`.

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -146,12 +146,14 @@ def main() -> None:
             target_name="MOCK (synthetic scene)",
             collections=["mock"],
             n_exposures_total=sum(f.n_exposures for f in frames if f.detectors != [1, 2, 3, 4, 5, 6]),
-            generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            generated_at=datetime.now(UTC).isoformat(timespec="seconds"),
             pipeline_tags=["mock"],
             mock=True,
         ),
     )
-    (OUT / "sequence.json").write_text(json.dumps(seq.model_dump(mode="json"), indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    (OUT / "sequence.json").write_text(
+        json.dumps(seq.model_dump(mode="json"), indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     size_kb = sum(p.stat().st_size for p in OUT.rglob("*") if p.is_file()) / 1024
     print(f"wrote {len(frames)} frames ({n}x{n}) to {OUT.relative_to(ROOT)} — {size_kb:.0f} KB")
 

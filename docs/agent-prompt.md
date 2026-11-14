@@ -194,6 +194,8 @@ If M1 slips by >2 h, drop P1 items in this order: AllWISE frame → light curves
 - Verify against real data, not just mocks; paste real numbers. If something cannot be verified, say so plainly.
 - Commit locally at each green checkpoint on your track branch, following the Git section of `CLAUDE.md`
   (one-line messages; push only when explicitly told to). Never deploy or create accounts without a human OK.
+- Before each commit: ruff check + ruff format + pytest clean for Python, `npm run build` + `npm run lint` for the
+  frontend. Python deps only via `uv add` (commit `uv.lock`); never `pip install` into the env by hand.
 - Ask before: changing the API contract, adding a heavy dependency, cutting a P0 item, anything public-facing.
 - Keep it simple: no auth, no database (disk cache + JSON), no microservices.
 - Tests: pytest for pure logic (visit grouping, PM propagation, stretch, cache keys, collection selection); a smoke test
