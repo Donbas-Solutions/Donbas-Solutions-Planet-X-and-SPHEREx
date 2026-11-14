@@ -23,7 +23,8 @@ export default function AboutPage() {
           different wavelength range.
         </li>
         <li>
-          All frames share one brightness scale, so a star that looks brighter in one frame really is brighter there.
+          All frames share one brightness scale, so brightness can be compared between frames. Visits may sample
+          different wavelengths inside a band; the frame details warn when coverage differs.
         </li>
         <li>
           The marker shows where the target is expected from its catalog proper motion at each frame’s date. It is
@@ -57,7 +58,8 @@ export default function AboutPage() {
           difference view.
         </li>
         <li>
-          Saturated stars (Barnard’s Star, R Dra, RW Aur in most bands) are marked as saturated and are not measured.
+          Saturated stars (Barnard’s Star, R Dra, RW Aur in most bands) are marked as saturated: their brightness is
+          not measured; positions use the unsaturated wings of the star.
         </li>
         <li>
           WISE 0855−0714: its motion is seen in D5–D6, but its aperture is blended with a field star, so the flux

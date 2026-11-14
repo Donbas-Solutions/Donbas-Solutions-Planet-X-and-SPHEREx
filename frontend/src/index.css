@@ -504,8 +504,12 @@ h1 {
 }
 
 .term:hover .term-tip,
-.term-button:focus-visible + .term-tip {
+.term-button:focus + .term-tip {
   visibility: visible;
+}
+
+.term.is-dismissed .term-tip {
+  visibility: hidden;
 }
 
 .glossary dt {
