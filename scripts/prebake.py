@@ -32,6 +32,7 @@ from app.archive.visits import cap_per_detector, group_visits
 from app.astrometry import position_at
 from app.config import configure_ssl
 from app.domain import ExposureMeta, SequenceParams, SequenceResult, Target, Visit
+from app.jobs import collections_for_job
 from app.pipeline.bundle import write_bundle
 from app.pipeline.photometry import measure_spectrum
 from app.pipeline.sequence import build_sequence
@@ -85,7 +86,8 @@ async def fetch_target(target: Target, cap: int, fov_arcmin: float = 10.0) -> Fe
     """Same plan, centre and window size as `archive.naive.fetch_sample`, so earlier cached windows are reused."""
     http = make_http()
     async with http.client:
-        collections = await CollectionDiscovery().collections(http)
+        # TAP answering 502 made discovery retry for ~7 min per target (2026-11-14); fall back after 30 s.
+        collections = await collections_for_job(http, CollectionDiscovery())
         exposures = await query_exposures(http, target, collections)
         plan: list[tuple[Visit, ExposureMeta]] = [
             (visit, meta) for visit in group_visits(exposures) for meta in cap_per_detector(visit, cap)
