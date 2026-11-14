@@ -78,7 +78,7 @@ may change.
 | `code` | Meaning | Partial data? |
 |---|---|---|
 | `few_exposures` | the visit has < 80 % of the exposures of the best visit of the same stack type (SR-1) | yes |
-| `incomplete_lambda` | the visit's λ span at the target is < 80 % of the best visit's (SR-1) | yes |
+| `incomplete_lambda` | the stack samples < 80 % of the 17 LVF channels per detector (`all`: of every requested detector), or its λ span at the target is < 80 % of the best visit's (SR-1). Capped live stacks (8 per detector) always get it | yes |
 | `saturated` | the target pixel carries `OVERFLOW`/`NONLINEAR`: shown as saturated, never measured | no — a property of the source |
 
 Only the "partial data" codes mean the frame's data is incomplete (spec §5.2). New codes are a contract change.

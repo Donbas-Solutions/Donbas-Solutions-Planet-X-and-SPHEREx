@@ -6,6 +6,7 @@ picklable (pass `progress=None` there). Rules: SR-1 … SR-6 in docs/spec.md; ou
 
 from __future__ import annotations
 
+import math
 import re
 from collections import defaultdict
 from collections.abc import Sequence
@@ -27,6 +28,15 @@ from .exposure import GridExposure, to_grid
 from .stack import Stack, stack
 
 COVERAGE_WARNING_FRACTION: Final = 0.8
+LVF_CHANNELS: Final = 17
+DETECTOR_BANDS_UM: Final = {
+    1: (0.75, 1.11),
+    2: (1.11, 1.64),
+    3: (1.64, 2.42),
+    4: (2.42, 3.82),
+    5: (3.82, 4.42),
+    6: (4.42, 5.0),
+}
 STRETCH_PERCENTILES: Final = (1.0, 99.7)
 STRETCH_ASINH_A: Final = 0.1
 _PIPELINE_TAG = re.compile(r"l2b-v\d+")
@@ -94,27 +104,60 @@ def _frame(
     return frame, FrameArrays(data=stacked.data, flags=stacked.flags)
 
 
-def _coverage_warnings(frames: list[Frame], stacks: dict[str, Stack]) -> None:
-    """SR-1: flag a visit whose exposures or λ span fall below 80 % of the best visit of the same stack type
-    (`D3`, `all`, ...): a visit missing whole detectors is compared with the full ones, not with itself."""
+def lvf_channel(detector: int, lambda_um: float) -> int:
+    """SPHEREx channels have a constant resolving power within a band, so they are equal steps in log λ."""
+    lo, hi = DETECTOR_BANDS_UM[detector]
+    position = math.log(lambda_um / lo) / math.log(hi / lo)
+    return min(LVF_CHANNELS - 1, max(0, math.floor(position * LVF_CHANNELS)))
+
+
+def channels_hit(stacked: Stack) -> int:
+    return len(
+        {
+            (e.cutout.meta.detector, lvf_channel(e.cutout.meta.detector, e.lambda_um))
+            for e in stacked.exposures
+            if np.isfinite(e.lambda_um)
+        }
+    )
+
+
+def _lambda_warning(frame: Frame, stacked: Stack, n_detectors: int, best_span: float) -> FrameWarning | None:
+    """Absolute: a capped live stack samples few LVF channels even when every visit is capped alike, so comparing
+    visits alone would miss it. Relative: a visit whose λ span falls short of the best visit's."""
+    expected = LVF_CHANNELS * n_detectors
+    hit = channels_hit(stacked)
+    if hit < COVERAGE_WARNING_FRACTION * expected:
+        return FrameWarning(
+            code="incomplete_lambda", message=f"incomplete λ coverage: {hit} of {expected} LVF channels"
+        )
+    span = frame.lambda_um[1] - frame.lambda_um[0]
+    if len(stacked.lambdas_um) > 1 and span < COVERAGE_WARNING_FRACTION * best_span:
+        return FrameWarning(
+            code="incomplete_lambda", message=f"incomplete λ coverage: {span:.2f} of {best_span:.2f} µm"
+        )
+    return None
+
+
+def _coverage_warnings(frames: list[Frame], stacks: dict[str, Stack], params: SequenceParams) -> None:
+    """SR-1: flag a visit with < 80 % of the exposures or λ span of the best visit of the same stack type (`D3`,
+    `all`, ...; a visit missing whole detectors is compared with the full ones), or a stack that samples < 80 % of
+    the LVF channels of its detectors (`all` counts every requested detector)."""
     by_kind: dict[str, list[Frame]] = defaultdict(list)
     for frame in frames:
         by_kind[frame.id.split("-", 1)[1]].append(frame)
-    for group in by_kind.values():
+    for kind, group in by_kind.items():
         best_n = max(f.n_exposures for f in group)
         best_span = max(f.lambda_um[1] - f.lambda_um[0] for f in group)
+        n_detectors = len(set(params.detectors)) if kind == "all" else 1
         for frame in group:
-            span = frame.lambda_um[1] - frame.lambda_um[0]
             if frame.n_exposures < COVERAGE_WARNING_FRACTION * best_n:
                 frame.warnings.append(
                     FrameWarning(code="few_exposures", message=f"few exposures: {frame.n_exposures} of up to {best_n}")
                 )
-            if len(stacks[frame.id].lambdas_um) > 1 and span < COVERAGE_WARNING_FRACTION * best_span:
-                frame.warnings.append(
-                    FrameWarning(
-                        code="incomplete_lambda", message=f"incomplete λ coverage: {span:.2f} of {best_span:.2f} µm"
-                    )
-                )
+            if params.mode == "visit_stack" and (
+                warning := _lambda_warning(frame, stacks[frame.id], n_detectors, best_span)
+            ):
+                frame.warnings.append(warning)
 
 
 def _stretch(arrays: Sequence[FrameArrays]) -> Stretch:
@@ -174,7 +217,7 @@ def build_sequence(
             if suffix == "all" or params.mode == "exposures":
                 display.append(frame_arrays)
 
-    _coverage_warnings(frames, stacks)
+    _coverage_warnings(frames, stacks, params)
     sequence = SequenceModel(
         grid=grid,
         stretch=_stretch(display or list(arrays.values())),

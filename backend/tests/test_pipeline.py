@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -16,7 +17,7 @@ from app.models import Sequence
 from app.pipeline.bundle import write_bundle
 from app.pipeline.measure import Shift, centroid, fit_position, fit_proper_motion, masked_core_center
 from app.pipeline.photometry import measure_spectrum
-from app.pipeline.sequence import SequenceError, build_sequence
+from app.pipeline.sequence import DETECTOR_BANDS_UM, LVF_CHANNELS, SequenceError, build_sequence, lvf_channel
 
 PIXSCALE_DEG = 6.2 / 3600
 ZODI_LEVEL = 5.0
@@ -130,7 +131,7 @@ def test_saturated_core_is_masked_but_source_flag_is_not() -> None:
     assert clean.expected_px is not None
     core = result.arrays[saturated.id].data[round(saturated.expected_px.y), round(saturated.expected_px.x)]
     assert np.isnan(core)
-    assert [w.code for w in saturated.warnings] == ["saturated"]
+    assert "saturated" in {w.code for w in saturated.warnings}
     assert np.isfinite(result.arrays[clean.id].data[round(clean.expected_px.y), round(clean.expected_px.x)])
 
 
@@ -159,6 +160,53 @@ def test_visit_missing_a_detector_gets_a_warning_on_its_all_stack() -> None:
     cutouts = [c for c in two_visits() if not (c.visit_id == "v2" and c.meta.detector == 5)]
     frames = {f.id: f for f in build_sequence(cutouts, MOVER, SequenceParams(fov_arcmin=4.0)).sequence.frames}
     assert "few_exposures" in {w.code for w in frames["v2-all"].warnings}
+
+
+def at_lambda(cutout: Cutout, lambda_um: float) -> Cutout:
+    return Cutout(**{**cutout.__dict__, "wavelength_um": np.full_like(cutout.wavelength_um, lambda_um)})
+
+
+def channel_centre_um(detector: int, channel: int) -> float:
+    lo, hi = DETECTOR_BANDS_UM[detector]
+    return float(lo * (hi / lo) ** ((channel + 0.5) / LVF_CHANNELS))
+
+
+def lambda_codes(
+    cutouts: list[Cutout], mode: Literal["visit_stack", "exposures"] = "visit_stack"
+) -> dict[str, list[str]]:
+    result = build_sequence(cutouts, MOVER, SequenceParams(fov_arcmin=4.0, detectors=(3,), mode=mode))
+    return {f.id: [w.message for w in f.warnings if w.code == "incomplete_lambda"] for f in result.sequence.frames}
+
+
+def test_lvf_channels_are_equal_steps_in_log_lambda() -> None:
+    assert lvf_channel(3, 1.64) == 0
+    assert lvf_channel(3, 2.4199) == LVF_CHANNELS - 1
+    assert [lvf_channel(3, channel_centre_um(3, c)) for c in range(LVF_CHANNELS)] == list(range(LVF_CHANNELS))
+    assert lvf_channel(3, 5.0) == LVF_CHANNELS - 1
+
+
+def test_equally_capped_visits_still_warn_about_few_lvf_channels() -> None:
+    cutouts = [
+        at_lambda(make_cutout(mjd + i, visit, 3), channel_centre_um(3, 2 * i))
+        for mjd, visit in ((MJD_V1, "v1"), (MJD_V2, "v2"))
+        for i in range(8)
+    ]
+    codes = lambda_codes(cutouts)
+    assert codes["v1-D3"] == codes["v2-D3"] == ["incomplete λ coverage: 8 of 17 LVF channels"]
+
+
+def test_full_lvf_coverage_has_no_lambda_warning() -> None:
+    cutouts = [
+        at_lambda(make_cutout(mjd + i / 10, visit, 3), channel_centre_um(3, i))
+        for mjd, visit in ((MJD_V1, "v1"), (MJD_V2, "v2"))
+        for i in range(LVF_CHANNELS)
+    ]
+    assert lambda_codes(cutouts) == {"v1-D3": [], "v1-all": [], "v2-D3": [], "v2-all": []}
+
+
+def test_single_exposures_get_no_lambda_warning() -> None:
+    cutouts = [at_lambda(make_cutout(MJD_V1, "v1", 3), 2.0), at_lambda(make_cutout(MJD_V2, "v2", 3), 2.0)]
+    assert all(not messages for messages in lambda_codes(cutouts, mode="exposures").values())
 
 
 def test_background_gradient_is_removed() -> None:
