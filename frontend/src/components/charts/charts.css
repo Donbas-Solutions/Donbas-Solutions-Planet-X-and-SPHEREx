@@ -1,0 +1,208 @@
+/* Series colours: dataviz reference palette, dark steps, validated all-pairs on --bg #0b0e14 (3 slots max). */
+.chart-panel {
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --chart-grid: #232a38;
+  --chart-band: #131824;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chart-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  align-items: center;
+}
+
+.chart-toolbar fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.chart-toolbar legend {
+  float: left;
+  margin-right: 8px;
+  color: var(--muted);
+}
+
+.chart-toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+}
+
+.swatch.series-1 {
+  background: var(--series-1);
+  border-color: var(--series-1);
+}
+
+.swatch.series-2 {
+  background: var(--series-2);
+  border-color: var(--series-2);
+}
+
+.swatch.series-3 {
+  background: var(--series-3);
+  border-color: var(--series-3);
+}
+
+.point-chart {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.point-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-size: 0.75rem;
+  touch-action: pan-y;
+}
+
+.point-chart text {
+  fill: var(--muted);
+}
+
+.point-chart .axis-title {
+  fill: var(--fg);
+}
+
+.point-chart .empty {
+  font-size: 0.875rem;
+}
+
+.point-chart .axis {
+  stroke: var(--muted);
+}
+
+.point-chart .grid {
+  stroke: var(--chart-grid);
+}
+
+.point-chart .zero {
+  stroke: var(--muted);
+  stroke-dasharray: 3 3;
+}
+
+.point-chart .band rect {
+  fill: transparent;
+}
+
+.point-chart .band-even rect {
+  fill: var(--chart-band);
+}
+
+.point-chart .mark {
+  --mark: var(--muted);
+}
+
+.point-chart .series-1 {
+  --mark: var(--series-1);
+}
+
+.point-chart .series-2 {
+  --mark: var(--series-2);
+}
+
+.point-chart .series-3 {
+  --mark: var(--series-3);
+}
+
+.point-chart .dot {
+  fill: var(--mark);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+
+.point-chart .err {
+  stroke: var(--mark);
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+
+.point-chart .hollow,
+.point-chart .cross {
+  fill: none;
+  stroke: var(--mark);
+  stroke-width: 1.5;
+}
+
+.chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  max-width: 200px;
+  padding: 6px 8px;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+  background: var(--bg);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-legend svg {
+  overflow: visible;
+}
+
+.chart-legend .hollow,
+.chart-legend .cross {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+
+.chart-table {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.chart-table table {
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-table th,
+.chart-table td {
+  padding: 2px 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.chart-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+}
