@@ -13,7 +13,7 @@ from app.astrometry import position_at
 from app.domain import Cutout, ExposureMeta, SequenceParams, Target
 from app.models import Sequence
 from app.pipeline.bundle import write_bundle
-from app.pipeline.measure import Shift, centroid
+from app.pipeline.measure import Shift, centroid, masked_core_center
 from app.pipeline.sequence import SequenceError, build_sequence
 
 PIXSCALE_DEG = 6.2 / 3600
@@ -130,6 +130,19 @@ def test_saturated_core_is_masked_but_source_flag_is_not() -> None:
     assert np.isnan(core)
     assert "target pixel saturated (OVERFLOW/NONLINEAR)" in saturated.warnings
     assert np.isfinite(result.arrays[clean.id].data[round(clean.expected_px.y), round(clean.expected_px.x)])
+
+
+def test_masked_core_centre_tracks_a_saturated_mover() -> None:
+    cutouts = [make_cutout(MJD_V1, "v1", 3, flag_core=OVERFLOW), make_cutout(MJD_V2, "v2", 3, flag_core=OVERFLOW)]
+    result = build_sequence(cutouts, MOVER, SequenceParams(fov_arcmin=4.0))
+    first, last = result.sequence.frames[0], result.sequence.frames[2]
+    assert first.expected_px is not None
+    assert last.expected_px is not None
+    a = masked_core_center(result.arrays[first.id].data, first.expected_px.x, first.expected_px.y, 3.0)
+    b = masked_core_center(result.arrays[last.id].data, last.expected_px.x, last.expected_px.y, 3.0)
+    assert a is not None
+    assert b is not None
+    assert Shift(b[0] - a[0], b[1] - a[1], 6.2).length_arcsec == pytest.approx(12.4, abs=1.5)
 
 
 def test_detector_selection_and_few_exposure_warning() -> None:

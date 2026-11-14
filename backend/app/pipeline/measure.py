@@ -31,6 +31,17 @@ class Shift:
         return math.degrees(math.atan2(-self.dx_px, self.dy_px)) % 360
 
 
+def masked_core_center(
+    data: npt.NDArray[np.float32], x0: float, y0: float, radius_px: float, min_pixels: int = 3
+) -> tuple[float, float] | None:
+    """Centre of the NaN hole a saturated (masked) core leaves near (x0, y0); None if there is no such hole."""
+    rows, cols = np.mgrid[0 : data.shape[0], 0 : data.shape[1]]
+    hole = (np.hypot(cols - x0, rows - y0) <= radius_px) & np.isnan(data)
+    if int(hole.sum()) < min_pixels:
+        return None
+    return float(cols[hole].mean()), float(rows[hole].mean())
+
+
 def centroid(data: npt.NDArray[np.float32], x0: float, y0: float, radius_px: float) -> tuple[float, float] | None:
     """Flux-weighted centroid of positive pixels within `radius_px` of (x0, y0); None if nothing is there."""
     rows, cols = np.mgrid[0 : data.shape[0], 0 : data.shape[1]]
