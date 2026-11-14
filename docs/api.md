@@ -40,8 +40,8 @@ bit — saturation shows up as `OVERFLOW` / `NONLINEAR`.
 | `GET /api/resolve?name=` | `ResolveResult` | SIMBAD with mirror fallback (`simbad.harvard.edu`); 404 if unknown |
 | `GET /api/sequence?ra=&dec=&fov=&det=&mode=&pmra=&pmdec=&ref_epoch=&allwise=` | `200 Sequence` or `202 JobAccepted` | `fov` arcmin (2–30, default 10); `det` = `all` or `1..6` (comma list); `mode` = `visit_stack` (default) \| `exposures` |
 | `GET /api/jobs/{job_id}` | `JobStatus` | poll every 1–2 s; `result` present when `done` |
-| `GET /api/spectrum?ra=&dec=&pmra=&pmdec=&ref_epoch=` | `Spectrum` | P1; offline fallback: `meta.spectrum` of the bundle (target only) |
-| `GET /api/lightcurve?…same…` | `Spectrum` | P1; client groups by detector / λ bin |
+| `GET /api/spectrum?ra=&dec=&pmra=&pmdec=&ref_epoch=` | `Spectrum` | P1; the target of a sequence: measured by its sequence job, `404` until one has finished (or after the 24 h cache TTL); offline fallback: `meta.spectrum` of the bundle |
+| `GET /api/lightcurve?…same…` | `Spectrum` | P1; the same points as `/api/spectrum`; client groups by detector / λ bin |
 | `GET /api/overlays?ra=&dec=&fov=&mjd=` | `Overlays` | P1; failed sources listed in `unavailable` |
 | `GET /files/...` | binary | processed frames |
 

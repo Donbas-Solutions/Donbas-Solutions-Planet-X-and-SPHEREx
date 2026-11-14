@@ -1,4 +1,8 @@
-"""Background jobs behind `/api/sequence` (FR-13): one job per request key, bundles cached in `processed/<key>/`."""
+"""Background jobs behind `/api/sequence` (FR-13): one job per request key, bundles cached in `processed/<key>/`.
+
+Each job also measures the target's spectrum (FR-16, FR-17) on the same cutouts: `spectrum.json` in the bundle,
+and a copy per target in `processed/spectra/`, which `/api/spectrum` and `/api/lightcurve` serve.
+"""
 
 from __future__ import annotations
 
@@ -24,9 +28,10 @@ from .archive.visits import cap_per_detector, group_visits
 from .astrometry import position_at
 from .config import settings
 from .domain import Cutout, ExposureMeta, ProgressCallback, SequenceParams, SequenceResult, Target, Visit
-from .models import JobProgress, JobState, JobStatus
+from .models import JobProgress, JobState, JobStatus, Spectrum
 from .models import Sequence as SequenceModel
 from .pipeline.bundle import MANIFEST, write_bundle
+from .pipeline.photometry import measure_spectrum
 from .pipeline.sequence import SequenceError, build_sequence
 
 logger = logging.getLogger(__name__)
@@ -34,16 +39,38 @@ logger = logging.getLogger(__name__)
 JOB_RETENTION_S: Final = 3600.0
 DISCOVERY_WAIT_S: Final = 30.0
 FILES_PREFIX: Final = "/files"
+SPECTRUM: Final = "spectrum.json"
+SPECTRA_DIR: Final = "spectra"
 ARCHIVE_DOWN: Final = (
     "The IRSA archive is unreachable or overloaded right now. Try again in a few minutes or open a preset target."
 )
 
 FetchFn = Callable[["SequenceRequest", ProgressCallback], Awaitable[FetchResult]]
 BuildFn = Callable[[Sequence[Cutout], Target, SequenceParams], SequenceResult]
+MeasureFn = Callable[[Sequence[Cutout], Target], Spectrum]
 
 
 class JobError(Exception):
     """A job failed for a reason the user should read as is."""
+
+
+def target_key(target: Target) -> str:
+    """Same position, motion and epoch → same key; the spectrum does not depend on FOV, detectors or mode."""
+    return _digest(_target_parts(target))
+
+
+def _target_parts(target: Target) -> tuple[str, ...]:
+    return (
+        f"{target.ra_deg:.5f}",
+        f"{target.dec_deg:.5f}",
+        f"{target.ref_epoch:.3f}",
+        _pm(target.pmra_masyr),
+        _pm(target.pmdec_masyr),
+    )
+
+
+def _digest(parts: Sequence[str]) -> str:
+    return hashlib.sha256("|".join(parts).encode()).hexdigest()[:24]
 
 
 @dataclass(frozen=True)
@@ -54,19 +81,16 @@ class SequenceRequest:
     @property
     def key(self) -> str:
         """Same sequence → same key. Rounding to 1e-5° (0.04″) is far below the 6.2″ pixel."""
-        t, p = self.target, self.params
-        parts = (
-            f"{t.ra_deg:.5f}",
-            f"{t.dec_deg:.5f}",
-            f"{t.ref_epoch:.3f}",
-            _pm(t.pmra_masyr),
-            _pm(t.pmdec_masyr),
-            f"{p.fov_arcmin:.1f}",
-            ",".join(str(d) for d in sorted(set(p.detectors))),
-            p.mode,
-            str(p.include_allwise),
+        p = self.params
+        return _digest(
+            (
+                *_target_parts(self.target),
+                f"{p.fov_arcmin:.1f}",
+                ",".join(str(d) for d in sorted(set(p.detectors))),
+                p.mode,
+                str(p.include_allwise),
+            )
         )
-        return hashlib.sha256("|".join(parts).encode()).hexdigest()[:24]
 
 
 def _pm(value: float | None) -> str:
@@ -116,15 +140,56 @@ async def fetch_for_request(
     )
 
 
+def build_and_measure(
+    build: BuildFn, measure: MeasureFn, cutouts: Sequence[Cutout], target: Target, params: SequenceParams
+) -> tuple[SequenceResult, Spectrum | None]:
+    """One process-pool call for both, so the cutouts are pickled once."""
+    result = build(cutouts, target, params)
+    try:
+        spectrum = measure(cutouts, target)
+    except Exception:
+        logger.exception("Photometry failed; the sequence is kept without a spectrum")
+        spectrum = None
+    return result, spectrum
+
+
+def with_spectrum_link(result: SequenceResult) -> SequenceResult:
+    meta = result.sequence.meta.model_copy(update={"spectrum": SPECTRUM})
+    return SequenceResult(sequence=result.sequence.model_copy(update={"meta": meta}), arrays=result.arrays)
+
+
 def with_file_urls(sequence: SequenceModel, key: str) -> SequenceModel:
     """Bundle URLs are relative to the manifest; the API serves them under `/files/<key>/` (docs/api.md)."""
+    prefix = f"{FILES_PREFIX}/{key}"
     frames = [
-        frame.model_copy(
-            update={"data": f"{FILES_PREFIX}/{key}/{frame.data}", "flags": f"{FILES_PREFIX}/{key}/{frame.flags}"}
-        )
+        frame.model_copy(update={"data": f"{prefix}/{frame.data}", "flags": f"{prefix}/{frame.flags}"})
         for frame in sequence.frames
     ]
-    return sequence.model_copy(update={"frames": frames})
+    meta = sequence.meta
+    if meta.spectrum is not None:
+        meta = meta.model_copy(update={"spectrum": f"{prefix}/{meta.spectrum}"})
+    return sequence.model_copy(update={"frames": frames, "meta": meta})
+
+
+def _write_atomic(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    partial = path.with_suffix(".part")
+    partial.write_text(text, encoding="utf-8")
+    partial.replace(path)
+
+
+def store_spectrum(processed_dir: Path, bundle_key: str, target_id: str, spectrum: Spectrum) -> None:
+    """The bundle's copy always; the per-target copy unless an earlier job measured more exposures (all detectors,
+    where this job had a selection)."""
+    text = spectrum.model_dump_json(indent=1) + "\n"
+    _write_atomic(processed_dir / bundle_key / SPECTRUM, text)
+    per_target = processed_dir / SPECTRA_DIR / f"{target_id}.json"
+    try:
+        existing: Spectrum | None = Spectrum.model_validate_json(per_target.read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        existing = None
+    if existing is None or len(spectrum.points) >= len(existing.points):
+        _write_atomic(per_target, text)
 
 
 @dataclass
@@ -153,6 +218,7 @@ class JobRunner:
         processed_dir: Path,
         executor: Executor | None = None,
         build: BuildFn = build_sequence,
+        measure: MeasureFn = measure_spectrum,
         max_running: int = settings.max_running_jobs,
         ttl_s: float = settings.processed_ttl_h * 3600,
         clock: Callable[[], float] = time.time,
@@ -161,6 +227,7 @@ class JobRunner:
         self._processed_dir = processed_dir
         self._executor = executor
         self._build = build
+        self._measure = measure
         self._running = asyncio.Semaphore(max_running)
         self._ttl_s = ttl_s
         self._clock = clock
@@ -174,6 +241,18 @@ class JobRunner:
     async def cached(self, request: SequenceRequest) -> SequenceModel | None:
         """The finished bundle of this request, unless it is older than the TTL (new data releases arrive weekly)."""
         return await self._load(request.key, fresh_only=True)
+
+    async def spectrum(self, target: Target) -> Spectrum | None:
+        """The target's spectrum from its latest sequence job, unless older than the TTL."""
+        path = anyio.Path(self._processed_dir / SPECTRA_DIR / f"{target_key(target)}.json")
+        try:
+            stat = await path.stat()
+            if self._clock() - stat.st_mtime > self._ttl_s:
+                return None
+            text = await path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return None
+        return Spectrum.model_validate_json(text)
 
     def submit(self, request: SequenceRequest) -> Job:
         """The queued, running or finished job of this request; a failed one is retried as a new job."""
@@ -231,9 +310,20 @@ class JobRunner:
             raise JobError("No SPHEREx exposure covers this position on the detector.")
         job.report("stacking", 0, len(fetched.cutouts))
         loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(
-            self._executor, self._build, fetched.cutouts, request.target, request.params
+        result, spectrum = await loop.run_in_executor(
+            self._executor,
+            build_and_measure,
+            self._build,
+            self._measure,
+            fetched.cutouts,
+            request.target,
+            request.params,
         )
+        if spectrum is not None:
+            await anyio.to_thread.run_sync(
+                store_spectrum, self._processed_dir, job.key, target_key(request.target), spectrum
+            )
+            result = with_spectrum_link(result)
         await anyio.to_thread.run_sync(write_bundle, result, self._processed_dir / job.key)
         job.report("stacking", len(fetched.cutouts), len(fetched.cutouts))
         sequence = await self._load(job.key, fresh_only=False)

@@ -53,7 +53,7 @@ def test_health_ok(client: TestClient) -> None:
 
 
 def test_unimplemented_endpoints_say_so(client: TestClient) -> None:
-    r = client.get("/api/spectrum", params={"ra": 269.45, "dec": 4.69})
+    r = client.get("/api/overlays", params={"ra": 269.45, "dec": 4.69, "fov": 10, "mjd": 61000})
     assert r.status_code == 501
 
 
@@ -112,3 +112,33 @@ def test_resolve_unknown_name_is_404(client: TestClient) -> None:
 def test_resolve_without_simbad_is_503(client: TestClient) -> None:
     use_simbad(httpx.Response(404, text="<!doctype html>"))
     assert client.get("/api/resolve", params={"name": "R Dra"}).status_code == 503
+
+
+def build_mover(client: TestClient) -> None:
+    accepted = client.get("/api/sequence", params=MOVER_QUERY)
+    if accepted.status_code == 202:
+        assert poll(client, accepted.json()["job_id"])["status"] == "done"
+
+
+MOVER_TARGET = {k: v for k, v in MOVER_QUERY.items() if k != "fov"}
+
+
+@pytest.mark.usefixtures("synthetic_runner")
+@pytest.mark.parametrize("path", ["/api/spectrum", "/api/lightcurve"])
+def test_spectrum_and_lightcurve_after_the_sequence(client: TestClient, path: str) -> None:
+    build_mover(client)
+    r = client.get(path, params=MOVER_TARGET)
+    assert r.status_code == 200
+    assert len(r.json()["points"]) > 0
+
+
+@pytest.mark.usefixtures("synthetic_runner")
+def test_live_sequence_links_its_spectrum(client: TestClient) -> None:
+    build_mover(client)
+    link = client.get("/api/sequence", params=MOVER_QUERY).json()["meta"]["spectrum"]
+    assert client.get(link).json()["points"]
+
+
+@pytest.mark.usefixtures("synthetic_runner")
+def test_spectrum_before_any_sequence_is_404(client: TestClient) -> None:
+    assert client.get("/api/spectrum", params={"ra": 12.0, "dec": -30.0}).status_code == 404

@@ -1,4 +1,4 @@
-"""Job runner behind /api/sequence (A3): keys, planning, states, cache. Synthetic cutouts, no network."""
+"""Job runner behind /api/sequence (A3) and the target spectra it measures. Synthetic cutouts, no network."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import asyncio
 import gzip
 from collections import Counter
 from collections.abc import Sequence
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import httpx
@@ -20,13 +21,18 @@ from app.archive.visits import group_visits
 from app.domain import Cutout, ExposureMeta, ProgressCallback, SequenceParams, SequenceResult, Target
 from app.jobs import (
     ARCHIVE_DOWN,
+    SPECTRA_DIR,
+    SPECTRUM,
     Job,
     JobError,
     JobRunner,
     SequenceRequest,
     collections_for_job,
     plan_exposures,
+    store_spectrum,
+    target_key,
 )
+from app.models import Spectrum, SpectrumPoint
 
 pytestmark = pytest.mark.anyio
 
@@ -177,3 +183,69 @@ async def test_hung_collection_discovery_falls_back_to_the_known_list() -> None:
     async with http.client:
         collections = await collections_for_job(http, CollectionDiscovery(fallback=("spherex_dr1",)), wait_s=0.05)
     assert collections == ("spherex_dr1",)
+
+
+def spectrum_of(n: int) -> Spectrum:
+    point = SpectrumPoint(
+        lambda_um=1.1, flux_ujy=1.0, err_ujy=0.1, mjd=61000.0, detector=3, visit="v1", saturated=False, flags=0
+    )
+    return Spectrum(points=[point] * n)
+
+
+def test_target_key_ignores_fov_detectors_and_mode() -> None:
+    a = SequenceRequest(target=MOVER, params=SequenceParams(fov_arcmin=3.0, detectors=(5,)))
+    b = SequenceRequest(target=MOVER, params=SequenceParams(mode="exposures"))
+    assert target_key(a.target) == target_key(b.target)
+
+
+async def test_job_measures_the_target_spectrum(tmp_path: Path) -> None:
+    runner = JobRunner(fetch_synthetic, tmp_path)
+    job = await finished(runner, runner.submit(REQUEST))
+    assert job.result is not None
+    assert job.result.meta.spectrum == f"/files/{REQUEST.key}/{SPECTRUM}"
+    assert (tmp_path / REQUEST.key / SPECTRUM).is_file()
+    spectrum = await runner.spectrum(MOVER)
+    assert spectrum is not None
+    assert len(spectrum.points) == len(two_visits())
+
+
+async def test_photometry_bug_keeps_the_sequence_without_a_spectrum(tmp_path: Path) -> None:
+    def broken_measure(cutouts: Sequence[Cutout], target: Target) -> Spectrum:
+        raise RuntimeError("boom")
+
+    runner = JobRunner(fetch_synthetic, tmp_path, measure=broken_measure)
+    job = await finished(runner, runner.submit(REQUEST))
+    assert job.state == "done", job.error
+    assert job.result is not None
+    assert job.result.meta.spectrum is None
+    assert await runner.spectrum(MOVER) is None
+
+
+async def test_spectrum_expires_with_the_ttl(tmp_path: Path) -> None:
+    clock = FakeClock()
+    runner = JobRunner(fetch_synthetic, tmp_path, ttl_s=3600, clock=clock)
+    await finished(runner, runner.submit(REQUEST))
+    clock.now = (tmp_path / SPECTRA_DIR / f"{target_key(MOVER)}.json").stat().st_mtime + 3601
+    assert await runner.spectrum(MOVER) is None
+
+
+def test_per_target_spectrum_keeps_the_fuller_measurement(tmp_path: Path) -> None:
+    store_spectrum(tmp_path, "all-detectors", "t", spectrum_of(6))
+    store_spectrum(tmp_path, "one-detector", "t", spectrum_of(2))
+    kept = Spectrum.model_validate_json((tmp_path / SPECTRA_DIR / "t.json").read_text(encoding="utf-8"))
+    assert len(kept.points) == 6
+
+
+def test_bundle_keeps_its_own_spectrum(tmp_path: Path) -> None:
+    store_spectrum(tmp_path, "all-detectors", "t", spectrum_of(6))
+    store_spectrum(tmp_path, "one-detector", "t", spectrum_of(2))
+    own = Spectrum.model_validate_json((tmp_path / "one-detector" / SPECTRUM).read_text(encoding="utf-8"))
+    assert len(own.points) == 2
+
+
+async def test_job_runs_build_and_photometry_in_a_process_pool(tmp_path: Path) -> None:
+    with ProcessPoolExecutor(max_workers=1) as pool:
+        runner = JobRunner(fetch_synthetic, tmp_path, executor=pool)
+        job = await finished(runner, runner.submit(REQUEST))
+    assert job.state == "done", job.error
+    assert await runner.spectrum(MOVER) is not None
