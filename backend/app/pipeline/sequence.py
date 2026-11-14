@@ -1,4 +1,4 @@
-"""Entry point of the science pipeline (Track C: A3).
+"""Entry point of the science pipeline (Track C: C1).
 
 `build_sequence` is pure and synchronous: it may run in a process pool, so arguments and results must stay
 picklable (pass `progress=None` there). Rules: SR-1 … SR-6 in docs/spec.md; output contract: docs/api.md.
@@ -17,4 +17,4 @@ def build_sequence(
     params: SequenceParams,
     progress: ProgressCallback | None = None,
 ) -> SequenceResult:
-    raise NotImplementedError("Track C: A3")
+    raise NotImplementedError("Track C: C1")

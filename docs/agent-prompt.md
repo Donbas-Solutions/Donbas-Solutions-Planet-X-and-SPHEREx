@@ -52,7 +52,7 @@ work for the live API and the static bundles.
 backend/app/
   domain.py       shared types — Target, ExposureMeta, Visit, Cutout, SequenceParams, FrameArrays, SequenceResult
   astrometry.py   proper-motion propagation (SR-3)
-  archive/        Track A — sia.py, visits.py, cutouts.py (done); naive.py (temporary); fetch.py (to implement)
+  archive/        Track A — sia.py, visits.py, cutouts.py, http.py, collections.py, ranges.py, fetch.py (done); naive.py (temporary)
   pipeline/       Track C — bundle.py (write_bundle, done); sequence.py (build_sequence, to implement)
   jobs.py         Track A — job runner (to create)
   main.py         Track A — endpoints

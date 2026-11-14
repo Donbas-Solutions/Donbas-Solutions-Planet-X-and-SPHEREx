@@ -5,9 +5,28 @@ import json
 import numpy as np
 from conftest import REPO_ROOT
 
-from app.models import Sequence
+from app.models import Sequence, Spectrum
 
 MOCK = REPO_ROOT / "frontend" / "public" / "mock"
+
+
+def mock_spectrum() -> Spectrum:
+    seq = Sequence.model_validate_json((MOCK / "sequence.json").read_text(encoding="utf-8"))
+    assert seq.meta.spectrum is not None
+    return Spectrum.model_validate_json((MOCK / seq.meta.spectrum).read_text(encoding="utf-8"))
+
+
+def test_mock_spectrum_matches_contract() -> None:
+    points = mock_spectrum().points
+    assert {p.detector for p in points} == {1, 2, 3, 4, 5, 6}
+    assert all(0.7 < p.lambda_um < 5.1 for p in points)
+    assert [p.mjd for p in points] == sorted(p.mjd for p in points)
+
+
+def test_saturated_spectrum_points_carry_no_numbers() -> None:
+    saturated = [p for p in mock_spectrum().points if p.saturated]
+    assert saturated
+    assert all(p.flux_ujy is None and p.err_ujy is None for p in saturated)
 
 
 def test_mock_manifest_matches_contract() -> None:

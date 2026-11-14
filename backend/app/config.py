@@ -31,6 +31,9 @@ class Settings:
     max_concurrency: int = field(default_factory=lambda: int(os.environ.get("IRSA_MAX_CONCURRENCY", "8")))
     http_timeout_s: float = field(default_factory=lambda: float(os.environ.get("IRSA_TIMEOUT_S", "120")))
     raw_cache_max_mb: int = field(default_factory=lambda: int(os.environ.get("RAW_CACHE_MAX_MB", "5000")))
+    s3_base_url: str = field(
+        default_factory=lambda: os.environ.get("SPHEREX_S3_URL", "https://nasa-irsa-spherex.s3.amazonaws.com/")
+    )
     user_agent: str = "spherex-blink/0.1"
 
     @property

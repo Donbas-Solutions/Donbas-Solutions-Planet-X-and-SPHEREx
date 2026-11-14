@@ -188,10 +188,17 @@ plausible-looking but scientifically wrong picture, so they are not optional.
 - The WISE 0855 preset uses `science/targets.json` (SIMBAD J2000 + PM), never the challenge-text coordinates.
 
 ### URL state
-- Canonical params: `ra`, `dec` (ICRS degrees), `fov` (arcmin, 2–30, default 10), `det` (`all` or a comma list
-  of `1..6`), `mode`, `name`, plus `manifest` for static bundles. `ra/dec/fov/det/mode` mirror
-  `GET /api/sequence`. Adding a param = tell the team (shared links and `/embed` depend on it).
-- Omit params that hold their default; an unknown or invalid value falls back to the default, never crashes.
+- The page URL params are defined in `docs/spec.md` §5.3 — that table is the source of truth; don't invent others.
+  Params: `target` (preset id), `name`, `ra`/`dec` (decimal degrees or URL-encoded sexagesimal), `fov` (arcmin,
+  2–30, default 10), `det` (`all` or a comma list of `1..6`), `view` (`blink` | `diff`), `a`/`b` (frame ids),
+  `fps` (0.5–3, default 2), `stretch` (`asinh` | `linear` | `log`), `flags` (comma list of `saturation`, `bad`,
+  `artifact`), `pmra`/`pmdec`/`epoch`, and `manifest` (development only).
+- Precedence: `target` > `name` > `ra`/`dec`.
+- Page params are not API params: the page has `view` and `epoch`, the API has `mode` and `ref_epoch`
+  (`docs/api.md`). Map them in one place in `api/`.
+- Adding or renaming a param = change spec §5.3 and tell the team (shared links and `/embed` depend on it).
+- Omit params that hold their default. Unknown params are ignored; an invalid value falls back to the default with a
+  visible notice, never a crash.
 
 ### Honest wording
 - No "detected" for anything below 5σ: show S/N or a 5σ upper limit (WISE 0855 is at the detection limit).

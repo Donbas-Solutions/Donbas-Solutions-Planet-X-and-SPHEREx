@@ -9,6 +9,10 @@ Scene (3 visits x detectors D1, D5, all):
   * a saturated star: core = NaN with OVERFLOW/NONLINEAR flags, ghost (not masked) in visit 2
   * a snowball in visit 2 / D1 (masked: NaN + SNOWBALL flag)
   * SOURCE flag on all star pixels (informational, never masked)
+
+spectrum.json (linked from meta.spectrum): the mover's spectrum, 3 visits x 6 detectors x 17 LVF channels, shaped
+like a cold T/Y dwarf (faint at 1 µm, CH4 absorption at 3.3 µm, peak near 4.3 µm). Two v1 points are marked
+saturated and one v2 point carries SNOWBALL only to exercise the UI: a real dwarf this faint never saturates.
 """
 
 from __future__ import annotations
@@ -26,12 +30,22 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 from app.flags import DEFAULT_FLAG_BITS  # noqa: E402
 from app.grid import make_grid  # noqa: E402
-from app.models import Frame, PixelPos, Sequence, SequenceMeta, Stretch  # noqa: E402
+from app.models import Frame, PixelPos, Sequence, SequenceMeta, Spectrum, SpectrumPoint, Stretch  # noqa: E402
 
 OUT = ROOT / "frontend" / "public" / "mock"
 BIT = {b.name: 1 << b.bit for b in DEFAULT_FLAG_BITS}
 PSF_SIGMA = 0.75  # px: SPHEREx PSF is undersampled
 RNG = np.random.default_rng(20261114)
+SPECTRUM_SEED = 20261115  # separate stream: adding the spectrum must not change the frames
+CHANNELS_PER_DETECTOR = 17
+DETECTOR_BANDS_UM = {
+    1: (0.75, 1.11),
+    2: (1.11, 1.64),
+    3: (1.64, 2.42),
+    4: (2.42, 3.82),
+    5: (3.82, 4.42),
+    6: (4.42, 5.0),
+}
 
 VISITS = [  # (id, first day, last day) — shaped like Barnard's real visits
     ("v1", "2025-08-15", "2025-10-01"),
@@ -50,6 +64,45 @@ def gaussian(
 ) -> npt.NDArray[np.float64]:
     yy, xx = np.mgrid[0 : shape[0], 0 : shape[1]]
     return flux / (2 * np.pi * sigma**2) * np.exp(-((xx - x) ** 2 + (yy - y) ** 2) / (2 * sigma**2))
+
+
+def _bump(lam: float, centre: float, width: float) -> float:
+    return float(np.exp(-0.5 * ((lam - centre) / width) ** 2))
+
+
+def cold_dwarf_flux_ujy(lam: float) -> float:
+    emission = 2.0 + 20 * _bump(lam, 1.27, 0.08) + 8 * _bump(lam, 1.58, 0.06) + 120 * _bump(lam, 4.3, 0.35)
+    return emission * (1 - 0.8 * _bump(lam, 3.3, 0.15))
+
+
+def mock_spectrum() -> Spectrum:
+    rng = np.random.default_rng(SPECTRUM_SEED)
+    points: list[SpectrumPoint] = []
+    for vid, first, last in VISITS:
+        t0, t1 = Time(first).mjd, Time(last).mjd
+        for detector, (lo, hi) in DETECTOR_BANDS_UM.items():
+            for ch in range(CHANNELS_PER_DETECTOR):
+                lam = lo + (hi - lo) * (ch + 0.5) / CHANNELS_PER_DETECTOR
+                mjd = t0 + (t1 - t0) * (ch + rng.uniform(0, 1)) / CHANNELS_PER_DETECTOR
+                saturated = vid == "v1" and detector == 5 and ch in (7, 8)
+                flags = BIT["OVERFLOW"] | BIT["NONLINEAR"] if saturated else 0
+                if vid == "v2" and detector == 1 and ch == 4:
+                    flags |= BIT["SNOWBALL"]
+                err = 1.5 + 0.05 * cold_dwarf_flux_ujy(lam)
+                flux = cold_dwarf_flux_ujy(lam) + rng.normal(0, err)
+                points.append(
+                    SpectrumPoint(
+                        lambda_um=round(lam, 4),
+                        flux_ujy=None if saturated else round(float(flux), 3),
+                        err_ujy=None if saturated else round(err, 3),
+                        mjd=round(float(mjd), 4),
+                        detector=detector,
+                        visit=vid,
+                        saturated=saturated,
+                        flags=flags,
+                    )
+                )
+    return Spectrum(points=sorted(points, key=lambda p: p.mjd))
 
 
 def main() -> None:
@@ -152,10 +205,12 @@ def main() -> None:
             generated_at=datetime.now(UTC).isoformat(timespec="seconds"),
             pipeline_tags=["mock"],
             mock=True,
+            spectrum="spectrum.json",
         ),
     )
+    (OUT / "spectrum.json").write_text(mock_spectrum().model_dump_json(indent=1) + "\n", encoding="utf-8", newline="\n")
     (OUT / "sequence.json").write_text(
-        json.dumps(seq.model_dump(mode="json"), indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(seq.model_dump(mode="json"), indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n"
     )
     size_kb = sum(p.stat().st_size for p in OUT.rglob("*") if p.is_file()) / 1024
     print(f"wrote {len(frames)} frames ({n}x{n}) to {OUT.relative_to(ROOT)} — {size_kb:.0f} KB")
