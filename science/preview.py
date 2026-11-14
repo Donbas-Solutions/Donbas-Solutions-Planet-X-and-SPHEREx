@@ -23,12 +23,11 @@ from app.config import configure_ssl, settings
 from app.domain import FrameArrays, SequenceParams, SequenceResult, Target
 from app.models import Frame
 from app.pipeline.bundle import write_bundle
-from app.pipeline.measure import Shift, centroid, masked_core_center
+from app.pipeline.measure import Shift, locate_source
 from app.pipeline.sequence import build_sequence
 
 ROOT = Path(__file__).resolve().parents[1]
 ZOOM = 4
-CENTROID_RADIUS_PX = 3.0
 
 
 def load_target(target_id: str) -> tuple[Target, dict[str, object]]:
@@ -80,17 +79,14 @@ def report_shift(name: str, first: Frame, last: Frame, arrays: dict[str, FrameAr
     if first.expected_px is None or last.expected_px is None:
         return
     expected = Shift(last.expected_px.x - first.expected_px.x, last.expected_px.y - first.expected_px.y, pixscale)
-    saturated = any("saturated" in w for w in first.warnings + last.warnings)
-    locate = masked_core_center if saturated else centroid
-    a = locate(arrays[first.id].data, first.expected_px.x, first.expected_px.y, CENTROID_RADIUS_PX)
-    b = locate(arrays[last.id].data, last.expected_px.x, last.expected_px.y, CENTROID_RADIUS_PX)
+    a = locate_source(arrays[first.id].data, first.expected_px.x, first.expected_px.y)
+    b = locate_source(arrays[last.id].data, last.expected_px.x, last.expected_px.y)
     if a is None or b is None:
         print(f"  {name}: no source found near the expected position")
         return
     measured = Shift(b[0] - a[0], b[1] - a[1], pixscale)
-    method = "masked-core centre" if saturated else "centroid"
     print(
-        f"  {name}: measured {measured.length_px:.2f} px @ PA {measured.position_angle_deg:.0f}° ({method}), "
+        f"  {name}: measured {measured.length_px:.2f} px @ PA {measured.position_angle_deg:.0f}°, "
         f"expected {expected.length_px:.2f} px @ PA {expected.position_angle_deg:.0f}°"
     )
 

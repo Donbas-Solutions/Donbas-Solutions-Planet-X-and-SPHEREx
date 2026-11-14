@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 import pytest
 from astropy.wcs import WCS
 
@@ -13,7 +14,7 @@ from app.astrometry import position_at
 from app.domain import Cutout, ExposureMeta, SequenceParams, Target
 from app.models import Sequence
 from app.pipeline.bundle import write_bundle
-from app.pipeline.measure import Shift, centroid, masked_core_center
+from app.pipeline.measure import Shift, centroid, fit_position, fit_proper_motion, masked_core_center
 from app.pipeline.sequence import SequenceError, build_sequence
 
 PIXSCALE_DEG = 6.2 / 3600
@@ -166,6 +167,43 @@ def test_background_gradient_is_removed() -> None:
     data = build_sequence([halo], MOVER, SequenceParams(fov_arcmin=6.0)).arrays["v1-D3"].data
     left, right = np.nanmedian(data[:, :15]), np.nanmedian(data[:, -15:])
     assert abs(float(right - left)) < 0.5
+
+
+@pytest.mark.parametrize("true_dx", [0.3, 0.5, 0.7])
+def test_gaussian_fit_beats_centroid_on_subpixel_shifts(true_dx: float) -> None:
+    rows, cols = np.mgrid[0:21, 0:21]
+
+    def star(x: float) -> npt.NDArray[np.float32]:
+        r2 = (cols - x) ** 2 + (rows - 10.0) ** 2
+        image: npt.NDArray[np.float32] = (100 * np.exp(-r2 / (2 * 0.6**2))).astype(np.float32)
+        return image
+
+    fit_a, fit_b = fit_position(star(10.0), 10, 10), fit_position(star(10.0 + true_dx), 10, 10)
+    com_a, com_b = centroid(star(10.0), 10, 10, 3.0), centroid(star(10.0 + true_dx), 10, 10, 3.0)
+    assert fit_a is not None
+    assert fit_b is not None
+    assert com_a is not None
+    assert com_b is not None
+    assert abs((fit_b[0] - fit_a[0]) - true_dx) < 0.02
+    assert abs((fit_b[0] - fit_a[0]) - true_dx) <= abs((com_b[0] - com_a[0]) - true_dx)
+
+
+def test_proper_motion_fit_recovers_a_known_motion() -> None:
+    mjds = [61000.0, 61182.6, 61365.25]
+    # 2 px/yr north and 1 px/yr east (x grows west) at 6.2″/px, plus small centroid noise.
+    xs = [50.0 - (m - mjds[0]) / 365.25 + n for m, n in zip(mjds, (0.01, -0.02, 0.01), strict=True)]
+    ys = [50.0 + 2 * (m - mjds[0]) / 365.25 + n for m, n in zip(mjds, (-0.01, 0.02, -0.01), strict=True)]
+    fit = fit_proper_motion(mjds, xs, ys, 6.2)
+    assert fit.pmra_masyr == pytest.approx(6200, abs=150)
+    assert fit.pmdec_masyr == pytest.approx(12400, abs=150)
+    assert fit.pmra_err_masyr is not None
+    assert fit.pmra_err_masyr > 0
+
+
+def test_proper_motion_fit_has_no_error_with_two_epochs() -> None:
+    fit = fit_proper_motion([61000.0, 61365.25], [50.0, 49.0], [50.0, 52.0], 6.2)
+    assert fit.pmdec_err_masyr is None
+    assert fit.offset_sigma(6200, 12400) is None
 
 
 def test_no_matching_detector_is_an_error() -> None:
