@@ -171,7 +171,7 @@ Blinking is flashing content (WCAG 2.2 SC 2.3.1): fps is capped at **3**, defaul
 ### 6.1 Science rules (details and rationale: `CLAUDE.md` → Science rules)
 | ID | Rule |
 |---|---|
-| SR-1 | Compare like with like: the blink unit is a per-visit stack per detector (or all detectors combined); λ coverage is recorded per stack and a warning is raised when a visit has < 80 % of the exposures or λ coverage of the best-covered visit of the same detector. |
+| SR-1 | Compare like with like: the blink unit is a per-visit stack per detector (or all detectors combined); λ coverage is recorded per stack and a warning is raised when a visit has < 80 % of the exposures or λ coverage of the best-covered visit of the same detector, or when a stack samples < 80 % of the 17 LVF channels of its detectors (absolute check: equally capped visits are all incomplete). |
 | SR-2 | Visits = time clusters separated by > 40 d; clusters longer than 60 d (deep fields) are split into 30-d bins; exposures per (detector, bin) are capped (cap set at Checkpoint A0, OD-4). |
 | SR-3 | Positions are propagated with proper motion to each frame's `MJD-AVG` in ICRS (no GCRS, no aberration); parallax is ignored and stated in FR-15. Catalog positions always carry their epoch (WISE 0855 challenge coordinates are epoch ≈2010.5). |
 | SR-4 | Background is subtracted (ZODI extension, then residual median) before one shared stretch is computed over all frames. |
