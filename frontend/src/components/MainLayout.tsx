@@ -5,11 +5,9 @@ import BottomTabs from './BottomTabs'
 import FramePanel from './FramePanel'
 import LoadStatus from './LoadStatus'
 import Notices from './Notices'
-import PlayerControls from './PlayerControls'
+import Player from './Player'
 import TopBar from './TopBar'
-import Viewer from './Viewer'
 
-const ZOOM = 5
 const DEFAULT_OVERLAY = ['bad', 'saturation'] as const
 
 interface Props {
@@ -30,8 +28,7 @@ export default function MainLayout({ notices, onDismissNotices }: Props) {
       <Notices notices={notices} onDismiss={onDismissNotices} />
       <main className="stage">
         <LoadStatus />
-        <Viewer zoom={ZOOM} overlayMask={overlayMask} />
-        <PlayerControls />
+        <Player overlayMask={overlayMask} />
       </main>
       <FramePanel
         showFlags={params.flags.length > 0}

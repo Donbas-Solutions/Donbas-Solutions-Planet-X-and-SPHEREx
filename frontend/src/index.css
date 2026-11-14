@@ -211,9 +211,92 @@ h1 {
   flex-wrap: wrap;
 }
 
+.player {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.viewport {
+  display: flex;
+  max-width: 100%;
+  max-height: 80vh;
+  overflow: auto;
+}
+
 .viewer {
   position: relative;
-  max-width: 100%;
+}
+
+.frame-caption,
+.shortcuts {
+  margin: 0;
+}
+
+.transport,
+.display-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.transport-row,
+.display-controls {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.transport-row {
+  display: flex;
+}
+
+.transport label,
+.display-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.transport .grow {
+  flex: 1 1 160px;
+}
+
+.transport .grow input {
+  width: 100%;
+}
+
+.transport .play {
+  min-width: 6.5em;
+}
+
+.segmented {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.segmented button + button {
+  margin-left: -1px;
+}
+
+.diff-legend p {
+  margin: 4px 0;
+}
+
+.legend-bar {
+  height: 12px;
+  max-width: 320px;
+  border-radius: 2px;
+}
+
+.legend-ticks {
+  display: flex;
+  justify-content: space-between;
+  max-width: 320px;
+  font-size: 0.85rem;
 }
 
 .viewer canvas {
@@ -241,6 +324,18 @@ h1 {
   border: 2px solid var(--accent);
   border-radius: 50%;
   pointer-events: none;
+}
+
+.marker-earlier {
+  border-style: dashed;
+  border-color: #fff;
+}
+
+.marker-later {
+  border-color: var(--fg);
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
 }
 
 .meta {

@@ -39,7 +39,7 @@ export default function SearchBar() {
 
   const handleDetChange = (value: string) => {
     if (value === 'custom') return
-    setParams({ det: parseViewParams(`?det=${value}`).params.det })
+    setParams({ det: parseViewParams(`?det=${value}`).params.det, a: null, b: null })
   }
 
   return (

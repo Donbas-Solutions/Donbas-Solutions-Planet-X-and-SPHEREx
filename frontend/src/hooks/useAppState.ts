@@ -1,6 +1,7 @@
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react'
 import type { PixelPos, Sequence } from '../api/types'
 import type { LoadedFrame } from '../lib/frames'
+import type { Playlist } from '../lib/playlist'
 import type { ProperMotion, SequenceSource, ViewParams } from '../lib/urlState'
 import type { SequenceLoad } from './useSequence'
 import type { SetViewParams } from './useViewParams'
@@ -23,10 +24,17 @@ export interface AppState {
   retry: () => void
   /** The ready sequence; null while loading or on error. */
   sequence: Sequence | null
+  /** Every frame of the sequence, in manifest order. */
   frames: readonly LoadedFrame[]
+  /** The frames being blinked: one detector set (from `params.det`), in time order. */
+  playlist: Playlist
   target: TargetInfo | null
+  /** Index into `playlist.frames`. */
   frameIndex: number
   currentFrame: LoadedFrame | null
+  /** A/B blink and difference operands (`params.a` / `params.b`, default first / last of the playlist). */
+  frameA: LoadedFrame | null
+  frameB: LoadedFrame | null
   /** Pixel the user clicked, in data coordinates of the common grid (row 0 = south). */
   selectedPixel: PixelPos | null
   setFrameIndex: Dispatch<SetStateAction<number>>

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import type { ResolveResult } from '../api/resolve'
 import type { PixelPos } from '../api/types'
 import type { LoadedFrame } from '../lib/frames'
+import { buildPlaylist } from '../lib/playlist'
 import { findPreset, PRESET_EPOCH } from '../lib/presets'
 import type { SequenceSource, ViewParams } from '../lib/urlState'
 import { AppStateContext, type AppState, type TargetInfo } from '../hooks/useAppState'
@@ -69,7 +70,9 @@ export default function AppStateProvider({ params, setParams, source, children }
   const value = useMemo<AppState>(() => {
     const sequence = load.status === 'ready' ? load.seq : null
     const frames = load.status === 'ready' ? load.frames : NO_FRAMES
-    const index = Math.min(Math.max(frameIndex, 0), Math.max(frames.length - 1, 0))
+    const playlist = buildPlaylist(frames, params.det)
+    const list = playlist.frames
+    const index = Math.min(Math.max(frameIndex, 0), Math.max(list.length - 1, 0))
     const fromSequence: TargetInfo | null = sequence
       ? { name: sequence.meta.target_name, ra: sequence.grid.ra, dec: sequence.grid.dec, pm: null }
       : null
@@ -81,9 +84,12 @@ export default function AppStateProvider({ params, setParams, source, children }
       retry: manifest.retry,
       sequence,
       frames,
+      playlist,
       target: targetFromParams(params) ?? fromSequence,
       frameIndex: index,
-      currentFrame: frames[index] ?? null,
+      currentFrame: list[index] ?? null,
+      frameA: list.find((f) => f.frame.id === params.a) ?? list[0] ?? null,
+      frameB: list.find((f) => f.frame.id === params.b) ?? list[list.length - 1] ?? null,
       selectedPixel,
       setFrameIndex,
       setSelectedPixel,

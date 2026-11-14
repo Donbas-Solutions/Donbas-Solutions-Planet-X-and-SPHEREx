@@ -1,62 +1,77 @@
-import { useEffect, useRef, type MouseEvent } from 'react'
+import { useEffect, useRef, type CSSProperties, type MouseEvent } from 'react'
+import type { PixelPos, Stretch } from '../api/types'
 import { useAppState } from '../hooks/useAppState'
-import { renderFrame } from '../lib/frames'
+import type { Colormap } from '../lib/colormap'
 import { displayToPixel, pixelToDisplay, type DisplayFraction } from '../lib/pixels'
+import { renderImage, type GridImage } from '../lib/render'
 
-interface Props {
-  zoom: number
-  overlayMask: number
+export type Zoom = 'fit' | number
+export const MAX_ZOOM = 8
+
+export interface Marker {
+  id: string
+  px: PixelPos
+  variant: 'expected' | 'earlier' | 'later'
+  title: string
 }
 
-function percent(f: DisplayFraction) {
+interface Props {
+  image: GridImage
+  stretch: Stretch
+  colormap: Colormap
+  overlayMask: number
+  zoom: Zoom
+  markers: readonly Marker[]
+  ariaLabel: string
+}
+
+function percent(f: DisplayFraction): CSSProperties {
   return { left: `${f.left * 100}%`, top: `${f.top * 100}%` }
 }
 
-export default function Viewer({ zoom, overlayMask }: Props) {
-  const { sequence, currentFrame, selectedPixel, setSelectedPixel } = useAppState()
+export default function Viewer({ image, stretch, colormap, overlayMask, zoom, markers, ariaLabel }: Props) {
+  const { selectedPixel, setSelectedPixel } = useAppState()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [ny, nx] = image.shape
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d')
-    if (!ctx || !sequence || !currentFrame) return
-    renderFrame(ctx, currentFrame, sequence.stretch, { overlayMask })
-  }, [sequence, currentFrame, overlayMask])
-
-  if (!sequence || !currentFrame) return null
-
-  const { frame } = currentFrame
-  const [ny, nx] = frame.shape
+    if (ctx) renderImage(ctx, image, stretch, colormap, { overlayMask })
+  }, [image, stretch, colormap, overlayMask])
 
   const handleClick = (e: MouseEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
-    const px = displayToPixel(
-      { left: (e.clientX - rect.left) / rect.width, top: (e.clientY - rect.top) / rect.height },
-      frame.shape,
-    )
-    setSelectedPixel(px)
+    const fraction = { left: (e.clientX - rect.left) / rect.width, top: (e.clientY - rect.top) / rect.height }
+    setSelectedPixel(displayToPixel(fraction, image.shape))
   }
 
+  const size: CSSProperties =
+    zoom === 'fit'
+      ? { width: '100%', maxWidth: `min(${nx * MAX_ZOOM}px, calc(70vh * ${nx / ny}))` }
+      : { width: nx * zoom, flex: 'none' }
+
   return (
-    <div className="viewer" style={{ width: nx * zoom, aspectRatio: `${nx} / ${ny}` }}>
-      <canvas
-        ref={canvasRef}
-        width={nx}
-        height={ny}
-        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- the image is drawn on a canvas, which needs an explicit role
-        role="img"
-        aria-label={`${sequence.meta.target_name ?? 'Field'}: ${frame.label}, ${frame.date_range.join(' to ')} UTC`}
-        onClick={handleClick}
-      />
-      {frame.expected_px && (
-        <div
-          className="marker"
-          title="Expected position from proper motion (not a detection)"
-          style={percent(pixelToDisplay(frame.expected_px, frame.shape))}
+    <div className="viewport">
+      <div className="viewer" style={{ ...size, aspectRatio: `${nx} / ${ny}` }}>
+        <canvas
+          ref={canvasRef}
+          width={nx}
+          height={ny}
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- the image is drawn on a canvas, which needs an explicit role
+          role="img"
+          aria-label={ariaLabel}
+          onClick={handleClick}
         />
-      )}
-      {selectedPixel && (
-        <div className="crosshair" style={percent(pixelToDisplay(selectedPixel, frame.shape))} />
-      )}
+        {markers.map((m) => (
+          <div
+            key={m.id}
+            className={`marker marker-${m.variant}`}
+            title={m.title}
+            style={percent(pixelToDisplay(m.px, image.shape))}
+          />
+        ))}
+        {selectedPixel && <div className="crosshair" style={percent(pixelToDisplay(selectedPixel, image.shape))} />}
+      </div>
     </div>
   )
 }
