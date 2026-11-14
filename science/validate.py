@@ -1,6 +1,6 @@
 """Validate the five test targets (docs/spec.md §6.2: T-1 … T-5, FR-16, FR-20) → science/VALIDATION.md + figures.
 
-Usage (from the repo root, after scripts/prebake.py — it uses the same depth, so cutouts come from cache/raw/):
+Usage (from the repo root, after scripts/prebake.py — same fetcher and depth, so cutouts come from cache/raw/):
     uv run --project backend python science/validate.py                 # all targets
     uv run --project backend python science/validate.py barnard eps_ind_b --max-per-detector 4
 """
@@ -8,19 +8,20 @@ Usage (from the repo root, after scripts/prebake.py — it uses the same depth, 
 from __future__ import annotations
 
 import argparse
+import asyncio
 import logging
 import math
+import sys
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from statistics import fmean
 
 import numpy as np
 from PIL import Image
 
-from app.archive.naive import Sample, fetch_sample
+from app.archive.fetch import FetchResult
 from app.config import configure_ssl
 from app.domain import SequenceParams, SequenceResult, Target
 from app.models import Frame, SpectrumPoint
@@ -30,6 +31,10 @@ from app.pipeline.sequence import build_sequence
 from preview import load_target, tile, to_diverging, to_gray
 
 ROOT = Path(__file__).resolve().parents[1]
+# Same plan, window and cache as the bundles: reuse prebake's fetcher instead of a second copy of it.
+sys.path.insert(0, str(ROOT / "scripts"))
+from prebake import fetch_target  # noqa: E402
+
 FIGURES = ROOT / "science" / "figures"
 REPORT = ROOT / "science" / "VALIDATION.md"
 CROP_HALF_PX = 20
@@ -63,6 +68,7 @@ EPS_IND_B_2MASS_MAG = {"J": 11.91, "H": 11.31, "Ks": 11.21}
 # WISE W2 (4.6 µm) Vega zero point (Jarrett et al. 2011) and WISE 0855's W2 magnitude.
 W2_ZERO_POINT_JY, WISE0855_W2_MAG = 171.787, 14.0
 MWIR_MIN_UM = 3.82
+MOTION_PA_TOLERANCE_DEG = 30.0
 
 
 @dataclass(frozen=True)
@@ -70,7 +76,7 @@ class Data:
     target: Target
     entry: dict[str, object]
     cap: int
-    sample: Sample
+    sample: FetchResult
     result: SequenceResult
     points: list[SpectrumPoint]
 
@@ -78,7 +84,7 @@ class Data:
 def load(target_id: str, cap_override: int | None) -> Data:
     target, entry = load_target(target_id)
     cap = cap_override or int(str(entry["prebake_cap"]))
-    sample = fetch_sample(target, max_per_detector=cap)
+    sample = asyncio.run(fetch_target(target, cap))
     result = build_sequence(sample.cutouts, target, SequenceParams())
     points = measure_spectrum(sample.cutouts, target).points
     return Data(target, entry, cap, sample, result, points)
@@ -221,37 +227,93 @@ def spectrum_section(data: Data) -> list[str]:
     return lines
 
 
+def motion_check(data: Data, suffix: str) -> tuple[Shift, Shift] | None:
+    """Measured and expected first→last shift of the source in the `suffix` frames (e.g. `D6`)."""
+    marked = [(f, f.expected_px) for f in data.result.sequence.frames if f.id.endswith(f"-{suffix}")]
+    frames = [(f, e) for f, e in marked if e is not None]
+    if len(frames) < 2:
+        return None
+    (first, e0), (last, e1) = frames[0], frames[-1]
+    a = locate_source(data.result.arrays[first.id].data, e0.x, e0.y)
+    b = locate_source(data.result.arrays[last.id].data, e1.x, e1.y)
+    if a is None or b is None:
+        return None
+    pixscale = data.result.sequence.grid.pixscale_arcsec
+    expected = Shift(e1.x - e0.x, e1.y - e0.y, pixscale)
+    return Shift(b[0] - a[0], b[1] - a[1], pixscale), expected
+
+
 def wise0855_section(data: Data) -> list[str]:
-    mwir = [p for p in data.points if p.lambda_um >= MWIR_MIN_UM]
-    expected_ujy = W2_ZERO_POINT_JY * 10 ** (-WISE0855_W2_MAG / 2.5) * 1e6
+    """WISE 0855 is invisible below ~3 µm (J ≈ 25), so flux there means a field source shares the aperture."""
     lines = [*header("T-3", data)]
-    combined = weighted_mean(mwir)
-    if combined is None:
-        lines.append("No usable D5–D6 photometry at the expected position.")
-        return [*lines, ""]
-    flux, err = combined
-    snr = flux / err
-    verdict = (
-        f"**detected** at S/N = {snr:.1f}"
-        if snr >= DETECTION_SIGMA
-        else f"**not detected** (S/N = {snr:.1f}); {DETECTION_SIGMA:.0f}σ upper limit = {DETECTION_SIGMA * err:.0f} µJy"
-    )
-    by_visit = defaultdict(list)
-    for p in mwir:
-        by_visit[p.visit].append(p)
+    expected_ujy = W2_ZERO_POINT_JY * 10 ** (-WISE0855_W2_MAG / 2.5) * 1e6
+    rows = [
+        ("λ < 1.6 µm (D1–D2)", 0.0, 1.6),
+        ("1.6–3.8 µm (D3–D4)", 1.6, MWIR_MIN_UM),
+        ("λ ≥ 3.8 µm (D5–D6)", MWIR_MIN_UM, 9.9),
+    ]
+    fluxes: dict[str, tuple[float, float] | None] = {}
     lines += [
-        f"Forced aperture photometry at the position propagated from SIMBAD J2000 + proper motion (the challenge "
-        f"coordinates are epoch ≈2010.5). {len(mwir)} exposures at λ ≥ {MWIR_MIN_UM} µm (D5–D6) combined by inverse "
-        f"variance: {flux:.0f} ± {err:.0f} µJy → {verdict}. For reference, WISE W2 = {WISE0855_W2_MAG} corresponds "
-        f"to ≈ {expected_ujy:.0f} µJy at 4.6 µm.",
+        "Forced aperture photometry (r = 3 px = 18.6″) at the position propagated from SIMBAD J2000 + proper motion "
+        "(the challenge coordinates are epoch ≈2010.5).",
         "",
-        "| Visit | Exposures | Flux (µJy) | S/N |",
+        "| Wavelengths | Exposures | Flux (µJy) | S/N |",
         "|---|---|---|---|",
     ]
-    for visit, points in sorted(by_visit.items(), key=lambda kv: fmean(p.mjd for p in kv[1])):
-        mean = weighted_mean(points)
+    for label, lo, hi in rows:
+        points = [p for p in data.points if lo <= p.lambda_um < hi]
+        fluxes[label] = mean = weighted_mean(points)
         cell = f"{mean[0]:.0f} ± {mean[1]:.0f} | {mean[0] / mean[1]:.1f}" if mean else "— | —"
-        lines.append(f"| {visit} | {len(points)} | {cell} |")
+        lines.append(f"| {label} | {len(points)} | {cell} |")
+
+    short = fluxes[rows[0][0]]
+    contaminated = short is not None and short[0] / short[1] >= DETECTION_SIGMA
+    lines += ["", "| Frames | Measured shift | Expected shift (proper motion) |", "|---|---|---|"]
+    moving: list[str] = []
+    for suffix in ("D5", "D6", "all"):
+        check = motion_check(data, suffix)
+        if check is None:
+            lines.append(f"| {suffix} | source not found | — |")
+            continue
+        measured, expected = check
+        lines.append(
+            f"| {suffix} | {measured.length_px:.2f} px @ PA {measured.position_angle_deg:.0f}° | "
+            f"{expected.length_px:.2f} px @ PA {expected.position_angle_deg:.0f}° |"
+        )
+        along = pa_error(measured.position_angle_deg, expected.position_angle_deg) <= MOTION_PA_TOLERANCE_DEG
+        if suffix != "all" and along and measured.length_px >= 0.5 * expected.length_px:
+            moving.append(suffix)
+
+    mwir = fluxes[rows[2][0]]
+    verdict = []
+    if moving:
+        verdict.append(
+            f"**Motion of WISE 0855 detected** in {' and '.join(moving)}: the source shifts in the predicted "
+            "direction where WISE 0855 is bright and the field source is faint."
+        )
+    if contaminated and short is not None and mwir is not None:
+        verdict.append(
+            f"**The flux is contaminated**: {short[0]:.0f} µJy at λ < 1.6 µm (S/N {short[0] / short[1]:.0f}) can only "
+            f"come from a field source in the aperture, so {mwir[0]:.0f} ± {mwir[1]:.0f} µJy at λ ≥ 3.8 µm is an "
+            "upper bound for WISE 0855, not its flux. The blend also shortens the measured shift."
+        )
+    elif mwir is not None:
+        snr = mwir[0] / mwir[1]
+        verdict.append(
+            f"D5–D6 flux {mwir[0]:.0f} ± {mwir[1]:.0f} µJy (S/N {snr:.1f})"
+            + (
+                ""
+                if snr >= DETECTION_SIGMA
+                else f"; {DETECTION_SIGMA:.0f}σ upper limit {DETECTION_SIGMA * mwir[1]:.0f} µJy"
+            )
+            + "."
+        )
+    for paragraph in verdict:
+        lines += ["", paragraph]
+    lines += [
+        "",
+        f"For reference, WISE W2 = {WISE0855_W2_MAG} corresponds to ≈ {expected_ujy:.0f} µJy at 4.6 µm.",
+    ]
     return [*lines, ""]
 
 
@@ -293,7 +355,11 @@ CAVEATS = """## Caveats
 - Positions come from a 2D Gaussian fit with masked pixels excluded (Barnard's saturated core is left out).
   Flux-weighted centroids lock onto pixel centres of the undersampled PSF and shortened the shifts by 10-20 %.
 - Proper-motion errors come from the scatter of 3–4 epochs around a line; parallax (0.27–0.55″) is ignored
-  (SR-3) and contributes to that scatter.
+  (SR-3) and contributes to that scatter. With 3 epochs the error rests on one degree of freedom and can be
+  accidentally tiny (Barnard D2: σ = 24 mas/yr → Δ/σ = 24 although the shift and PA agree); trust the 4-epoch
+  ε Indi B errors more.
+- ε Indi B D4 misses the last visit (no D4 exposures in it), so its first→last baseline and shift are shorter;
+  the 0.7 px threshold assumes the full baseline.
 - ε Indi A (V 4.7) lies 6.7′ west of ε Indi B: its halo leaves residuals at the western edge of the difference.
 - D1 (0.75–1.1 µm) barely detects the T dwarfs ε Indi Ba/Bb, so its shift is noise-dominated.
 - Photometry uses the pixel solid angle from the WCS; IRSA's per-pixel SAPM map would refine it by the small
