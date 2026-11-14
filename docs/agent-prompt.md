@@ -1,7 +1,8 @@
 # Промпт для Claude Code: SPHEREx Blink
 
 **Як користуватися.** Phase 0, Phase 0.5 і перша хвиля треків уже в `main` (PR #1–#4). Команда з 4 людей, кожен бере
-одну роль і працює у своїй гілці (див. «Roles and ownership — round 2»). У своїй сесії Claude Code пишіть:
+одну роль і робить її фічі по черзі, кожну в окремій короткій гілці від свіжого `main` (див. «Roles and ownership —
+round 2»), з PR одразу по завершенні. У своїй сесії Claude Code пишіть:
 
 > Read `CLAUDE.md` and `docs/agent-prompt.md`, then execute **Track X, round 2**. Stop at every checkpoint.
 
@@ -106,53 +107,53 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
 
 ### Roles and ownership — round 2
 
-| Role | Who | Branch | Owns | Mission now |
+| Role | Who | Feature branches (in order) | Owns | Mission now |
 |---|---|---|---|---|
-| **A — Archive & API** | the A person | `track-a-archive` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`, Dockerfile; contract files | Live API (M1) and the backend deploy |
-| **B — Frontend core** | the B person | `track-b-frontend` | app shell, state, URL, player, panels, `package.json` | Live mode, fixes, sub-path-safe URLs for the deploy |
-| **C — Science & delivery** | the team lead | `track-c-science` (science), `track-c-delivery` (deploy, README, pitch) | `backend/app/pipeline/`, `science/`, `scripts/prebake.py`, `frontend/public/prebaked/`, README, deploy config, pitch | Spectrum endpoint with A, FR-16 acceptance, **submission and static deploy** |
-| **D — P1 features** | the new person | `track-d-features` | `frontend/src/components/{charts,context,embed}/` (+ their `lib/` helpers) | Spectrum and light-curve charts, Aladin context panel, embed, Gaia markers |
+| **A — Archive & API** | the A person | `feat/live-sequence-api` → `feat/spectrum-api` → `chore/backend-docker` → `feat/gaia-overlays` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`, Dockerfile; contract files | Live API (M1) and the backend deploy |
+| **B — Frontend core** | the B person | `fix/subpath-safe-urls` → `feat/live-mode` → `fix/diff-default-and-about` | app shell, state, URL, player, panels, `package.json` | Live mode, fixes, sub-path-safe URLs for the deploy |
+| **C — Science & delivery** | the team lead | `docs/submission-rules` → `chore/static-deploy` → `test/fr16-spectrophotometry` → `docs/readme-and-pitch` | `backend/app/pipeline/`, `science/`, `scripts/prebake.py`, `frontend/public/prebaked/`, README, deploy config, pitch | Spectrum endpoint with A, FR-16 acceptance, **submission and static deploy** |
+| **D — P1 features** | the new person | `feat/spectrum-chart` → `feat/light-curve-chart` → `feat/aladin-context` → `feat/embed-view` | `frontend/src/components/{charts,context,embed}/` (+ their `lib/` helpers) | Spectrum and light-curve charts, Aladin context panel, embed, Gaia markers |
 
 Shared: `domain.py` (A + C), `CLAUDE.md`, `docs/spec.md`, `docs/api.md` (announce changes). B and D share the
 frontend: D only touches its component folders and reads app state through B's hooks; anything else goes through B.
 
 ### Track A — round 2
-1. **A3 `jobs.py`** (FR-13): registry keyed by request; background task query → plan → `fetch_cutouts` →
+1. `feat/live-sequence-api` — **A3 `jobs.py`** (FR-13): registry keyed by request; background task query → plan → `fetch_cutouts` →
    `build_sequence` in a process pool (`progress=None`) → `write_bundle` into `cache/processed/<key>/`, served at `/files`.
-2. **A4 endpoints**: `/api/sequence` (200 cached | 202 job), `/api/jobs/{id}`, `/api/resolve` (SIMBAD + Harvard mirror,
+2. same branch — **A4 endpoints**: `/api/sequence` (200 cached | 202 job), `/api/jobs/{id}`, `/api/resolve` (SIMBAD + Harvard mirror,
    FR-2), `/api/health` with discovered collections. **Checkpoint A (M1):** live Barnard and ε Indi B over HTTP.
-3. **`/api/spectrum` and `/api/lightcurve`** with C: call `pipeline.photometry.measure_spectrum` on the cutouts of the
+3. `feat/spectrum-api` — **`/api/spectrum` and `/api/lightcurve`** with C: call `pipeline.photometry.measure_spectrum` on the cutouts of the
    job's plan.
-4. **Dockerfile + backend hosting** (with C, OD-1): persistent disk for `cache/`, health check, LRU cap.
-5. P1: `/api/overlays` (Gaia DR3 propagated to the frame epoch) for D's Gaia markers (FR-18).
+4. `chore/backend-docker` — **Dockerfile + backend hosting** (with C, OD-1): persistent disk for `cache/`, health check, LRU cap.
+5. `feat/gaia-overlays` (P1) — `/api/overlays` (Gaia DR3 propagated to the frame epoch) for D's Gaia markers (FR-18).
 
 ### Track B — round 2
-1. **Sub-path-safe URLs** (blocks C's static deploy if the host serves the site under `/<repo>/`, e.g. GitHub Pages):
+1. `fix/subpath-safe-urls` — **Sub-path-safe URLs** (blocks C's static deploy if the host serves the site under `/<repo>/`, e.g. GitHub Pages):
    every `/prebaked/…`, `/mock/…`, `/api/…`, `/files/…` URL built from `import.meta.env.BASE_URL` / one API base.
-2. **Live mode** once A4 lands: `/?ra=&dec=` and `/?name=` end to end, job progress, errors (FR-2, FR-13).
-3. Fixes: the default diff of ε Indi B uses visit 2026-04 instead of the last visit 2026-09; About says WISE 0855 is
+2. `feat/live-mode` — **Live mode** once A4 lands: `/?ra=&dec=` and `/?name=` end to end, job progress, errors (FR-2, FR-13).
+3. `fix/diff-default-and-about` — the default diff of ε Indi B uses visit 2026-04 instead of the last visit 2026-09; About says WISE 0855 is
    "not a detection" — update to "motion seen in D5–D6, flux blended with a field star" (`science/VALIDATION.md` T-3).
-4. Support D: expose the selected pixel / current frame / sequence through the state hook; review D's PRs.
+4. No branch — support D: expose the selected pixel / current frame / sequence through the state hook; review D's PRs.
 
 ### Track C — round 2
-1. **First (blocks everyone's deadline): settle OD-3** — exact submission deadline (hour, time zone), required format
+1. `docs/submission-rules` — **first (blocks everyone's deadline): settle OD-3** — exact submission deadline (hour, time zone), required format
    (project page, video length, slides), AI-use disclosure and branding rules from the Space Apps Participant Guides.
-2. **Pick the static host with the team (OD-1, frontend part)** and deploy the frontend + 5 bundles: a public URL that
+2. `chore/static-deploy` — **pick the static host with the team (OD-1, frontend part)** and deploy the frontend + 5 bundles: a public URL that
    works with no backend (FR-14). Needs B's step 1 if the host uses a sub-path.
-3. `/api/spectrum` + `/api/lightcurve` with A (C owns the science, A the endpoint).
-4. FR-16 acceptance: one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25).
-5. README (what, how, screenshots/GIFs from the bundles, limitations, credits NFR-10), licence decision (OD-2),
+3. On A's `feat/spectrum-api` — `/api/spectrum` + `/api/lightcurve` (C owns the science, A the endpoint).
+4. `test/fr16-spectrophotometry` — FR-16 acceptance: one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25).
+5. `docs/readme-and-pitch` — README (what, how, screenshots/GIFs from the bundles, limitations, credits NFR-10), licence decision (OD-2),
    pitch script and video, submission text.
 
 ### Track D — round 2
-Work on `track-d-features`; develop against the bundles: `/?target=eps_ind_b` (spectrum in `meta.spectrum`).
-1. **Spectrum chart** (FR-16): flux vs λ from `spectrum.json` / `/api/spectrum`, errors, coloured by visit;
+One branch per feature, from a fresh `main`; develop against the bundles: `/?target=eps_ind_b` (spectrum in `meta.spectrum`).
+1. `feat/spectrum-chart` — **Spectrum chart** (FR-16): flux vs λ from `spectrum.json` / `/api/spectrum`, errors, coloured by visit;
    saturated points as hollow markers labelled "saturated", never as values (SR-6). One small chart library, lazy-loaded
    (ask before adding it).
-2. **Light-curve chart** (FR-17): flux vs time per detector from the same points.
-3. **Context panel** (FR-19): Aladin Lite (`components/AladinPanel.tsx`) synced to target and FOV; SPHEREx colour HiPS,
+2. `feat/light-curve-chart` — **Light-curve chart** (FR-17): flux vs time per detector from the same points.
+3. `feat/aladin-context` — **Context panel** (FR-19): Aladin Lite (`components/AladinPanel.tsx`) synced to target and FOV; SPHEREx colour HiPS,
    AllWISE, 2MASS; Gaia DR3 via VizieR. Verify in a real browser (WebGL).
-4. **Embed** (FR-21): `/embed?…` minimal view + "copy embed code".
+4. `feat/embed-view` — **Embed** (FR-21): `/embed?…` minimal view + "copy embed code".
 5. P1 if time allows: Gaia markers in the player (FR-18, needs A's `/api/overlays`), AllWISE frame (FR-22).
 
 ### Who waits for whom — round 2
@@ -165,8 +166,10 @@ Work on `track-d-features`; develop against the bundles: `/?target=eps_ind_b` (s
 | Backend deploy (A + C) | A4 + Dockerfile | static deploy is already public |
 
 ### Integration and git
-- Each person works on their branch; **merge into `main` after every green checkpoint** (not only at milestones), so
-  the others get it within hours. The team lead merges PRs.
+- **One short-lived branch per feature**, named like a commit (`feat/…`, `fix/…`, `chore/…`, `docs/…`, `test/…`) and
+  created from a fresh `main`: `git switch -c feat/spectrum-chart origin/main`. Open the PR as soon as the feature is
+  green; the team lead merges. Then start the next branch from the updated `main`. The old `track-*` branches are
+  retired.
 - Start every work round with `git pull origin main` into your branch (merge; never rebase pushed commits).
 - Lockfile conflicts: regenerate (`uv lock`, `npm install`), never merge by hand. Ask before adding a dependency.
 - Contract changes only through A, announced in the team chat; `domain.py` changes agreed by A and C.
