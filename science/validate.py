@@ -15,7 +15,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -28,6 +28,7 @@ from app.models import Frame, SpectrumPoint
 from app.pipeline.measure import Shift, fit_proper_motion, locate_source
 from app.pipeline.photometry import measure_spectrum
 from app.pipeline.sequence import build_sequence
+from app.pipeline.variability import matched_changes, strongest_per_detector
 from preview import load_target, tile, to_diverging, to_gray
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -69,6 +70,7 @@ EPS_IND_B_2MASS_MAG = {"J": 11.91, "H": 11.31, "Ks": 11.21}
 W2_ZERO_POINT_JY, WISE0855_W2_MAG = 171.787, 14.0
 MWIR_MIN_UM = 3.82
 MOTION_PA_TOLERANCE_DEG = 30.0
+MJD_ZERO = datetime(1858, 11, 17, tzinfo=UTC)
 
 
 @dataclass(frozen=True)
@@ -346,8 +348,36 @@ def light_curve_section(test_id: str, data: Data, note: str) -> list[str]:
         "",
         "Fluxes are per detector, averaged over each visit's exposures; the LVF wavelength differs between "
         "exposures, so changes in λ coverage between visits add to the apparent variability.",
+        "",
+        *matched_lambda_lines(data.points),
     ]
     return [*lines, ""]
+
+
+def matched_lambda_lines(points: Sequence[SpectrumPoint]) -> list[str]:
+    """The visit pair with the largest change at matched λ per detector (`pipeline.variability`)."""
+    best = strongest_per_detector(matched_changes(points))
+    first_mjd: dict[str, float] = {}
+    for p in points:
+        first_mjd[p.visit] = min(first_mjd.get(p.visit, p.mjd), p.mjd)
+    month = {v: f"{MJD_ZERO + timedelta(days=mjd):%Y-%m}" for v, mjd in first_mjd.items()}
+    if not best:
+        return ["No visit pair shares a measured exposure within one LVF channel: no matched-λ comparison."]
+    lines = [
+        "Matched λ: each exposure is paired with the nearest-λ exposure of another visit (≤ 1 LVF channel apart); "
+        "errors include a 5 % floor per exposure and the local spectral slope times the λ offset. The strongest "
+        "visit pair per detector (the largest of several looks, so judge it against 5σ):",
+        "",
+        "| Detector | Visits | Later / earlier | Significance (σ) | Pairs | λ (µm) |",
+        "|---|---|---|---|---|---|",
+    ]
+    for detector, change in sorted(best.items()):
+        lo, hi = change.lambda_um
+        lines.append(
+            f"| D{detector} | {month[change.earlier]} → {month[change.later]} | {change.ratio:.2f} | "
+            f"{change.significance:.1f} | {change.n_pairs} | {lo:.3f}–{hi:.3f} |"
+        )
+    return lines
 
 
 CAVEATS = """## Caveats
