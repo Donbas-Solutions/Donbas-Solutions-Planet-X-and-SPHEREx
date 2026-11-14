@@ -1,6 +1,7 @@
 import { useAppState } from '../hooks/useAppState'
 import { bitsInGroup, countFlagged, flagMask, GROUP_COLOR, GROUP_LABEL, OVERLAY_GROUPS } from '../lib/flags'
 import type { OverlayGroup } from '../lib/urlState'
+import Term from './Term'
 
 export default function FlagsPanel() {
   const { sequence, currentFrame, params, setParams } = useAppState()
@@ -38,7 +39,10 @@ export default function FlagsPanel() {
           )
         })}
       </ul>
-      <p className="muted small">The overlay only tints pixels; the image values are unchanged.</p>
+      <p className="muted small">
+        The overlay only tints pixels; the image values are unchanged. <Term id="saturated">Saturated</Term> pixels
+        are never measured.
+      </p>
       <details>
         <summary>Flag bits</summary>
         {(['saturation', 'bad', 'artifact', 'info'] as const).map((g) => {

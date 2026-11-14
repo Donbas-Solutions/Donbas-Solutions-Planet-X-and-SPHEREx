@@ -1,5 +1,6 @@
 import { BLUE_ORANGE, colormapCss } from '../lib/colormap'
 import type { DiffImage } from '../lib/diff'
+import Term from './Term'
 
 interface Props {
   diff: DiffImage
@@ -23,7 +24,7 @@ export default function DiffLegend({ diff, range }: Props) {
       </div>
       <p className="muted">
         Orange: brighter in the later frame ({diff.later.frame.date_range[0]}). Blue: brighter in the earlier frame (
-        {diff.earlier.frame.date_range[0]}). A blue–orange pair (dipole) is a source that moved; a single blob is a
+        {diff.earlier.frame.date_range[0]}). A blue–orange pair (<Term id="dipole">dipole</Term>) is a source that moved; a single blob is a
         source that changed brightness.
       </p>
       {diff.warnings.length > 0 && (
