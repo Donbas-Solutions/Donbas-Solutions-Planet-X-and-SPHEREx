@@ -26,7 +26,13 @@ Source: the official *Project Submission Guide*, spaceappschallenge.org/resource
 - **Other:** no images/video/audio of persons under 18. Checkboxes "Terms and Conditions" and "Confirm All Work is
   Original" on submit. Judging criteria: Impact, Creativity, Validity, Relevance, Presentation.
 
-## OD-1 — hosting proposal (team decides)
+## OD-1 — hosting (deferred)
+
+**Decision 2026-11-14:** no deploy for the submission — it is not required. We test locally; the "link to final
+project" is the public GitHub repository, run from the README. The proposal below is kept for later. If revisited:
+Netlify's free plan for accounts created after 2025-09-04 is credit-based (300 credits/month, ~15 per production
+deploy, the site pauses when they run out), so it is risky for frequent deploys; Azure (Static Web Apps + Container
+Apps, team credits) is the alternative.
 
 What we need (NFR-4): a static frontend with the prebaked bundles that stays up for weeks after the event; a backend
 (Docker, cache on disk) that may sleep — the UI then falls back to `/prebaked/` (FR-14).

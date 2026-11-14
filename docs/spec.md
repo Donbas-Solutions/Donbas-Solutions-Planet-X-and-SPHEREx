@@ -198,7 +198,7 @@ a verdict, caveats. Catalog values: `science/targets.json`.
 | NFR-1 | **Performance.** Prebaked or cached sequence: first frame < 2 s on a 20 Mbit/s connection; rendering a 290×290 frame < 16 ms on a mid-range laptop. Uncached: progress visible < 2 s; end-to-end time budget set after Checkpoint A0 (OD-5). |
 | NFR-2 | **Payload.** Image + flags ≤ 75 KB per frame at 10′ and ≤ 680 KB at 30′. A typical 10′ sequence (3–4 visits × 7 stacks) ≤ 3 MB; deep-field sequences (e.g. R Dra, ~17 bins) may be larger and load frames on demand. |
 | NFR-3 | **Data freshness.** No hardcoded collections: newest DR + QR discovered via TAP (cached 6 h, config fallback). Processed results are keyed by the set of image keys (obs_id, detector), so new exposures trigger a rebuild. Prebaked bundles regenerate with one command. |
-| NFR-4 | **Availability.** Static frontend and prebaked bundles stay online through judging (weeks after the event); the backend may sleep — the UI degrades to offline mode (FR-14). |
+| NFR-4 | **Availability.** Deferred (OD-1, 2026-11-14): no hosting for the submission. The public GitHub repository is the "final project" link and runs locally from the README; prebaked bundles work without a backend (FR-14). If hosted later: static frontend + bundles stay online through judging, the backend may sleep. |
 | NFR-5 | **Load on external services.** ≤ 8 concurrent requests to IRSA per backend instance, retries with backoff, timeouts, caching; generic User-Agent; no personal data in requests. |
 | NFR-6 | **Browsers.** Latest two versions of Chrome, Firefox, Safari, Edge on desktop; mobile Safari/Chrome usable. WebGL is required only for the context panel (FR-19). |
 | NFR-7 | **Security.** No authentication and no user data stored. API validates every parameter (422 on violation); CORS restricted to known origins; no secrets in the repo; external text rendered as text. |
@@ -215,8 +215,8 @@ Float32 arrays and are stretched and differenced client-side. Details: `docs/age
 
 ## 9. Deliverables
 
-- Public URL of the tool (static frontend + bundles; backend if hosted — OD-1).
-- Repository with README (what, how to run, screenshots, limitations, credits).
+- Public GitHub repository = the "final project" link, with a README (what, how to run locally on macOS and Windows,
+  screenshots, limitations, credits). No hosted URL for the submission (OD-1).
 - `science/VALIDATION.md` with evidence for T-1 … T-5.
 - GIFs or screenshots per test target; demo video and project description in the Space Apps format (OD-3).
 
@@ -224,8 +224,8 @@ Float32 arrays and are stretched and differenced client-side. Details: `docs/age
 
 | ID | Decision | Owner | Needed by |
 |---|---|---|---|
-| OD-1 | Hosting for backend (Docker, persistent disk) and frontend (static) | Team | Sunday morning |
-| OD-2 | Repository licence (Aladin Lite is GPL/LGPL-3) | Team | Before submission |
+| OD-1 | Hosting — decided 2026-11-14: **no deploy for the submission**, local runs only; the public repo is the final-project link. Hosting options for later: `docs/deploy.md` | Team | Done |
+| OD-2 | Repository goes public + its licence (Aladin Lite is GPL/LGPL-3) | Team | Before submission |
 | OD-3 | Exact submission deadline (hour, time zone) and required format (video/slides, AI-use disclosure, branding rules) | Track D | Saturday |
 | OD-4 | Fetch strategy — decided 2026-11-14 (A0): S3 range reads primary, IRSA `ibe` multi-range fallback, cutout service last resort (`CLAUDE.md` → Verified data facts). Exposure cap per group — proposed 20 per (detector, visit), 10 per deep-field bin; awaiting the team | Track A | Checkpoint A0 |
 | OD-5 | Uncached end-to-end latency budget | Track A | Checkpoint A0 |
