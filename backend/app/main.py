@@ -14,7 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .archive.collections import CollectionDiscovery
-from .archive.http import make_http
+from .archive.http import Http, make_http
+from .archive.resolve import ResolveError, Resolver
 from .config import configure_ssl, settings
 from .domain import DETECTORS, SequenceParams, Target
 from .jobs import JobRunner, SequenceRequest, fetch_for_request
@@ -33,6 +34,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     warm_up = asyncio.create_task(discovery.collections(http)) if settings.warm_collections else None
     pool = ProcessPoolExecutor(max_workers=settings.pipeline_workers)
     runner = JobRunner(partial(fetch_for_request, http, discovery), settings.processed_dir, executor=pool)
+    app.state.http = http
+    app.state.resolver = Resolver()
     app.state.discovery = discovery
     app.state.runner = runner
     try:
@@ -65,7 +68,19 @@ def get_discovery(request: Request) -> CollectionDiscovery:
     return discovery
 
 
+def get_http(request: Request) -> Http:
+    http: Http = request.app.state.http
+    return http
+
+
+def get_resolver(request: Request) -> Resolver:
+    resolver: Resolver = request.app.state.resolver
+    return resolver
+
+
 Runner = Annotated[JobRunner, Depends(get_runner)]
+SharedHttp = Annotated[Http, Depends(get_http)]
+NameResolver = Annotated[Resolver, Depends(get_resolver)]
 Discovery = Annotated[CollectionDiscovery, Depends(get_discovery)]
 
 
@@ -93,8 +108,16 @@ JobId = Annotated[str, Path(pattern=r"^[0-9a-f]{32}$")]
 
 
 @app.get("/api/resolve", response_model=ResolveResult)
-def resolve(name: Annotated[str, Query(min_length=1, max_length=100)]) -> ResolveResult:
-    raise _not_yet("Track A")
+async def resolve(
+    http: SharedHttp, resolver: NameResolver, name: Annotated[str, Query(min_length=1, max_length=100)]
+) -> ResolveResult:
+    try:
+        result = await resolver.resolve(http, name)
+    except ResolveError as exc:
+        raise HTTPException(status_code=503, detail="SIMBAD is unreachable; enter coordinates instead.") from exc
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"{name!r} is not known to SIMBAD")
+    return result
 
 
 def _detectors(det: str) -> tuple[int, ...]:

@@ -4,10 +4,14 @@ import time
 from collections.abc import Iterator
 from typing import Any
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 from test_jobs import fetch_synthetic
+from test_resolve import BARNARD_CSV, HEADER
 
+from app.archive.http import make_http
+from app.archive.resolve import Resolver
 from app.config import settings
 from app.jobs import JobRunner
 from app.main import app
@@ -87,3 +91,24 @@ def test_unknown_job_is_404(client: TestClient) -> None:
 
 def test_job_id_must_be_hex(client: TestClient) -> None:
     assert client.get("/api/jobs/..%2F..%2Fsecret").status_code in (404, 422)
+
+
+def use_simbad(answer: httpx.Response) -> None:
+    app.state.http = make_http(transport=httpx.MockTransport(lambda request: answer))
+    app.state.resolver = Resolver()
+
+
+def test_resolve_returns_position_and_motion(client: TestClient) -> None:
+    use_simbad(httpx.Response(200, text=BARNARD_CSV))
+    body = client.get("/api/resolve", params={"name": "Barnard's star"}).json()
+    assert (body["name"], body["pmdec"]) == ("Barnard's star", 10362.394)
+
+
+def test_resolve_unknown_name_is_404(client: TestClient) -> None:
+    use_simbad(httpx.Response(200, text=HEADER))
+    assert client.get("/api/resolve", params={"name": "no such object"}).status_code == 404
+
+
+def test_resolve_without_simbad_is_503(client: TestClient) -> None:
+    use_simbad(httpx.Response(404, text="<!doctype html>"))
+    assert client.get("/api/resolve", params={"name": "R Dra"}).status_code == 503
