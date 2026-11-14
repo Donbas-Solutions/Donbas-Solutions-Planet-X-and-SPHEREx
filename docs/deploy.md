@@ -5,7 +5,9 @@
 Source: the official *Project Submission Guide*, spaceappschallenge.org/resources/project-submission-guide/ (dated 2026-11-13).
 
 - **Deadline:** click "Submit for Judging" before **Sun 2026-11-15, 23:59 local time of our Local Event**
-  (Universal Event: the Team Owner's local time). Our Local Lead may set an earlier local-judging cutoff — **ask**.
+  (Universal Event: the Team Owner's local time). Our Local Event is **Kyiv** ⇒ **2026-11-15 23:59 EET (UTC+2) =
+  21:59 UTC**. The Kyiv Local Lead may set an earlier local-judging cutoff — **ask**. Only the Team Owner (not Track D)
+  may be able to submit — confirm who clicks the button.
   Save or submit after the deadline → not judged. Resubmitting is allowed until then; the last save counts.
 - **Required fields (English only):** project name; high-level summary; link to project demo; link to final project;
   detailed description (what, how, benefits, tools); use of AI ("SI"); NASA data used (≥1 NASA resource required
