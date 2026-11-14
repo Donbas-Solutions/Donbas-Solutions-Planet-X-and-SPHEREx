@@ -5,8 +5,13 @@ interface Props {
 }
 
 function note(m: VisitMean): string {
-  if (m.fluxUjy !== null) return m.nSaturated > 0 ? `${m.nSaturated} saturated excluded` : ''
-  return m.nSaturated > 0 ? 'saturated' : 'masked by flags'
+  if (m.fluxUjy === null) return m.nSaturated > 0 ? 'saturated' : 'masked by flags'
+  const notes = [
+    m.isLambdaComplete ? '' : 'incomplete λ',
+    m.nSaturated > 0 ? `${m.nSaturated} saturated excluded` : '',
+    m.nMeasured === 1 ? 'one exposure: formal error only' : '',
+  ]
+  return notes.filter(Boolean).join('; ')
 }
 
 export default function VisitMeansTable({ means }: Props) {

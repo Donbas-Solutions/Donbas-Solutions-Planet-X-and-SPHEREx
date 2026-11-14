@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Spectrum, SpectrumPoint } from '../../api/types'
 import { extent, pad, type ScaleKind } from '../../lib/chart'
-import { amplitudes, detectorId, detectorsByMeasured, visitMeans, type VisitMean } from '../../lib/lightcurve'
+import { detectorId, detectorsByMeasured, variability, visitMeans, type VisitMean } from '../../lib/lightcurve'
 import {
   detectorBands,
   MAX_VISIT_SERIES,
@@ -22,6 +22,10 @@ interface Props {
 }
 
 type Mode = 'exposures' | 'visits'
+
+function formatP(p: number): string {
+  return p < 0.001 ? 'p < 0.001' : `p = ${p.toPrecision(2)}`
+}
 
 /** Visit labels collide when there are many bins (deep fields); the shading alone still shows them. */
 const MAX_BAND_LABELS = 6
@@ -72,7 +76,7 @@ export default function LightCurveChart({ spectrum, targetName }: Props) {
   const { points } = spectrum
   const visits = useMemo(() => visitsOf(points), [points])
   const means = useMemo(() => visitMeans(points, visits), [points, visits])
-  const amps = useMemo(() => amplitudes(means), [means])
+  const stats = useMemo(() => variability(means), [means])
   const bandsByDetector = useMemo(() => new Map(detectorBands(points).map((b) => [b.detector, b])), [points])
   const detectorIds = useMemo(() => detectorsByMeasured(points), [points])
   const sortedDetectorIds = useMemo(() => [...detectorIds].sort((a, b) => a.localeCompare(b)), [detectorIds])
@@ -110,7 +114,12 @@ export default function LightCurveChart({ spectrum, targetName }: Props) {
     nonpositive: yScale === 'log' ? shown.filter((p) => p.y !== null && p.y <= 0).length : 0,
   }
   const selectedDetectors = new Set(slots.flatMap((s) => (s ? [s] : [])))
-  const shownAmps = amps.filter((a) => selectedDetectors.has(detectorId(a.detector)))
+  const shownStats = stats.filter((s) => selectedDetectors.has(detectorId(s.detector)))
+  const incomplete = means.filter(
+    (m) => m.fluxUjy !== null && !m.isLambdaComplete && selectedDetectors.has(detectorId(m.detector)),
+  )
+  const withStats = new Set(stats.map((s) => s.detector))
+  const notComparable = [...new Set(incomplete.map((m) => m.detector))].filter((d) => !withStats.has(d))
   const isFull = !slots.includes(null)
   const noneMeasured = points.every((p) => pointStatus(p) !== 'measured')
 
@@ -185,15 +194,28 @@ export default function LightCurveChart({ spectrum, targetName }: Props) {
         ariaLabel={`Light curve of ${targetName}: ${counts.measured} ${mode === 'visits' ? 'visit means' : 'measured exposures'}, ${counts.saturated} saturated, ${counts.flagged} masked. The table below lists the visit means.`}
       />
       <StatusLegend {...counts} measuredLabel={mode === 'visits' ? 'visit means, with 1σ errors' : undefined} />
-      {shownAmps.length > 0 && (
-        <ul className="chart-legend" aria-label="Variability amplitude">
-          {shownAmps.map((a) => (
-            <li key={a.detector}>
-              D{a.detector}: brightest − faintest visit mean = {a.deltaUjy.toFixed(1)} ± {a.errUjy.toFixed(1)} µJy (
-              {(a.deltaUjy / a.errUjy).toFixed(1)}σ, {a.nVisits} visits)
+      {(shownStats.length > 0 || notComparable.length > 0) && (
+        <ul className="chart-stats" aria-label="Variability between visits">
+          {notComparable.map((d) => (
+            <li key={`nc${d}`}>
+              <strong>D{d}</strong>: no variability figure — fewer than two visits sampled a comparable λ range.
+            </li>
+          ))}
+          {shownStats.map((s) => (
+            <li key={s.detector}>
+              <strong>D{s.detector}</strong>: χ² = {s.chi2.toFixed(1)} for {s.dof} dof against a constant flux (
+              {formatP(s.pValue)}). Range of the {s.nVisits} visit means: {s.rangeUjy.toFixed(1)} ±{' '}
+              {s.rangeErrUjy.toFixed(1)} µJy, not corrected for the number of visits.
+              {s.nExcluded > 0 && ` ${s.nExcluded} visit${s.nExcluded > 1 ? 's' : ''} with incomplete λ coverage left out.`}
             </li>
           ))}
         </ul>
+      )}
+      {incomplete.length > 0 && (
+        <p className="warn">
+          Incomplete λ coverage (SR-1): {incomplete.map((m) => `D${m.detector} ${m.visit.label}`).join(', ')} sampled
+          less than 80 % of the λ range of the widest visit, so their means are not comparable with the others.
+        </p>
       )}
       <VisitMeansTable means={means} />
     </>
