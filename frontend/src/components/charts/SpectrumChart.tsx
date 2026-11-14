@@ -8,7 +8,7 @@ import {
   mjdToIsoDate,
   pointStatus,
   prefersLogScale,
-  toggleVisitSlot,
+  toggleSlot,
   visitsOf,
   type VisitInfo,
 } from '../../lib/spectrum'
@@ -94,7 +94,7 @@ export default function SpectrumChart({ spectrum, targetName }: Props) {
                   type="checkbox"
                   checked={isOn}
                   disabled={!isOn && isFull}
-                  onChange={() => setSlots((s) => toggleVisitSlot(s, v.id))}
+                  onChange={() => setSlots((s) => toggleSlot(s, v.id))}
                 />
                 <span className={isOn ? `swatch series-${slot + 1}` : 'swatch'} aria-hidden="true" />
                 {v.label} <span className="muted">({v.count})</span>

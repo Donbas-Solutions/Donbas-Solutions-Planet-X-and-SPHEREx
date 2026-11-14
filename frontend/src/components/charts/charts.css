@@ -183,6 +183,13 @@
   stroke-width: 1.5;
 }
 
+.chart-stats {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
 .chart-table {
   max-height: 320px;
   overflow: auto;

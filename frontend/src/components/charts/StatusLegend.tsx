@@ -1,5 +1,6 @@
 interface Props {
   measured: number
+  measuredLabel?: string
   saturated: number
   flagged: number
   nonpositive: number
@@ -7,11 +8,17 @@ interface Props {
 
 const R = 4
 
-export default function StatusLegend({ measured, saturated, flagged, nonpositive }: Props) {
+export default function StatusLegend({
+  measured,
+  measuredLabel = 'measured, with 1σ error bars',
+  saturated,
+  flagged,
+  nonpositive,
+}: Props) {
   return (
     <ul className="chart-legend" aria-label="Point types">
       <li>
-        {measured} measured, with 1σ error bars
+        {measured} {measuredLabel}
       </li>
       {saturated > 0 && (
         <li>

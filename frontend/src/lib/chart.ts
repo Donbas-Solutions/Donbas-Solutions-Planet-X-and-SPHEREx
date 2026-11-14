@@ -43,7 +43,7 @@ export function logTicks(lo: number, hi: number): number[] {
   const first = Math.floor(Math.log10(lo))
   const last = Math.ceil(Math.log10(hi))
   const decades = last - first
-  const mantissas = decades <= 2 ? [1, 2, 5] : [1]
+  const mantissas = decades <= 3 ? [1, 2, 5] : [1]
   const ticks: number[] = []
   for (let e = first; e <= last; e++) {
     for (const m of mantissas) {
