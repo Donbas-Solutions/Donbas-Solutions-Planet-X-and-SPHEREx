@@ -117,12 +117,7 @@ async def collections_for_job(
     http: Http, discovery: CollectionDiscovery, wait_s: float = DISCOVERY_WAIT_S
 ) -> tuple[str, ...]:
     """A hung TAP (seen 2026-11-14: > 60 s per attempt, 5 attempts) must not hold the job: use the last known list."""
-    try:
-        async with asyncio.timeout(wait_s):
-            return await discovery.collections(http)
-    except TimeoutError:
-        logger.warning("Collection discovery took over %.0f s; using %s", wait_s, discovery.current)
-        return discovery.current
+    return await discovery.collections(http, wait_s=wait_s)
 
 
 async def fetch_for_request(

@@ -182,8 +182,10 @@ async def test_hung_collection_discovery_falls_back_to_the_known_list() -> None:
         return httpx.Response(200)
 
     http = make_http(transport=httpx.MockTransport(hang))
+    discovery = CollectionDiscovery(fallback=("spherex_dr1",))
     async with http.client:
-        collections = await collections_for_job(http, CollectionDiscovery(fallback=("spherex_dr1",)), wait_s=0.05)
+        collections = await collections_for_job(http, discovery, wait_s=0.05)
+        await discovery.aclose()
     assert collections == ("spherex_dr1",)
 
 

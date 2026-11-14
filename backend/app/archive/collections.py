@@ -46,7 +46,11 @@ def select_collections(counts: Mapping[str, int]) -> tuple[str, ...]:
 
 class CollectionDiscovery:
     """Caches the discovered collections for 6 h; on failure serves the last good list or the configured fallback,
-    and retries TAP after 10 min (a TAP query takes ~10 s, so it must not run per request)."""
+    and retries TAP after 10 min (a TAP query takes ~10 s, so it must not run per request).
+
+    One TAP query at a time runs as a background task that callers wait for but never cancel: a hung TAP (seen
+    2026-11-14: no byte in 120 s) is waited out once per 10 min, not by every job, and its eventual answer is kept.
+    """
 
     def __init__(
         self,
@@ -55,10 +59,10 @@ class CollectionDiscovery:
     ) -> None:
         self._fallback = tuple(fallback)
         self._clock = clock
-        self._lock = asyncio.Lock()
         self._collections: tuple[str, ...] = ()
         self._source: CollectionSource = "fallback"
         self._expires_at = float("-inf")
+        self._query: asyncio.Task[None] | None = None
 
     @property
     def source(self) -> CollectionSource:
@@ -69,24 +73,57 @@ class CollectionDiscovery:
         """The last known list without querying TAP: the fallback until the first discovery has finished."""
         return self._collections or self._fallback
 
-    async def collections(self, http: Http) -> tuple[str, ...]:
-        async with self._lock:
-            if self._clock() < self._expires_at:
-                return self._collections
-            try:
-                response = await get(http, TAP_SYNC_URL, {"QUERY": DISCOVERY_QUERY, "LANG": "ADQL", "FORMAT": "csv"})
-                selected = select_collections(parse_collection_counts(response.text))
-            except (ArchiveError, KeyError, ValueError) as exc:
-                logger.warning("Collection discovery failed (%s); using %s", exc, self._collections or "fallback")
-                if not self._collections:
-                    self._collections, self._source = self._fallback, "fallback"
+    def _fresh(self) -> bool:
+        return self._clock() < self._expires_at
+
+    def start(self, http: Http) -> None:
+        """Query TAP in the background unless the cached list is fresh or a query is already running."""
+        if not self._fresh() and self._query is None:
+            self._query = asyncio.create_task(self._discover(http), name="collection-discovery")
+            self._query.add_done_callback(self._query_done)
+
+    async def collections(self, http: Http, wait_s: float | None = None) -> tuple[str, ...]:
+        """The cached list, or the result of a TAP query awaited for at most `wait_s` (None: until it ends)."""
+        if self._fresh():
+            return self.current
+        self.start(http)
+        query = self._query
+        if query is not None:
+            done, _ = await asyncio.wait({query}, timeout=wait_s)
+            if not done:
+                logger.warning("Collection discovery took over %.0f s; using %s", wait_s, self.current)
                 self._expires_at = self._clock() + FAILURE_TTL_S
-                return self._collections
-            if selected:
-                self._collections, self._source = selected, "tap"
-                self._expires_at = self._clock() + CACHE_TTL_S
-            else:
-                logger.warning("TAP listed no usable SPHEREx collection; using the fallback")
-                self._collections, self._source = self._fallback, "fallback"
-                self._expires_at = self._clock() + FAILURE_TTL_S
-            return self._collections
+        return self.current
+
+    async def aclose(self) -> None:
+        query = self._query
+        if query is not None:
+            query.cancel()
+            await asyncio.wait({query})
+
+    async def _discover(self, http: Http) -> None:
+        try:
+            response = await get(http, TAP_SYNC_URL, {"QUERY": DISCOVERY_QUERY, "LANG": "ADQL", "FORMAT": "csv"})
+            selected = select_collections(parse_collection_counts(response.text))
+        except (ArchiveError, KeyError, ValueError) as exc:
+            logger.warning("Collection discovery failed (%s); using %s", exc, self._collections or "fallback")
+            self._fail()
+            return
+        if selected:
+            self._collections, self._source = selected, "tap"
+            self._expires_at = self._clock() + CACHE_TTL_S
+        else:
+            logger.warning("TAP listed no usable SPHEREx collection; using the fallback")
+            self._collections, self._source = self._fallback, "fallback"
+            self._expires_at = self._clock() + FAILURE_TTL_S
+
+    def _fail(self) -> None:
+        if not self._collections:
+            self._collections, self._source = self._fallback, "fallback"
+        self._expires_at = self._clock() + FAILURE_TTL_S
+
+    def _query_done(self, query: asyncio.Task[None]) -> None:
+        self._query = None
+        if not query.cancelled() and (exc := query.exception()) is not None:
+            logger.error("Collection discovery crashed; using %s", self.current, exc_info=exc)
+            self._fail()

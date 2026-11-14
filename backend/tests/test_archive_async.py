@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import csv
 import gzip
 import io
@@ -194,6 +195,66 @@ async def test_discovery_retries_tap_soon_after_a_failure() -> None:
         clock.now = FAILURE_TTL_S + 1
         await discovery.collections(http)
     assert calls["tap"] == 2
+
+
+def tap_answering_after(release: asyncio.Event, calls: Counter[str]) -> Http:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        calls["tap"] += 1
+        await release.wait()
+        return httpx.Response(200, text=TAP_CSV)
+
+    return make_http(max_concurrency=2, transport=httpx.MockTransport(handler))
+
+
+async def test_hung_tap_is_waited_out_once_not_by_every_caller() -> None:
+    calls = Counter[str]()
+    discovery = CollectionDiscovery(fallback=FALLBACK, clock=FakeClock())
+    http = tap_answering_after(asyncio.Event(), calls)
+    async with http.client:
+        assert await discovery.collections(http, wait_s=0.05) == FALLBACK
+        async with asyncio.timeout(1):
+            assert await discovery.collections(http, wait_s=30) == FALLBACK
+        async with asyncio.timeout(1):
+            await discovery.aclose()
+    assert calls["tap"] == 1
+
+
+async def test_late_tap_answer_is_kept_after_callers_gave_up() -> None:
+    calls = Counter[str]()
+    release = asyncio.Event()
+    clock = FakeClock()
+    discovery = CollectionDiscovery(fallback=FALLBACK, clock=clock)
+    http = tap_answering_after(release, calls)
+    async with http.client:
+        assert await discovery.collections(http, wait_s=0.05) == FALLBACK
+        release.set()
+        clock.now = FAILURE_TTL_S + 1
+        async with asyncio.timeout(1):
+            latest = await discovery.collections(http)
+        assert latest == (
+            "spherex_dr1",
+            "spherex_dr1_deep",
+            "spherex_qr3",
+            "spherex_qr3_deep",
+        )
+    assert calls["tap"] == 1
+
+
+async def test_hung_tap_is_waited_for_again_after_the_failure_ttl() -> None:
+    calls = Counter[str]()
+    clock = FakeClock()
+    discovery = CollectionDiscovery(fallback=FALLBACK, clock=clock)
+    http = tap_answering_after(asyncio.Event(), calls)
+    async with http.client:
+        await discovery.collections(http, wait_s=0.05)
+        clock.now = FAILURE_TTL_S + 1
+        loop = asyncio.get_running_loop()
+        started = loop.time()
+        await discovery.collections(http, wait_s=0.2)
+        waited_s = loop.time() - started
+        await discovery.aclose()
+    assert waited_s >= 0.15
+    assert calls["tap"] == 1
 
 
 async def test_query_exposures_merges_collections_like_the_recorded_coverage() -> None:
