@@ -15,6 +15,7 @@ from app.domain import Cutout, ExposureMeta, SequenceParams, Target
 from app.models import Sequence
 from app.pipeline.bundle import write_bundle
 from app.pipeline.measure import Shift, centroid, fit_position, fit_proper_motion, masked_core_center
+from app.pipeline.photometry import measure_spectrum
 from app.pipeline.sequence import SequenceError, build_sequence
 
 PIXSCALE_DEG = 6.2 / 3600
@@ -204,6 +205,19 @@ def test_proper_motion_fit_has_no_error_with_two_epochs() -> None:
     fit = fit_proper_motion([61000.0, 61365.25], [50.0, 49.0], [50.0, 52.0], 6.2)
     assert fit.pmdec_err_masyr is None
     assert fit.offset_sigma(6200, 12400) is None
+
+
+def test_photometry_recovers_flux_and_flags_saturation() -> None:
+    clean = make_cutout(MJD_V1, "v1", 3, flux=500.0)
+    saturated = make_cutout(MJD_V2, "v2", 3, flux=500.0, flag_core=OVERFLOW)
+    points = {p.visit: p for p in measure_spectrum([clean, saturated], MOVER).points}
+    pixel_sr = (6.2 / 206265) ** 2
+    expected_ujy = 500.0 * pixel_sr * 1e12  # 500 MJy/sr summed over pixels → µJy
+    assert points["v1"].flux_ujy == pytest.approx(expected_ujy, rel=0.05)
+    assert points["v1"].err_ujy is not None
+    assert 1.0 <= points["v1"].lambda_um <= 1.2
+    assert points["v2"].saturated
+    assert points["v2"].flux_ujy is None
 
 
 def test_no_matching_detector_is_an_error() -> None:
