@@ -473,10 +473,11 @@
    "mock"
   ],
   "n_exposures_total": 112,
-  "generated_at": "2026-11-14T12:12:46+00:00",
+  "generated_at": "2026-11-14T14:20:06+00:00",
   "pipeline_tags": [
    "mock"
   ],
-  "mock": true
+  "mock": true,
+  "spectrum": "spectrum.json"
  }
 }

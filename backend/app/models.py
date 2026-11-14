@@ -85,6 +85,11 @@ class SequenceMeta(BaseModel):
     generated_at: str
     pipeline_tags: list[str]
     mock: bool = False
+    spectrum: str | None = Field(
+        None,
+        description="URL of a Spectrum of the target at its propagated position, relative to the manifest URL "
+        "or absolute; lets static bundles show the spectrum and light curve without a backend",
+    )
 
 
 class Sequence(BaseModel):

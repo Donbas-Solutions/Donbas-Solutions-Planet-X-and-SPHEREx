@@ -59,6 +59,8 @@ export interface SequenceMeta {
   generated_at: string
   pipeline_tags: string[]
   mock: boolean
+  /** Spectrum of the target, relative to the manifest URL (or an absolute path); absent = none bundled. */
+  spectrum?: string | null
 }
 
 export interface Sequence {
@@ -67,6 +69,22 @@ export interface Sequence {
   flag_bits: FlagBit[]
   frames: Frame[]
   meta: SequenceMeta
+}
+
+/** Saturated points have `flux_ujy: null`: label them, never plot a value (SR-6). */
+export interface SpectrumPoint {
+  lambda_um: number
+  flux_ujy: number | null
+  err_ujy: number | null
+  mjd: number
+  detector: number
+  visit: string
+  saturated: boolean
+  flags: number
+}
+
+export interface Spectrum {
+  points: SpectrumPoint[]
 }
 
 export interface JobStatus {
