@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import contextlib
 from collections.abc import AsyncIterator
 from concurrent.futures import ProcessPoolExecutor
@@ -32,7 +31,8 @@ settings.raw_dir.mkdir(parents=True, exist_ok=True)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     http = make_http()
     discovery = CollectionDiscovery()
-    warm_up = asyncio.create_task(discovery.collections(http)) if settings.warm_collections else None
+    if settings.warm_collections:
+        discovery.start(http)
     pool = ProcessPoolExecutor(max_workers=settings.pipeline_workers)
     runner = JobRunner(partial(fetch_for_request, http, discovery), settings.processed_dir, executor=pool)
     app.state.http = http
@@ -42,8 +42,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
-        if warm_up is not None:
-            warm_up.cancel()
+        await discovery.aclose()
         await runner.aclose()
         await http.client.aclose()
         pool.shutdown(wait=False, cancel_futures=True)
