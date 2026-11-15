@@ -1,0 +1,130 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Repository variables (not environment ones: those are not visible here). Without them the job is skipped,
+    # so CI stays green until Azure is set up with infra/bootstrap.sh.
+    if: >-
+      vars.AZURE_CLIENT_ID != '' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: production
+      url: ${{ steps.apps.outputs.url }}
+    env:
+      RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      # Empty: the resource group's region. Azure for Students allows only a few regions (docs/deploy.md).
+      LOCATION: ${{ vars.AZURE_LOCATION }}
+      BUDGET_EMAIL: ${{ vars.BUDGET_EMAIL }}
+      WEB_MIN_REPLICAS: ${{ vars.WEB_MIN_REPLICAS || '0' }}
+      API_MIN_REPLICAS: ${{ vars.API_MIN_REPLICAS || '0' }}
+      IMAGE_TAG: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.IMAGE_TAG }}
+          persist-credentials: false
+
+      - name: Azure login (OIDC, no stored secret)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Infrastructure without the apps (registry, environment, logs, budget)
+        id: base
+        run: |
+          set -euo pipefail
+          az deployment group create \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "base-$GITHUB_RUN_ID" \
+            --template-file infra/main.bicep \
+            --parameters deployApps=false budgetEmail="$BUDGET_EMAIL" ${LOCATION:+"location=$LOCATION"} \
+            --query properties.outputs --output json > base.json
+          echo "acr=$(jq -r .acrName.value base.json)" >> "$GITHUB_OUTPUT"
+          echo "registry=$(jq -r .acrLoginServer.value base.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Registry login
+        run: az acr login --name "${{ steps.base.outputs.acr }}"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Backend image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: backend
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.base.outputs.registry }}/spherex-blink-backend:${{ env.IMAGE_TAG }}
+            ${{ steps.base.outputs.registry }}/spherex-blink-backend:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+      - name: Frontend image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: frontend
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.base.outputs.registry }}/spherex-blink-frontend:${{ env.IMAGE_TAG }}
+            ${{ steps.base.outputs.registry }}/spherex-blink-frontend:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+      - name: Container Apps on the new images
+        id: apps
+        run: |
+          set -euo pipefail
+          az deployment group create \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "apps-$GITHUB_RUN_ID" \
+            --template-file infra/main.bicep \
+            --parameters deployApps=true imageTag="$IMAGE_TAG" budgetEmail="$BUDGET_EMAIL" \
+              webMinReplicas="$WEB_MIN_REPLICAS" apiMinReplicas="$API_MIN_REPLICAS" ${LOCATION:+"location=$LOCATION"} \
+            --query properties.outputs --output json > apps.json
+          echo "url=$(jq -r .webUrl.value apps.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test of the public site
+        env:
+          URL: ${{ steps.apps.outputs.url }}
+        run: |
+          set -uo pipefail
+          # Both apps may be scaled to zero: the first requests wait for a cold start (backend image ~850 MB).
+          check() {
+            for attempt in $(seq 1 30); do
+              code=$(curl -s -o /dev/null -m 30 -w '%{http_code}' "$URL$1")
+              [ "$code" = 200 ] && { echo "$1 200"; return 0; }
+              echo "$1 $code (attempt $attempt)"; sleep 10
+            done
+            return 1
+          }
+          check /healthz && check /prebaked/barnard/sequence.json && check /api/health
+
+      - name: Prune old images (keep the last 5 tags)
+        continue-on-error: true
+        run: >
+          az acr run --registry "${{ steps.base.outputs.acr }}" /dev/null
+          --cmd "acr purge --filter 'spherex-blink-backend:.*' --filter 'spherex-blink-frontend:.*'
+          --keep 5 --ago 0d --untagged"

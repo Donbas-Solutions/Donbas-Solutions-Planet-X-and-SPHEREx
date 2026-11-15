@@ -78,7 +78,7 @@ All images are rendered by our pipeline from real SPHEREx data. None of them is 
 
 | Path | Contents |
 |---|---|
-| `backend/` | Python 3.11+ / FastAPI API: data discovery, cutouts, stacking |
+| `backend/` | Python 3.11.5+ / FastAPI API: data discovery, cutouts, stacking |
 | `frontend/` | React + TypeScript + Vite viewer, Aladin Lite sky context |
 | `science/` | Test targets and validation scripts |
 | `scripts/` | Mock and prebaked data bundles |
@@ -108,6 +108,12 @@ Open <http://localhost:8080>. nginx serves the built frontend and the prebaked b
 `/files` to the backend, which is not published on the host. Downloaded and processed data live in the `cache`
 volume (`docker compose down -v` removes it). Settings: copy `.env.example` to `.env`; no secrets are needed.
 The port is bound to `127.0.0.1` unless `BIND_ADDR` says otherwise.
+
+### CI/CD
+
+Every pull request runs lint, type checks, tests, a Docker smoke test and secret/vulnerability scans
+(`.github/workflows/ci.yml`). A green `main` is deployed to Azure Container Apps (`deploy.yml`, `infra/main.bicep`);
+one-time setup in [`docs/deploy.md`](docs/deploy.md).
 
 ## Limitations
 

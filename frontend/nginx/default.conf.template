@@ -1,4 +1,14 @@
 # Same origin for the page, /api and /files, as with the Vite dev proxy: no CORS needed.
+# The image's entrypoint fills in BACKEND_URL (envsubst): it differs between Docker Compose and Azure Container Apps.
+
+# Behind a load balancer (Azure ingress) every request comes from a private address: rate-limit the client instead.
+set_real_ip_from 10.0.0.0/8;
+set_real_ip_from 172.16.0.0/12;
+set_real_ip_from 192.168.0.0/16;
+set_real_ip_from 100.64.0.0/10;
+real_ip_header X-Forwarded-For;
+real_ip_recursive on;
+
 limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
 
 map $uri $cache_control {
@@ -38,19 +48,17 @@ server {
         # Job polling is 1-3 s per tab; the limit only stops floods that would hit IRSA (NFR-5).
         limit_req zone=api burst=40 nodelay;
         limit_req_status 429;
-        proxy_pass http://backend:8000;
+        # The upstream keeps its own Host header: Azure's internal ingress routes by it.
+        proxy_pass ${BACKEND_URL};
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 180s;
     }
 
     location /files/ {
         limit_except GET HEAD { deny all; }
-        proxy_pass http://backend:8000;
+        proxy_pass ${BACKEND_URL};
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
         proxy_read_timeout 60s;
     }
 
