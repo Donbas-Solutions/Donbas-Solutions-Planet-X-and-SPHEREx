@@ -67,8 +67,8 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   shortened by the blend; the 412 ± 26 µJy at λ ≥ 3.8 µm is an upper bound, not WISE 0855's flux.
 - **The blending star is Gaia DR3 5756956644387831296** (G 16.31, proper motion 6 mas/yr): 11.8″ from WISE 0855's
   expected position in the 2025-05 visit and 4.6″ in 2026-04/05, inside the 3-px (18.6″) aperture both times.
-- **Saturation confirmed at full depth:** Barnard in every band; RW Aur in D2–D6 (161 of 178 points); R Dra in all
-  128 points. ε Indi B is not saturated (2 of 357 points).
+- **Saturation confirmed at full depth:** Barnard in every band; RW Aur in D2–D6 (306 of 333 points); R Dra in all
+  759 points. ε Indi B is not saturated (3 of 356 points).
 - **ε Indi B's QR3 visit (2026-09/10) has no D1 and D4 exposures** — those frame sets have a shorter baseline.
 - **SAPM** (per-pixel solid angle, would refine photometry): `s3://nasa-irsa-spherex/dr1/solid_angle_pixel_map/
   cal-sapm-v3-2026-191/<k>/solid_angle_pixel_map_D<k>_spx_cal-sapm-v3-2026-191.fits`, HDU `IMAGE`, arcsec² per pixel
@@ -103,6 +103,8 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - **WISE 0855 challenge coordinates are epoch ≈2010.5**, 85″ from the SIMBAD J2000 position. Use `science/targets.json`
   (SIMBAD J2000 + PM) for propagation, never the challenge coordinates as J2000.
 - SIMBAD Strasbourg was down on 2026-11-14 (404); the mirror `simbad.harvard.edu` worked → always have a fallback.
+  Still so on 2026-11-15 12:19 UTC: Harvard resolves exact names in 0.1–0.9 s, but the short-designation `LIKE`
+  query (`WISE 0855-0714`) hit the 15 s resolver timeout twice; the full `WISE J085510.83-071442.5` took 0.4 s.
 - **Gaia DR3 TAP** (2026-11-15): ESA (`gea.esac.esa.int`), its Heidelberg mirror and VizieR did not answer; MAST
   (`mast.stsci.edu/vo-tap/api/v0.1/gaiadr3/sync`, table `dbo.gaia_source`) and GAVO (`dc.g-vo.org/tap/sync`,
   `gaia.dr3lite`) did: 1.3 s and 0.6 s for a 10′ field; GAVO timed out on a 30′ field at the Galactic centre.
@@ -112,7 +114,8 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   CDS's HiPS servers (`alasky`, `alaskybis`) were down on 2026-11-14/15. The IRSA mirror answered throughout:
   `irsa.ipac.caltech.edu/data/hips/CDS/2MASS/Color`, `…/CDS/AllWISE/RGB-W4-W2-W1`, `…/CDS/DSS2/color` (list:
   `irsa.ipac.caltech.edu/data/hips/list`); it has no SPHEREx colour mosaic, only the DR1 cube.
-- **IRSA SIA and TAP flapping** (2026-11-15, 08:40–09:20 UTC): `502 Proxy Error` within 0.6 s for most requests,
+- **IRSA SIA and TAP flapping** (2026-11-15, 08:40–09:20 UTC; still 10 of 10 `502` at 12:17 UTC while S3 and the
+  IRSA HiPS mirror answered `200`): `502 Proxy Error` within 0.6 s for most requests,
   now and then a `200` after ~21 s; sequential and parallel requests failed alike. The file servers (`ibe`, S3)
   were unaffected. The backend therefore keeps the SIA answer of each collection for an hour
   (`archive.sia.SiaCache`): a retried search converged on the third attempt while direct probes still failed.
@@ -181,8 +184,8 @@ All commands below are the same on macOS and Windows.
 | Real data sample (from root) | `uv run --project backend python scripts/fetch_sample.py barnard eps_ind_b --max-per-detector 4` → `cache/raw/` |
 | Add a Python dependency | `cd backend && uv add <pkg>` (dev: `uv add --dev <pkg>`); commit `pyproject.toml` + `uv.lock` |
 | View a bundle | `http://localhost:5173/?manifest=/mock/sequence.json` (default) |
-| Prebake static bundles (from root) | `uv run --project backend python scripts/prebake.py [target ...]` → `frontend/public/prebaked/` (S3 fetcher; ~1–2 min per target) |
-| Validate the test targets (from root) | `uv run --project backend python science/validate.py [target ...]` → `science/VALIDATION.md` (~5 min for all; a subset rewrites the report with only that subset) |
+| Prebake static bundles (from root) | `uv run --project backend python scripts/prebake.py [target ...]` → `frontend/public/prebaked/` (S3 fetcher; ~1–2 min per target, R Dra ~8 min; add `--recorded-sia` while IRSA SIA/TAP is down) |
+| Validate the test targets (from root) | `uv run --project backend python science/validate.py [target ...]` → `science/VALIDATION.md` (~5 min for all; a subset rewrites the report with only that subset; `--recorded-sia` as in prebake) |
 | Preview one target (from root) | `uv run --project backend python science/preview.py barnard` → `cache/preview/<target>/preview.png` |
 | Type-check the scripts | `uv run --project backend mypy --strict --ignore-missing-imports --explicit-package-bases science/validate.py scripts/prebake.py` |
 
