@@ -110,6 +110,37 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
   **M3 🟡** (Aladin context, Gaia markers, README and submission open).
 - IRSA was unstable on 2026-11-14 (SIA/TAP `502` or hanging for minutes): prebaked bundles are the demo path.
 
+### Status of round 3 (2026-11-15, 10:00 UTC)
+Done — in `main`: `fix/spectrum-store` (#17: expired spectra replaced, race-free writes, a hung TAP waited out once).
+
+Done — on `feat/gaia-overlays` (pushed, PR open, not merged yet):
+- **FR-18 complete:** `/api/overlays` (Gaia DR3 at the frame epoch; MAST → GAVO → ESA) and the "Gaia DR3 stars"
+  overlay in the player (`gaia=1`). Barnard and ε Indi B markers land within 0.01 px of `expected_px`.
+- **FR-19 working:** context panel with 2MASS / AllWISE / DSS2 from the IRSA HiPS mirror (CDS is down), survey
+  selector, Gaia stars, outage message. The SPHEREx mosaic is offered only while CDS answers.
+- Live search survives a flapping IRSA (SIA answers kept per collection); unique names for deep-field bins;
+  partial-data note scoped to the frames on screen; error boundary.
+- Checked in a real browser: all five presets and user-found targets (Teegarden's star, raw coordinates,
+  Wolf 359), offline mode, embed, URL state.
+
+Still open, in order of importance:
+1. **Merge `feat/gaia-overlays`** and tell the team about the contract changes (`GaiaStar.source_id` is a string,
+   `unavailable` always lists `skybot`, new page parameter `gaia`).
+2. **Submission (C):** repository public + licence (OD-2, GPL/LGPL-3-compatible), Team Owner and Kyiv cutoff
+   confirmed, README (local run on macOS and Windows, screenshots, limitations, credits, AI-use disclosure), video
+   ≤ 30 s or ≤ 7 slides, submission text, links tested in a private window.
+3. **Clean-clone test on Windows** from the README (B), screenshots and GIFs.
+4. **FR-16 acceptance (C):** one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25); only the
+   2MASS sanity check exists.
+5. **When IRSA is stable:** M1 live numbers for Barnard and ε Indi B (A); regenerate the RW Aur (cap 10) and R Dra
+   (cap 3) bundles with fuller depth and rerun `science/validate.py` so `VALIDATION.md` matches (C).
+6. **Not started, drop first:** FR-20 measured proper motion in the UI (it exists only in `VALIDATION.md`), FR-22
+   AllWISE old-epoch frame, FR-21 embed acceptance (the view works; "copy embed code" is missing), optional error
+   `code` in `JobStatus`.
+7. Not checked: narrow screens (< 768 px) and the "no SPHEREx coverage" state.
+
+The round-3 track lists below are kept as written on 2026-11-14; this section overrides them where they differ.
+
 ### Roles and ownership — round 3
 
 | Role | Who | Feature branches (in order) | Owns | Mission now |
