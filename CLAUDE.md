@@ -103,8 +103,9 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - **WISE 0855 challenge coordinates are epoch ≈2010.5**, 85″ from the SIMBAD J2000 position. Use `science/targets.json`
   (SIMBAD J2000 + PM) for propagation, never the challenge coordinates as J2000.
 - SIMBAD Strasbourg was down on 2026-11-14 (404); the mirror `simbad.harvard.edu` worked → always have a fallback.
-  Still so on 2026-11-15 12:19 UTC: Harvard resolves exact names in 0.1–0.9 s, but the short-designation `LIKE`
-  query (`WISE 0855-0714`) hit the 15 s resolver timeout twice; the full `WISE J085510.83-071442.5` took 0.4 s.
+  Still so on 2026-11-15 12:19 UTC: Harvard resolves exact names in 0.1–0.9 s. A short-designation `LIKE` with a
+  wildcard right after the survey (`WISE% J0855%-0714%`) scans the whole survey (2–15 s, past the resolver timeout);
+  exact catalogue prefixes OR-ed together (`WISE J0855%…`, `WISEA J0855%…`, …) take 0.3–0.6 s (`archive.resolve`).
 - **Gaia DR3 TAP** (2026-11-15): ESA (`gea.esac.esa.int`), its Heidelberg mirror and VizieR did not answer; MAST
   (`mast.stsci.edu/vo-tap/api/v0.1/gaiadr3/sync`, table `dbo.gaia_source`) and GAVO (`dc.g-vo.org/tap/sync`,
   `gaia.dr3lite`) did: 1.3 s and 0.6 s for a 10′ field; GAVO timed out on a 30′ field at the Galactic centre.

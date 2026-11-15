@@ -76,17 +76,25 @@ def test_adql_escapes_quotes_and_collapses_spaces() -> None:
 @pytest.mark.parametrize(
     ("name", "pattern"),
     [
-        ("WISE 0855-0714", "'WISE% J0855%-0714%'"),
-        (UNICODE_MINUS_NAME, "'WISE% J0855%-0714%'"),
-        ("wisea j0855-0714", "'WISE% J0855%-0714%'"),
-        ("2MASS J0415-0935", "'2MASS% J0415%-0935%'"),
-        ("CWISE 1249+3621", "'CWISE% J1249%+3621%'"),
+        ("WISE 0855-0714", "i.id LIKE 'WISEA J0855%-0714%'"),
+        (UNICODE_MINUS_NAME, "i.id LIKE 'WISE J0855%-0714%'"),
+        ("wisea j0855-0714", "i.id LIKE 'WISEPC J0855%-0714%'"),
+        ("2MASS J0415-0935", "i.id LIKE '2MASSI J0415%-0935%'"),
+        ("CWISE 1249+3621", "i.id LIKE 'CWISE J1249%+3621%'"),
     ],
 )
-def test_short_designations_become_a_like_pattern(name: str, pattern: str) -> None:
+def test_short_designations_become_like_patterns(name: str, pattern: str) -> None:
     adql = designation_adql(name)
     assert adql is not None
-    assert adql.endswith(f"LIKE {pattern}")
+    assert pattern in adql
+
+
+@pytest.mark.parametrize("name", ["WISE 0855-0714", "2MASS 0415-0935", "CWISE 1249+3621"])
+def test_designation_patterns_start_with_a_full_catalogue_prefix(name: str) -> None:
+    """A `%` right after the survey name makes SIMBAD scan every identifier of the survey (timeouts)."""
+    adql = designation_adql(name)
+    assert adql is not None
+    assert "% J" not in adql
 
 
 @pytest.mark.parametrize("name", ["R Dra", "eps Ind B", "WISE J085510.83-071442.5", "WISE 0855"])

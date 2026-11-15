@@ -25,6 +25,13 @@ _DISPLAY_PREFIX = re.compile(r"^(NAME|V\*|\*\*?)\s+")
 _DASHES = str.maketrans(dict.fromkeys("‐‑‒–—−", "-"))
 # Short survey designations as people write them ("WISE 0855-0714", challenge text); SIMBAD stores only the full ones.
 _SHORT_DESIGNATION = re.compile(r"^(CWISE|WISEA?|2MASS[IWS]?)\s*J?\s*(\d{4})\s*([+-])\s*(\d{4})$", re.IGNORECASE)
+# SIMBAD's catalogue prefixes per survey. A wildcard right after the survey name (`WISE% J0855…`) scans every
+# WISE or 2MASS identifier: 2–15 s on simbad.harvard.edu, past the timeout; exact prefixes take 0.5 s (2026-11-15).
+_SURVEY_PREFIXES: Final = {
+    "CWISE": ("CWISE", "CWISEP"),
+    "WISE": ("WISE", "WISEA", "WISEP", "WISEPA", "WISEPC", "WISEU"),
+    "2MASS": ("2MASS", "2MASSI", "2MASSW", "2MASSS"),
+}
 _COLUMNS: Final = "b.oid, b.main_id, b.ra, b.dec, b.pmra, b.pmdec, b.plx_value"
 _FROM: Final = "FROM basic AS b JOIN ident AS i ON b.oid = i.oidref"
 
@@ -53,10 +60,10 @@ def designation_adql(name: str) -> str | None:
     if match is None:
         return None
     survey, ra_hhmm, sign, dec_ddmm = match.groups()
-    root = next(r for r in ("CWISE", "WISE", "2MASS") if survey.upper().startswith(r))
-    pattern = f"{root}% J{ra_hhmm}%{sign}{dec_ddmm}%"
+    root = next(r for r in _SURVEY_PREFIXES if survey.upper().startswith(r))
+    where = " OR ".join(f"i.id LIKE '{p} J{ra_hhmm}%{sign}{dec_ddmm}%'" for p in _SURVEY_PREFIXES[root])
     # No TOP: on SIMBAD `DISTINCT TOP n` with LIKE took 35–45 s, plain DISTINCT 1.5–2 s (2026-11-14).
-    return f"SELECT DISTINCT {_COLUMNS} {_FROM} WHERE i.id LIKE '{pattern}'"
+    return f"SELECT DISTINCT {_COLUMNS} {_FROM} WHERE {where}"
 
 
 def _number(value: str) -> float | None:
