@@ -175,6 +175,7 @@ All commands below are the same on macOS and Windows.
 |---|---|
 | Backend dev server (:8000) | `cd backend && uv run uvicorn app.main:app --reload --port 8000` |
 | Frontend dev server (:5173, proxies `/api` + `/files` to :8000) | `cd frontend && npm run dev` |
+| Whole app in Docker (:8080, from root) | `docker compose up -d --build` · logs `docker compose logs -f` · stop `docker compose down` |
 | Backend tests | `cd backend && uv run pytest -q` (live IRSA/SIMBAD tests: `uv run pytest -m network`) |
 | Backend type check | `cd backend && uv run mypy app tests` |
 | Python lint + format (whole repo, from root) | `uv run --project backend ruff check --fix .` · `uv run --project backend ruff format .` |
