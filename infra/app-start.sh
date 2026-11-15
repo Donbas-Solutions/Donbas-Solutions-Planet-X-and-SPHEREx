@@ -9,8 +9,8 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --no-server-header
 nginx -g 'daemon off;' &
 
 trap 'kill -TERM $(jobs -p) 2>/dev/null' TERM INT
-wait -n
-status=$?
+status=0
+wait -n || status=$?
 # shellcheck disable=SC2046 # one argument per remaining job
 kill -TERM $(jobs -p) 2>/dev/null || true
 exit "$status"
