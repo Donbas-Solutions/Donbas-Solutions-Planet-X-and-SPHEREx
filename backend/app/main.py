@@ -199,11 +199,10 @@ async def lightcurve(
 
 @app.get("/api/overlays", response_model=Overlays)
 async def overlays(http: SharedHttp, gaia: Gaia, ra: Ra, dec: Dec, fov: Fov, mjd: Mjd) -> Overlays:
-    """Gaia DR3 stars of the field at their positions on `mjd` (FR-18). Asteroids (FR-25) are not implemented:
-    `skybot` is always listed as unavailable, so an empty list is not read as "no asteroids here"."""
+    """Gaia DR3 stars of the field at their positions on `mjd` (FR-18)."""
     try:
         sources = await gaia.sources(http, ra, dec, fov)
     except GaiaError:
-        return Overlays(gaia=[], asteroids=[], unavailable=["gaia", "skybot"])
+        return Overlays(gaia=[], unavailable=["gaia"])
     stars = await anyio.to_thread.run_sync(stars_at, sources, ra, dec, fov, mjd)
-    return Overlays(gaia=stars, asteroids=[], unavailable=["skybot"])
+    return Overlays(gaia=stars, unavailable=[])

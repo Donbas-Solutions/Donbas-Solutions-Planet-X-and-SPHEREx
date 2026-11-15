@@ -158,17 +158,17 @@ def test_overlays_return_gaia_stars_at_the_frame_epoch(client: TestClient) -> No
     assert (star["dec"], star["pmdec"], star["g"]) == pytest.approx((4.770049, 10362.394, 8.194), abs=1e-3)
 
 
-def test_overlays_say_that_asteroids_are_not_available(client: TestClient) -> None:
+def test_overlays_with_gaia_list_nothing_as_unavailable(client: TestClient) -> None:
     use_gaia(httpx.Response(200, text=BARNARD_FIELD_CSV))
     body = client.get("/api/overlays", params=BARNARD_FIELD).json()
-    assert (body["asteroids"], body["unavailable"]) == ([], ["skybot"])
+    assert (sorted(body), body["unavailable"]) == (["gaia", "unavailable"], [])
 
 
 def test_overlays_without_gaia_list_it_as_unavailable(client: TestClient) -> None:
     use_gaia(httpx.Response(404, text="<!doctype html>"))
     r = client.get("/api/overlays", params=BARNARD_FIELD)
     assert r.status_code == 200
-    assert (r.json()["gaia"], r.json()["unavailable"]) == ([], ["gaia", "skybot"])
+    assert (r.json()["gaia"], r.json()["unavailable"]) == ([], ["gaia"])
 
 
 @pytest.mark.parametrize(
