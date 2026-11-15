@@ -77,6 +77,6 @@ Done. In GitHub → Settings → Secrets and variables → Actions → Variables
   AZURE_SUBSCRIPTION_ID  $subscription
   AZURE_RESOURCE_GROUP   $group
   AZURE_LOCATION         $location
-Optional: BUDGET_EMAIL (monthly cost alert), WEB_MIN_REPLICAS=1 to keep the site warm.
+Optional: BUDGET_EMAIL (monthly cost alert), MIN_REPLICAS=1 to keep the site warm.
 Then create the environment "production" (Settings → Environments) and run the Deploy workflow.
 EOF

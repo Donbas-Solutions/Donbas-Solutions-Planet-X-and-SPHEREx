@@ -35,8 +35,7 @@ jobs:
       # Empty: the resource group's region. Azure for Students allows only a few regions (docs/deploy.md).
       LOCATION: ${{ vars.AZURE_LOCATION }}
       BUDGET_EMAIL: ${{ vars.BUDGET_EMAIL }}
-      WEB_MIN_REPLICAS: ${{ vars.WEB_MIN_REPLICAS || '0' }}
-      API_MIN_REPLICAS: ${{ vars.API_MIN_REPLICAS || '0' }}
+      MIN_REPLICAS: ${{ vars.MIN_REPLICAS || '0' }}
       IMAGE_TAG: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -102,7 +101,7 @@ jobs:
             --name "apps-$GITHUB_RUN_ID" \
             --template-file infra/main.bicep \
             --parameters deployApps=true imageTag="$IMAGE_TAG" budgetEmail="$BUDGET_EMAIL" \
-              webMinReplicas="$WEB_MIN_REPLICAS" apiMinReplicas="$API_MIN_REPLICAS" ${LOCATION:+"location=$LOCATION"} \
+              minReplicas="$MIN_REPLICAS" ${LOCATION:+"location=$LOCATION"} \
             --query properties.outputs --output json > apps.json
           echo "url=$(jq -r .webUrl.value apps.json)" >> "$GITHUB_OUTPUT"
 

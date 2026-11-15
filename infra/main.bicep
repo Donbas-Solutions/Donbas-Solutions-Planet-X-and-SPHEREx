@@ -1,4 +1,4 @@
-// SPHEREx Blink on Azure Container Apps: nginx frontend (public) + FastAPI backend (internal), images in ACR.
+// SPHEREx Blink on Azure Container Apps: one app with nginx (public) and the FastAPI backend, images in ACR.
 // Deployed by .github/workflows/deploy.yml in two passes: deployApps=false creates the registry, the images are
 // pushed, then deployApps=true creates or updates the apps with the new tag.
 
@@ -9,14 +9,10 @@ param prefix string = 'spherex-blink'
 param deployApps bool = false
 param imageTag string = 'latest'
 
-@description('0 lets the site sleep when idle (cold start of a few seconds); 1 keeps it warm, e.g. during judging.')
-@minValue(0)
-param webMinReplicas int = 0
-
-@description('0 lets the backend sleep; its first request then waits for the 850 MB image to start.')
+@description('0 lets the app sleep when idle (cold start: the 850 MB backend image starts too); 1 keeps it warm.')
 @minValue(0)
 @maxValue(1)
-param apiMinReplicas int = 0
+param minReplicas int = 0
 
 param apiCpu string = '1.0'
 param apiMemory string = '2Gi'
@@ -28,7 +24,6 @@ param budgetAmountUsd int = 20
 param budgetStartDate string = '2026-11-01'
 
 var suffix = uniqueString(resourceGroup().id)
-var apiName = '${prefix}-api'
 var webName = '${prefix}-web'
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 var tags = { app: prefix }
@@ -94,8 +89,11 @@ var identity = {
   userAssignedIdentities: { '${pullIdentity.id}': {} }
 }
 
-resource api 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
-  name: apiName
+// nginx and the backend run as two containers of one app and talk over localhost: express environments have no
+// internal-only ingress (an `external: false` app still got a public FQDN on 2026-11-15), so a separate backend app
+// would be reachable from the internet past nginx's method filter and rate limit.
+resource app 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
+  name: webName
   location: location
   tags: tags
   identity: identity
@@ -107,15 +105,27 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
       activeRevisionsMode: 'Single'
       registries: registry
       ingress: {
-        external: false
-        targetPort: 8000
-        transport: 'http'
-        // No allowInsecure: express environments reject it (ExpressAllowInsecureNotSupported, 2026-11-15) and
-        // redirect plain HTTP to HTTPS, so the frontend calls the backend over HTTPS.
+        external: true
+        targetPort: 8080
+        transport: 'auto'
+        allowInsecure: false
       }
     }
     template: {
       containers: [
+        {
+          name: 'web'
+          image: '${acr.properties.loginServer}/${prefix}-frontend:${imageTag}'
+          resources: { cpu: json('0.25'), memory: '0.5Gi' }
+          env: [{ name: 'BACKEND_URL', value: 'http://127.0.0.1:8000' }]
+          probes: [
+            {
+              type: 'Liveness'
+              httpGet: { path: '/healthz', port: 8080 }
+              periodSeconds: 30
+            }
+          ]
+        }
         {
           name: 'api'
           image: '${acr.properties.loginServer}/${prefix}-backend:${imageTag}'
@@ -143,55 +153,10 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
           ]
         }
       ]
-      // One replica at most: jobs and their progress live in the process's memory.
+      // One replica at most: jobs and their progress live in the backend's memory.
       scale: {
-        minReplicas: apiMinReplicas
+        minReplicas: minReplicas
         maxReplicas: 1
-        rules: [{ name: 'http', http: { metadata: { concurrentRequests: '50' } } }]
-      }
-    }
-  }
-}
-
-resource web 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
-  name: webName
-  location: location
-  tags: tags
-  identity: identity
-  // nginx resolves the backend's name once at start-up and exits if it does not exist yet.
-  dependsOn: [acrPull, api]
-  properties: {
-    environmentId: env.id
-    workloadProfileName: 'Consumption'
-    configuration: {
-      activeRevisionsMode: 'Single'
-      registries: registry
-      ingress: {
-        external: true
-        targetPort: 8080
-        transport: 'auto'
-        allowInsecure: false
-      }
-    }
-    template: {
-      containers: [
-        {
-          name: 'web'
-          image: '${acr.properties.loginServer}/${prefix}-frontend:${imageTag}'
-          resources: { cpu: json('0.25'), memory: '0.5Gi' }
-          env: [{ name: 'BACKEND_URL', value: 'https://${apiName}.internal.${env.properties.defaultDomain}' }]
-          probes: [
-            {
-              type: 'Liveness'
-              httpGet: { path: '/healthz', port: 8080 }
-              periodSeconds: 30
-            }
-          ]
-        }
-      ]
-      scale: {
-        minReplicas: webMinReplicas
-        maxReplicas: 2
         rules: [{ name: 'http', http: { metadata: { concurrentRequests: '100' } } }]
       }
     }
