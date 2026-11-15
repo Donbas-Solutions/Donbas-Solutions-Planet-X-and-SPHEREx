@@ -558,16 +558,17 @@ h1 {
   line-height: 1.4;
   text-align: left;
   white-space: normal;
-  visibility: hidden;
+  /* display, not visibility: a hidden absolute box still widens the page and adds a horizontal scrollbar. */
+  display: none;
 }
 
 .term:hover .term-tip,
 .term-button:focus + .term-tip {
-  visibility: visible;
+  display: block;
 }
 
 .term.is-dismissed .term-tip {
-  visibility: hidden;
+  display: none;
 }
 
 .glossary dt {
