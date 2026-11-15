@@ -1,12 +1,11 @@
-"""Background jobs behind `/api/sequence` (FR-13): one job per request key, bundles cached in `processed/<key>/`.
+"""Background jobs behind `/api/sequence` (FR-13): one job per request key, bundles kept by `storage.BundleStore`.
 
-Each job also measures the target's spectrum (FR-16, FR-17) on the same cutouts; `storage.BundleStore` keeps both.
+Each job also measures the target's spectrum (FR-16, FR-17) on the same cutouts.
 """
 
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import logging
 import time
 import uuid
@@ -18,16 +17,17 @@ from typing import Final
 
 import anyio
 
-from .archive.fetch import FetchResult
-from .archive.http import ArchiveError
-from .archive.plan import NoCoverageError
-from .config import settings
-from .domain import Cutout, ProgressCallback, SequenceParams, SequenceResult, Target
-from .models import JobProgress, JobState, JobStatus, Spectrum
-from .models import Sequence as SequenceModel
-from .pipeline.photometry import measure_spectrum
-from .pipeline.sequence import SequenceError, build_sequence
-from .storage import SPECTRUM, BundleStore
+from ..archive.fetch import FetchResult
+from ..archive.http import ArchiveError
+from ..archive.plan import NoCoverageError
+from ..config import settings
+from ..domain import Cutout, ProgressCallback, SequenceParams, SequenceResult, Target
+from ..models import JobProgress, JobState, JobStatus, Spectrum
+from ..models import Sequence as SequenceModel
+from ..pipeline.photometry import measure_spectrum
+from ..pipeline.sequence import SequenceError, build_sequence
+from ..storage import SPECTRUM, BundleStore
+from .keys import SequenceRequest, target_key
 
 logger = logging.getLogger(__name__)
 
@@ -36,56 +36,13 @@ ARCHIVE_DOWN: Final = (
     "The IRSA archive is unreachable or overloaded right now. Try again in a few minutes or open a preset target."
 )
 
-FetchFn = Callable[["SequenceRequest", ProgressCallback], Awaitable[FetchResult]]
+FetchFn = Callable[[SequenceRequest, ProgressCallback], Awaitable[FetchResult]]
 BuildFn = Callable[[Sequence[Cutout], Target, SequenceParams], SequenceResult]
 MeasureFn = Callable[[Sequence[Cutout], Target], Spectrum]
 
 
 class JobError(Exception):
     """A job failed for a reason the user should read as is."""
-
-
-def target_key(target: Target) -> str:
-    """Same position, motion and epoch → same key; the spectrum does not depend on FOV, detectors or mode."""
-    return _digest(_target_parts(target))
-
-
-def _target_parts(target: Target) -> tuple[str, ...]:
-    return (
-        f"{target.ra_deg:.5f}",
-        f"{target.dec_deg:.5f}",
-        f"{target.ref_epoch:.3f}",
-        _pm(target.pmra_masyr),
-        _pm(target.pmdec_masyr),
-    )
-
-
-def _digest(parts: Sequence[str]) -> str:
-    return hashlib.sha256("|".join(parts).encode()).hexdigest()[:24]
-
-
-@dataclass(frozen=True)
-class SequenceRequest:
-    target: Target
-    params: SequenceParams
-
-    @property
-    def key(self) -> str:
-        """Same sequence → same key. Rounding to 1e-5° (0.04″) is far below the 6.2″ pixel."""
-        p = self.params
-        return _digest(
-            (
-                *_target_parts(self.target),
-                f"{p.fov_arcmin:.1f}",
-                ",".join(str(d) for d in sorted(set(p.detectors))),
-                p.mode,
-                str(p.include_allwise),
-            )
-        )
-
-
-def _pm(value: float | None) -> str:
-    return "-" if value is None else f"{value:.2f}"
 
 
 def build_and_measure(
