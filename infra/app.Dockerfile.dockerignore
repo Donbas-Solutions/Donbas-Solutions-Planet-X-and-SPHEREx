@@ -1,0 +1,15 @@
+*
+!frontend/
+!backend/pyproject.toml
+!backend/uv.lock
+!backend/.python-version
+!backend/app/
+!infra/app-nginx.conf
+!infra/app-start.sh
+frontend/node_modules
+frontend/dist
+frontend/.vite
+frontend/*.tsbuildinfo
+frontend/*.local
+**/__pycache__
+**/*.py[cod]

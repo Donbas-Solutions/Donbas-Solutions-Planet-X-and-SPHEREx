@@ -87,6 +87,35 @@ jobs:
         if: always()
         run: docker compose down -v
 
+  azure-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the Azure image
+        run: docker build -f infra/app.Dockerfile -t spherex-blink-app:ci .
+      - name: Smoke test without IPv6, as on Azure Container Apps
+        run: |
+          set -euo pipefail
+          docker run -d --name app --sysctl net.ipv6.conf.all.disable_ipv6=1 -e WARM_COLLECTIONS=0 \
+            -p 127.0.0.1:8080:8080 spherex-blink-app:ci
+          base=http://127.0.0.1:8080
+          for _ in $(seq 1 60); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' "$base/api/health")" = 200 ] && break
+            sleep 1
+          done
+          for path in /healthz /api/health /prebaked/barnard/sequence.json /embed; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$base$path")
+            echo "$path $code"
+            test "$code" = 200
+          done
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$base/api/health")" = 403
+      - name: Logs on failure
+        if: failure()
+        run: docker logs app
+
   infra:
     runs-on: ubuntu-latest
     timeout-minutes: 10

@@ -29,11 +29,12 @@ Source: the official *Project Submission Guide*, spaceappschallenge.org/resource
 ## Azure Container Apps + CI/CD (team OK on 2026-11-15)
 
 ```
-GitHub ── PR / push ──► CI: ruff · mypy · pytest · oxlint · vite build · compose smoke test · bicep lint
+GitHub ── PR / push ──► CI: ruff · mypy · pytest · oxlint · vite build · compose + azure image smoke tests · bicep lint
                                                        · gitleaks (blocking) · trivy (report only)
 main, CI green ──► Deploy (OIDC, no stored secret): bicep pass 1 (ACR, env, logs, budget)
                    → build + push both images (tag = commit SHA) → bicep pass 2 (apps) → smoke test → prune ACR
-Azure: one app spherex-blink-web, 0–1 replica: nginx (public HTTPS) ──/api, /files via 127.0.0.1:8000──► backend
+Azure: one app spherex-blink-web, 0–1 replica, one container (infra/app.Dockerfile):
+       nginx (public HTTPS) ──/api, /files via 127.0.0.1:8000──► backend
 ```
 
 Files: `infra/main.bicep`, `infra/bootstrap.sh`, `.github/workflows/{ci,deploy}.yml`, `.github/dependabot.yml`.
@@ -63,13 +64,17 @@ roughly $0.13 per busy hour. `MIN_REPLICAS=1` (always warm, e.g. during judging)
 roughly $25–30 a month.
 `BUDGET_EMAIL` sets a $20/month alert at 80 % actual and 100 % forecast.
 
-**Why one app with two containers:** the environment came up as an *express* environment (2026-11-15): it rejects
-`allowInsecure` and gave an `external: false` app a public FQDN, so a separate backend app would be reachable past
-nginx. As sidecars in one replica they talk over localhost and only nginx is exposed.
+**Why one container with nginx and the backend:** the environment came up as an *express* environment
+(`properties.environmentMode: "Express"`, visible from API version 2026-07-01; 2026-11-15). It rejected
+`allowInsecure` (`ExpressAllowInsecureNotSupported`), gave an `external: false` app a public FQDN (no `.internal.`
+names) and rejected a second container (`Sidecar Containers is not supported`). So `infra/app.Dockerfile` runs both
+processes (`infra/app-start.sh`, the container exits when either dies), they talk over localhost and only nginx is
+public. Azure also has no IPv6 inside containers: nginx listens on IPv4 only. CI builds this image and smoke-tests
+it with IPv6 disabled. `compose.yaml` keeps the two separate images for local runs.
 
 **Limits of this setup:** one replica at most (jobs live in the backend's memory); the cache is the container's
 ephemeral disk, lost on scale-to-zero or restart; the prebaked bundles are part of the frontend image. A cold start
-pulls both images (backend ~850 MB) and can take a minute or more; with `MIN_REPLICAS=1` there is none.
+pulls the ~900 MB image and can take a minute or more; with `MIN_REPLICAS=1` there is none.
 To tear everything down: `az group delete -n rg-spherex-blink`.
 
 ## OD-1 — hosting (deferred, superseded by the Azure section above)

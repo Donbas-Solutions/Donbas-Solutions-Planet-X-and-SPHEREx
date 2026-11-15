@@ -1,6 +1,6 @@
-// SPHEREx Blink on Azure Container Apps: one app with nginx (public) and the FastAPI backend, images in ACR.
+// SPHEREx Blink on Azure Container Apps: one app whose container runs nginx (public) and the FastAPI backend.
 // Deployed by .github/workflows/deploy.yml in two passes: deployApps=false creates the registry, the images are
-// pushed, then deployApps=true creates or updates the apps with the new tag.
+// pushed, then deployApps=true creates or updates the app with the new tag.
 
 targetScope = 'resourceGroup'
 
@@ -9,13 +9,13 @@ param prefix string = 'spherex-blink'
 param deployApps bool = false
 param imageTag string = 'latest'
 
-@description('0 lets the app sleep when idle (cold start: the 850 MB backend image starts too); 1 keeps it warm.')
+@description('0 lets the app sleep when idle (a cold start pulls the ~900 MB image); 1 keeps it warm.')
 @minValue(0)
 @maxValue(1)
 param minReplicas int = 0
 
-param apiCpu string = '1.0'
-param apiMemory string = '2Gi'
+param cpu string = '1.25'
+param memory string = '2.5Gi'
 
 @description('Monthly cost alert for this resource group; empty disables the budget.')
 param budgetEmail string = ''
@@ -89,9 +89,9 @@ var identity = {
   userAssignedIdentities: { '${pullIdentity.id}': {} }
 }
 
-// nginx and the backend run as two containers of one app and talk over localhost: express environments have no
-// internal-only ingress (an `external: false` app still got a public FQDN on 2026-11-15), so a separate backend app
-// would be reachable from the internet past nginx's method filter and rate limit.
+// One container (infra/app.Dockerfile) with nginx and the backend, talking over localhost: the environment is an
+// "express" one (properties.environmentMode, 2026-11-15), which allows a single container per app and has no
+// internal-only ingress, so a separate backend app would be public and bypass nginx's method filter and rate limit.
 resource app 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
   name: webName
   location: location
@@ -114,22 +114,9 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
     template: {
       containers: [
         {
-          name: 'web'
-          image: '${acr.properties.loginServer}/${prefix}-frontend:${imageTag}'
-          resources: { cpu: json('0.25'), memory: '0.5Gi' }
-          env: [{ name: 'BACKEND_URL', value: 'http://127.0.0.1:8000' }]
-          probes: [
-            {
-              type: 'Liveness'
-              httpGet: { path: '/healthz', port: 8080 }
-              periodSeconds: 30
-            }
-          ]
-        }
-        {
-          name: 'api'
-          image: '${acr.properties.loginServer}/${prefix}-backend:${imageTag}'
-          resources: { cpu: json(apiCpu), memory: apiMemory }
+          name: 'app'
+          image: '${acr.properties.loginServer}/${prefix}-app:${imageTag}'
+          resources: { cpu: json(cpu), memory: memory }
           env: [
             { name: 'CORS_ORIGINS', value: webUrl }
             { name: 'PIPELINE_WORKERS', value: '1' }
@@ -141,13 +128,13 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
           probes: [
             {
               type: 'Startup'
-              httpGet: { path: '/api/health', port: 8000 }
+              httpGet: { path: '/api/health', port: 8080 }
               periodSeconds: 5
               failureThreshold: 30
             }
             {
               type: 'Liveness'
-              httpGet: { path: '/api/health', port: 8000 }
+              httpGet: { path: '/healthz', port: 8080 }
               periodSeconds: 30
             }
           ]
