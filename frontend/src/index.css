@@ -457,7 +457,11 @@ h1 {
 }
 
 .marker-gaia {
-  opacity: 0.85;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.75);
+  opacity: 0.8;
 }
 
 .marker-gaia-mover,
