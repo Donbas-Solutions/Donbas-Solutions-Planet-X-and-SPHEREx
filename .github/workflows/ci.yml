@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.1"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Install
+        run: uv sync --frozen --project backend
+      - name: Ruff check
+        run: uv run --project backend ruff check --output-format=github .
+      - name: Ruff format
+        run: uv run --project backend ruff format --check .
+      - name: Mypy (backend)
+        working-directory: backend
+        run: uv run mypy app tests
+      - name: Mypy (scripts)
+        run: uv run --project backend mypy --strict --ignore-missing-imports --explicit-package-bases science/validate.py scripts/prebake.py
+      - name: Pytest
+        working-directory: backend
+        run: uv run pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and start the stack
+        # WARM_COLLECTIONS=0: the smoke test must not depend on IRSA being up.
+        run: WARM_COLLECTIONS=0 docker compose up -d --build --wait --wait-timeout 180
+      - name: Smoke test through nginx
+        run: |
+          set -euo pipefail
+          base=http://127.0.0.1:8080
+          for path in /healthz /api/health /prebaked/barnard/sequence.json /about; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$base$path")
+            echo "$path $code"
+            test "$code" = 200
+          done
+          test "$(curl -s -o /dev/null -w '%{http_code}' "$base/api/sequence?ra=999&dec=0")" = 422
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$base/api/health")" = 403
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v
+
+  infra:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Bicep build and lint
+        run: |
+          az bicep install
+          az bicep build --file infra/main.bicep --stdout > /dev/null
+          az bicep lint --file infra/main.bicep
+
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Gitleaks over the whole history
+        # safe.directory: the checkout belongs to the runner's user, not to the container's.
+        run: >
+          docker run --rm -v "$PWD:/repo"
+          -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/repo
+          ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact --no-banner
+
+  vulnerabilities:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Trivy on the lockfiles (report only, never fails the build)
+        run: >
+          docker run --rm -v "$PWD:/repo:ro" aquasec/trivy:0.76.2
+          fs --quiet --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 /repo

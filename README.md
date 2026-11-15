@@ -49,6 +49,12 @@ Open <http://localhost:8080>. nginx serves the built frontend and the prebaked b
 volume (`docker compose down -v` removes it). Settings: copy `.env.example` to `.env`; no secrets are needed.
 The port is bound to `127.0.0.1` unless `BIND_ADDR` says otherwise.
 
+### CI/CD
+
+Every pull request runs lint, type checks, tests, a Docker smoke test and secret/vulnerability scans
+(`.github/workflows/ci.yml`). A green `main` is deployed to Azure Container Apps (`deploy.yml`, `infra/main.bicep`);
+one-time setup in [`docs/deploy.md`](docs/deploy.md).
+
 ## Limitations
 
 - SPHEREx pixels are 6.2″, so even the fastest nearby stars move only ~1–2 px over the available ~1 year baseline.

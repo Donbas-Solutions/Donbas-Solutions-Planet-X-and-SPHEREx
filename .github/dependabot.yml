@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+    groups:
+      actions: { patterns: ["*"] }
+
+  - package-ecosystem: docker
+    directories: [/backend, /frontend]
+    schedule: { interval: weekly }
+    groups:
+      base-images: { patterns: ["*"] }
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    ignore:
+      # Pinned on purpose: npm `latest` is a beta (CLAUDE.md).
+      - dependency-name: aladin-lite
+    groups:
+      npm-minor: { update-types: [minor, patch] }
+
+  - package-ecosystem: uv
+    directory: /backend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    groups:
+      python-minor: { update-types: [minor, patch] }

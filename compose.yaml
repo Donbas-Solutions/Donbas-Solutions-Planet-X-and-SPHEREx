@@ -24,6 +24,7 @@ services:
       LIVE_CAP_PER_DETECTOR: ${LIVE_CAP_PER_DETECTOR:-8}
       RAW_CACHE_MAX_MB: ${RAW_CACHE_MAX_MB:-5000}
       PROCESSED_TTL_H: ${PROCESSED_TTL_H:-24}
+      WARM_COLLECTIONS: ${WARM_COLLECTIONS:-1}
     volumes:
       - cache:/data/cache
     tmpfs:
@@ -48,6 +49,8 @@ services:
       - "${BIND_ADDR:-127.0.0.1}:${PORT:-8080}:8080"
     tmpfs:
       - /tmp:size=64m,mode=1777
+      # The entrypoint renders the nginx config from its template at start-up.
+      - /etc/nginx/conf.d:size=1m,mode=1777
 
 volumes:
   cache:

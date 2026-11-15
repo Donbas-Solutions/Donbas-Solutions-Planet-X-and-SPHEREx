@@ -26,7 +26,42 @@ Source: the official *Project Submission Guide*, spaceappschallenge.org/resource
 - **Other:** no images/video/audio of persons under 18. Checkboxes "Terms and Conditions" and "Confirm All Work is
   Original" on submit. Judging criteria: Impact, Creativity, Validity, Relevance, Presentation.
 
-## OD-1 — hosting (deferred)
+## Azure Container Apps + CI/CD (team OK on 2026-11-15)
+
+```
+GitHub ── PR / push ──► CI: ruff · mypy · pytest · oxlint · vite build · compose smoke test · bicep lint
+                                                       · gitleaks (blocking) · trivy (report only)
+main, CI green ──► Deploy (OIDC, no stored secret): bicep pass 1 (ACR, env, logs, budget)
+                   → build + push both images (tag = commit SHA) → bicep pass 2 (apps) → smoke test → prune ACR
+Azure: spherex-blink-web (nginx, public HTTPS, 0–2 replicas) ──/api, /files──► spherex-blink-api (internal, 0–1)
+```
+
+Files: `infra/main.bicep`, `infra/bootstrap.sh`, `.github/workflows/{ci,deploy}.yml`, `.github/dependabot.yml`.
+
+**One-time setup** (a subscription Owner, Git Bash or any shell with `az`):
+1. `az login`, then `infra/bootstrap.sh levch6/Donbas-Solutions-Planet-X-and-SPHEREx [rg-spherex-blink] [westeurope]`.
+   It registers the resource providers, creates the resource group and the app registration
+   `spherex-blink-github-deploy` with a federated credential for the GitHub environment `production`, and gives it
+   Contributor on that resource group plus the right to grant only `AcrPull` (an ABAC condition).
+2. GitHub → Settings → Environments: create `production` (add required reviewers for a manual approval gate).
+3. GitHub → Settings → Secrets and variables → Actions → **Variables, repository level** (environment variables are
+   not visible to the job's `if`): `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`,
+   `AZURE_RESOURCE_GROUP` (printed by the script); optional `BUDGET_EMAIL`, `WEB_MIN_REPLICAS`, `API_MIN_REPLICAS`.
+4. Actions → Deploy → Run workflow. The site URL appears on the run and in the environment.
+
+Until step 3 is done the Deploy job is skipped, so `main` stays green.
+
+**Cost** (estimates; check the Azure pricing calculator): idle ≈ ACR Basic ~$5/month + a few cents of logs (ingestion
+capped at 0.1 GB/day). Apps scale to zero and bill per second while they run; the backend at 1 vCPU / 2 GiB costs
+roughly $0.10 per busy hour. `WEB_MIN_REPLICAS=1` (site always warm, e.g. during judging) adds a few dollars a month.
+`BUDGET_EMAIL` sets a $20/month alert at 80 % actual and 100 % forecast.
+
+**Limits of this setup:** the backend has at most one replica (jobs live in memory) and its cache is the container's
+ephemeral disk, lost on scale-to-zero or restart; the prebaked bundles are part of the frontend image. A cold backend
+start takes up to a minute (850 MB image), during which the UI shows the offline banner and the presets still work.
+To tear everything down: `az group delete -n rg-spherex-blink`.
+
+## OD-1 — hosting (deferred, superseded by the Azure section above)
 
 **Decision 2026-11-14:** no deploy for the submission — it is not required. We test locally; the "link to final
 project" is the public GitHub repository, run from the README. The proposal below is kept for later. If revisited:
