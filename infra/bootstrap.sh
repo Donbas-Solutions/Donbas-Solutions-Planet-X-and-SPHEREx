@@ -21,14 +21,17 @@ acr_pull=7f951dda-4ed3-4680-a7ca-43fe172d538d
 subscription=$(az account show --query id -o tsv)
 tenant=$(az account show --query tenantId -o tsv)
 scope="/subscriptions/$subscription/resourceGroups/$group"
-echo "Subscription $subscription, resource group $group ($location), GitHub repo $repo"
+echo "Subscription $subscription, resource group $group, resources in $location, GitHub repo $repo"
 
 for namespace in Microsoft.App Microsoft.ContainerRegistry Microsoft.OperationalInsights \
   Microsoft.ManagedIdentity Microsoft.Consumption; do
   az provider register --namespace "$namespace" --wait --output none
 done
 
-az group create --name "$group" --location "$location" --tags app=spherex-blink --output none
+# A resource group cannot move; its region only holds metadata, the apps go to AZURE_LOCATION.
+if [ "$(az group exists --name "$group")" = false ]; then
+  az group create --name "$group" --location "$location" --tags app=spherex-blink --output none
+fi
 
 app_id=$(az ad app list --display-name "$app_name" --query '[0].appId' -o tsv)
 if [ -z "$app_id" ]; then
