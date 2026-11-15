@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Spectrum, SpectrumPoint } from '../../api/types'
+import { useAppState } from '../../hooks/useAppState'
 import { extent, pad, type ScaleKind } from '../../lib/chart'
 import {
   detectorId,
@@ -97,7 +98,8 @@ function meanPoint(m: VisitMean, slot: number): ChartPoint {
 
 export default function LightCurveChart({ spectrum, targetName }: Props) {
   const { points } = spectrum
-  const visits = useMemo(() => visitsOf(points), [points])
+  const { sequence } = useAppState()
+  const visits = useMemo(() => visitsOf(points, sequence?.frames), [points, sequence])
   const means = useMemo(() => visitMeans(points, visits), [points, visits])
   const stats = useMemo(() => variability(means), [means])
   const matched = useMemo(() => strongestMatchedChanges(points, visits), [points, visits])

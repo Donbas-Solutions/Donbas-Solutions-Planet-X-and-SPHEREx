@@ -1,11 +1,11 @@
-import type { SpectrumPoint } from '../api/types'
+import type { Frame, SpectrumPoint } from '../api/types'
 import { presetNear, type PresetId } from './presets'
 
 export type PointStatus = 'measured' | 'saturated' | 'flagged'
 
 export interface VisitInfo {
   id: string
-  /** UTC month of the visit's first point, e.g. "2025-04". */
+  /** The visit's name in the player; else the UTC month of its first point (the day too if months collide). */
   label: string
   mjdStart: number
   count: number
@@ -26,7 +26,17 @@ export function pointStatus(p: SpectrumPoint): PointStatus {
   return p.flux_ujy === null ? 'flagged' : 'measured'
 }
 
-export function visitsOf(points: readonly SpectrumPoint[]): VisitInfo[] {
+/** `v2` → "2026-03" from the label of the visit's combined frame, so charts and player name a visit alike. */
+function frameVisitLabels(frames: readonly Frame[]): Map<string, string> {
+  const labels = new Map<string, string>()
+  for (const f of frames) {
+    const [visit = '', kind] = f.id.split('-')
+    if (kind === 'all') labels.set(visit, f.label.split(' · ')[0] ?? f.label)
+  }
+  return labels
+}
+
+export function visitsOf(points: readonly SpectrumPoint[], frames: readonly Frame[] = []): VisitInfo[] {
   const byId = new Map<string, { mjdStart: number; count: number }>()
   for (const p of points) {
     const v = byId.get(p.visit)
@@ -37,8 +47,15 @@ export function visitsOf(points: readonly SpectrumPoint[]): VisitInfo[] {
       byId.set(p.visit, { mjdStart: p.mjd, count: 1 })
     }
   }
-  return [...byId]
-    .map(([id, v]) => ({ id, label: mjdToIsoDate(v.mjdStart).slice(0, 7), ...v }))
+  const visits = [...byId].map(([id, v]) => ({ id, date: mjdToIsoDate(v.mjdStart), ...v }))
+  const perMonth = new Map<string, number>()
+  for (const v of visits) perMonth.set(v.date.slice(0, 7), (perMonth.get(v.date.slice(0, 7)) ?? 0) + 1)
+  const fromFrames = frameVisitLabels(frames)
+  return visits
+    .map(({ date, ...v }) => {
+      const fromPoints = (perMonth.get(date.slice(0, 7)) ?? 0) > 1 ? date : date.slice(0, 7)
+      return { ...v, label: fromFrames.get(v.id) ?? fromPoints }
+    })
     .sort((a, b) => a.mjdStart - b.mjdStart)
 }
 

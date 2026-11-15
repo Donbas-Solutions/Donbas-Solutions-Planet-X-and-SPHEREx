@@ -100,3 +100,29 @@ export interface JobStatus {
   result?: Sequence | null
   error?: string | null
 }
+
+/** A Gaia DR3 star at the epoch asked from `/api/overlays`. `source_id` is text: it exceeds 2^53. */
+export interface GaiaStar {
+  source_id: string
+  /** ICRS degrees at the requested MJD */
+  ra: number
+  dec: number
+  g: number | null
+  /** mas/yr, includes cos(dec); null for stars without a measured proper motion */
+  pmra: number | null
+  pmdec: number | null
+}
+
+export interface Asteroid {
+  name: string
+  ra: number
+  dec: number
+  v: number | null
+}
+
+/** `unavailable` names the sources without data (`gaia`, `skybot`): an empty list there does not mean "none". */
+export interface Overlays {
+  gaia: GaiaStar[]
+  asteroids: Asteroid[]
+  unavailable: string[]
+}

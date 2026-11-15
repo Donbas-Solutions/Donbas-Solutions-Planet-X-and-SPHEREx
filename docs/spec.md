@@ -151,6 +151,7 @@ shareable URLs and embedding; static bundles for the five test targets.
 | `fps` | 0.5–3 | 2 | §5.4 |
 | `stretch` | `asinh` · `linear` · `log` | `asinh` | |
 | `flags` | comma list of `saturation`, `bad`, `artifact` | none | |
+| `gaia` | `1` | off | Gaia DR3 stars over the frames (FR-18) |
 | `pmra`, `pmdec`, `epoch` | mas/yr (pmra includes cos δ), Julian year | from resolve | Enables FR-10 for raw coordinates |
 | `manifest` | bundle URL | — | Development and testing only |
 
@@ -226,7 +227,7 @@ Float32 arrays and are stretched and differenced client-side. Details: `docs/age
 |---|---|---|---|
 | OD-1 | Hosting — decided 2026-11-14: **no deploy for the submission**, local runs only; the public repo is the final-project link. Hosting options for later: `docs/deploy.md` | Team | Done |
 | OD-2 | Repository goes public + its licence (Aladin Lite is GPL/LGPL-3) | Team | Before submission |
-| OD-3 | Exact submission deadline (hour, time zone) and required format (video/slides, AI-use disclosure, branding rules) | Track D | Saturday |
+| OD-3 | Submission deadline and format — answered 2026-11-14: 2026-11-15 23:59 Kyiv, video ≤ 30 s or ≤ 7 slides, AI-use disclosure, no NASA branding (`docs/deploy.md`). Still to confirm: the Team Owner who submits and an earlier Kyiv cutoff | Track D | Done, except the two confirmations |
 | OD-4 | Fetch strategy — decided 2026-11-14 (A0): S3 range reads primary, IRSA `ibe` multi-range fallback, cutout service last resort (`CLAUDE.md` → Verified data facts). Exposure cap per group — proposed 20 per (detector, visit), 10 per deep-field bin; awaiting the team | Track A | Checkpoint A0 |
 | OD-5 | Uncached end-to-end latency budget | Track A | Checkpoint A0 |
 | OD-6 | ~~Who owns which track~~ — decided 2026-11-14: four roles A–D (`docs/agent-prompt.md` → Roles and ownership); people assigned by the team | Team | Done |

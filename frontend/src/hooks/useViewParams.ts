@@ -9,6 +9,8 @@ export function useViewParams(): {
   params: ViewParams
   setParams: SetViewParams
   notices: readonly string[]
+  /** Shows one notice in the page banner; unlike component state it survives a change of the sequence. */
+  notify: (text: string) => void
   dismissNotices: () => void
 } {
   const [initial] = useState(() => parseViewParams(window.location.search))
@@ -41,6 +43,7 @@ export function useViewParams(): {
   }, [])
 
   const dismissNotices = useCallback(() => setNotices([]), [])
+  const notify = useCallback((text: string) => setNotices([text]), [])
 
-  return { params, setParams, notices, dismissNotices }
+  return { params, setParams, notices, notify, dismissNotices }
 }

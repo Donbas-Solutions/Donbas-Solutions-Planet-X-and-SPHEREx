@@ -23,7 +23,7 @@ from ..domain import Cutout, ExposureMeta, ProgressCallback, Target, Visit
 from .cutouts import cache_name, cutout_url, load_cutout, strip_to_file
 from .http import ArchiveError, Http, get, raise_first
 from .ranges import OffDetectorError, fetch_window, s3_url
-from .sia import SEARCH_RADIUS_DEG, SIA_URL, parse_sia_csv, sia_params
+from .sia import SEARCH_RADIUS_DEG, SIA_URL, SiaCache, parse_sia_csv, sia_params
 
 logger = logging.getLogger(__name__)
 
@@ -42,19 +42,34 @@ def _position_now(target: Target) -> tuple[float, float]:
     return position_at(target, float(Time.now().mjd))
 
 
+async def _sia_csv(http: Http, params: dict[str, str], cache: SiaCache | None) -> str:
+    cached = cache.get(params) if cache is not None else None
+    if cached is not None:
+        return cached
+    text = (await get(http, SIA_URL, params)).text
+    if cache is not None:
+        cache.put(params, text)
+    return text
+
+
 async def query_exposures(
-    http: Http, target: Target, collections: Sequence[str], radius_deg: float = SEARCH_RADIUS_DEG
+    http: Http,
+    target: Target,
+    collections: Sequence[str],
+    radius_deg: float = SEARCH_RADIUS_DEG,
+    cache: SiaCache | None = None,
 ) -> list[ExposureMeta]:
     """All exposures of `collections` covering the target, unique by (obs_id, detector), sorted by time.
 
     Collections are queried concurrently; any collection failing fails the query, because a silently missing
-    collection would drop whole visits. On duplicates the earlier collection in `collections` wins.
+    collection would drop whole visits. On duplicates the earlier collection in `collections` wins. With a
+    `cache`, the collections that answered are remembered, so a retry asks only for the rest.
     """
     ra_deg, dec_deg = await anyio.to_thread.run_sync(_position_now, target)
     try:
         async with asyncio.TaskGroup() as group:
             tasks = [
-                group.create_task(get(http, SIA_URL, sia_params(collection, ra_deg, dec_deg, radius_deg)))
+                group.create_task(_sia_csv(http, sia_params(collection, ra_deg, dec_deg, radius_deg), cache))
                 for collection in collections
             ]
     except* ArchiveError as failures:
@@ -62,7 +77,7 @@ async def query_exposures(
 
     found: dict[str, ExposureMeta] = {}
     for task in tasks:
-        for meta in parse_sia_csv(task.result().text):
+        for meta in parse_sia_csv(task.result()):
             found.setdefault(meta.key, meta)
     return sorted(found.values(), key=lambda m: (m.mjd_start, m.detector))
 

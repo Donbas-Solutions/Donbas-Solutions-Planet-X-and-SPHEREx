@@ -3,7 +3,7 @@
 A web tool for blinking NASA SPHEREx images: enter sky coordinates (RA/Dec) or an object name and get an animated
 sequence of SPHEREx images of that sky patch, so moving and variable objects stand out.
 
-Built for the NASA Space Apps Challenge 2026, challenge "Planet X and SPHEREx". **Work in progress.**
+Built for the NASA Space Apps Challenge 2026, challenge "Planet X and SPHEREx".
 
 ## How it works
 
@@ -33,7 +33,8 @@ cd backend && uv sync && uv run uvicorn app.main:app --reload --port 8000
 cd frontend && npm ci && npm run dev
 ```
 
-Open <http://localhost:5173>. Without real data yet, the viewer shows a synthetic mock bundle.
+Open <http://localhost:5173>. The five test targets open from prebaked real SPHEREx data, also without the
+backend; a search by name or coordinates asks the live archive through the backend.
 
 ## Limitations
 
@@ -46,3 +47,4 @@ Open <http://localhost:5173>. Without real data yet, the viewer shows a syntheti
 ## Data
 
 SPHEREx data: NASA / IPAC Infrared Science Archive (IRSA). Object names resolved with SIMBAD (CDS).
+Star overlay: Gaia DR3 (ESA / Gaia DPAC), read from the MAST, GAVO or ESA archives.

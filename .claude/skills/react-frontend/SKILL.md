@@ -126,8 +126,8 @@ src/
   are the HiPS ids in `CLAUDE.md`. Present in the 3.8.2 bundle: `gotoRaDec`, `setFoV`, `setBaseImageLayer`,
   `newImageSurvey`, `A.catalogFromVizieR`. The package ships no types — check signatures against the 3.8.2 API
   docs and add each method you use to a typed interface in `src/aladin-lite.d.ts`.
-  `components/AladinPanel.tsx` is still the Phase 0 skeleton (it recreates the instance on every prop change);
-  B5 brings it in line with the rule above.
+  `components/AladinPanel.tsx` follows this rule: one instance per mount, updated through `setImageSurvey`,
+  `gotoRaDec`, `setFoV` and a catalog; surveys come from `lib/hips.ts` (IRSA mirror first, CDS is often down).
 
 ## Performance
 
@@ -192,7 +192,7 @@ plausible-looking but scientifically wrong picture, so they are not optional.
   Params: `target` (preset id), `name`, `ra`/`dec` (decimal degrees or URL-encoded sexagesimal), `fov` (arcmin,
   2–30, default 10), `det` (`all` or a comma list of `1..6`), `view` (`blink` | `diff`), `a`/`b` (frame ids),
   `fps` (0.5–3, default 2), `stretch` (`asinh` | `linear` | `log`), `flags` (comma list of `saturation`, `bad`,
-  `artifact`), `pmra`/`pmdec`/`epoch`, and `manifest` (development only).
+  `artifact`), `gaia` (`1` = Gaia DR3 stars overlay), `pmra`/`pmdec`/`epoch`, and `manifest` (development only).
 - Precedence: `target` > `name` > `ra`/`dec`.
 - Page params are not API params: the page has `view` and `epoch`, the API has `mode` and `ref_epoch`
   (`docs/api.md`). Map them in one place in `api/`.
