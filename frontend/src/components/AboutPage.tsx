@@ -100,6 +100,13 @@ export default function AboutPage() {
         Context view: Aladin Lite (CDS, Strasbourg) showing 2MASS, AllWISE (NASA / JPL-Caltech, UCLA) and DSS2 images
         from the IRSA HiPS mirror, or the SPHEREx colour mosaic from CDS.
       </p>
+
+      <h2>Use of AI</h2>
+      <p>
+        The code, tests and documentation were written with Claude Code (Anthropic), an AI coding assistant, under the
+        team's direction and review. Every image on this site is computed from SPHEREx data by our pipeline: none is
+        AI-generated, and the site makes no AI calls.
+      </p>
     </main>
   )
 }
