@@ -5,7 +5,6 @@ from __future__ import annotations
 import contextlib
 from collections.abc import AsyncIterator
 from concurrent.futures import ProcessPoolExecutor
-from functools import partial
 from typing import Annotated, Literal
 
 import anyio
@@ -14,13 +13,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .archive.collections import CollectionDiscovery
+from .archive.fetch import FetchResult
 from .archive.gaia import GaiaCatalog, GaiaError, stars_at
 from .archive.http import Http, make_http
+from .archive.plan import fetch_exposures
 from .archive.resolve import ResolveError, Resolver
 from .archive.sia import SiaCache
 from .config import configure_ssl, settings
-from .domain import DETECTORS, SequenceParams, Target
-from .jobs import JobRunner, SequenceRequest, fetch_for_request
+from .domain import DETECTORS, ProgressCallback, SequenceParams, Target
+from .jobs import JobRunner, SequenceRequest
 from .models import CacheStats, Health, JobAccepted, JobStatus, Overlays, ResolveResult, Sequence, Spectrum
 from .pipeline.bundle import MANIFEST
 from .storage import BundleStore
@@ -38,7 +39,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if settings.warm_collections:
         discovery.start(http)
     pool = ProcessPoolExecutor(max_workers=settings.pipeline_workers)
-    fetch = partial(fetch_for_request, http, discovery, sia_cache=SiaCache())
+    sia_cache = SiaCache()
+
+    async def fetch(request: SequenceRequest, progress: ProgressCallback) -> FetchResult:
+        return await fetch_exposures(
+            http,
+            discovery,
+            request.target,
+            request.params,
+            progress,
+            cap_per_detector=settings.live_cap_per_detector,
+            sia_cache=sia_cache,
+        )
+
     store = BundleStore(settings.processed_dir, url_prefix="/files", ttl_s=settings.processed_ttl_h * 3600)
     runner = JobRunner(fetch, store, executor=pool)
     gaia = GaiaCatalog()

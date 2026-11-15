@@ -18,17 +18,15 @@ from test_pipeline import MOVER, two_visits
 from app.archive.collections import CollectionDiscovery
 from app.archive.fetch import FetchResult
 from app.archive.http import ArchiveError, make_http
+from app.archive.plan import NO_COVERAGE, NoCoverageError, collections_for_job, plan_exposures
 from app.archive.sia import parse_sia_csv
 from app.archive.visits import group_visits
 from app.domain import Cutout, ExposureMeta, ProgressCallback, SequenceParams, SequenceResult, Target
 from app.jobs import (
     ARCHIVE_DOWN,
     Job,
-    JobError,
     JobRunner,
     SequenceRequest,
-    collections_for_job,
-    plan_exposures,
     target_key,
 )
 from app.models import Spectrum, SpectrumPoint
@@ -136,11 +134,11 @@ async def test_same_request_reuses_the_job(tmp_path: Path) -> None:
 
 async def test_failed_job_is_retried_as_a_new_job(tmp_path: Path) -> None:
     async def no_coverage(request: SequenceRequest, progress: ProgressCallback) -> FetchResult:
-        raise JobError("No SPHEREx coverage at this position for the selected detectors.")
+        raise NoCoverageError
 
     runner = JobRunner(no_coverage, store_at(tmp_path))
     first = await finished(runner, runner.submit(REQUEST))
-    assert first.error == "No SPHEREx coverage at this position for the selected detectors."
+    assert first.error == NO_COVERAGE
     assert runner.submit(REQUEST).id != first.id
 
 

@@ -14,20 +14,15 @@ from collections.abc import Awaitable, Callable, Sequence
 from concurrent.futures import Executor
 from dataclasses import dataclass, field
 from functools import partial
-from statistics import fmean
 from typing import Final
 
 import anyio
 
-from .archive.collections import CollectionDiscovery
-from .archive.cutouts import cutout_size_deg
-from .archive.fetch import FetchResult, fetch_cutouts, query_exposures
-from .archive.http import ArchiveError, Http
-from .archive.sia import SiaCache
-from .archive.visits import cap_per_detector, group_visits
-from .astrometry import position_at
+from .archive.fetch import FetchResult
+from .archive.http import ArchiveError
+from .archive.plan import NoCoverageError
 from .config import settings
-from .domain import Cutout, ExposureMeta, ProgressCallback, SequenceParams, SequenceResult, Target, Visit
+from .domain import Cutout, ProgressCallback, SequenceParams, SequenceResult, Target
 from .models import JobProgress, JobState, JobStatus, Spectrum
 from .models import Sequence as SequenceModel
 from .pipeline.photometry import measure_spectrum
@@ -37,7 +32,6 @@ from .storage import SPECTRUM, BundleStore
 logger = logging.getLogger(__name__)
 
 JOB_RETENTION_S: Final = 3600.0
-DISCOVERY_WAIT_S: Final = 30.0
 ARCHIVE_DOWN: Final = (
     "The IRSA archive is unreachable or overloaded right now. Try again in a few minutes or open a preset target."
 )
@@ -92,48 +86,6 @@ class SequenceRequest:
 
 def _pm(value: float | None) -> str:
     return "-" if value is None else f"{value:.2f}"
-
-
-def plan_exposures(
-    exposures: Sequence[ExposureMeta], detectors: Sequence[int], cap: int
-) -> list[tuple[Visit, ExposureMeta]]:
-    """Visits are grouped over all detectors, so a detector selection never changes how visits are split."""
-    wanted = set(detectors)
-    return [
-        (visit, meta)
-        for visit in group_visits(exposures)
-        for meta in cap_per_detector(visit, cap)
-        if meta.detector in wanted
-    ]
-
-
-async def collections_for_job(
-    http: Http, discovery: CollectionDiscovery, wait_s: float = DISCOVERY_WAIT_S
-) -> tuple[str, ...]:
-    """A hung TAP (seen 2026-11-14: > 60 s per attempt, 5 attempts) must not hold the job: use the last known list."""
-    return await discovery.collections(http, wait_s=wait_s)
-
-
-async def fetch_for_request(
-    http: Http,
-    discovery: CollectionDiscovery,
-    request: SequenceRequest,
-    progress: ProgressCallback,
-    sia_cache: SiaCache | None = None,
-) -> FetchResult:
-    collections = await collections_for_job(http, discovery)
-    exposures = await query_exposures(http, request.target, collections, cache=sia_cache)
-    plan = plan_exposures(exposures, request.params.detectors, settings.live_cap_per_detector)
-    if not plan:
-        raise JobError("No SPHEREx coverage at this position for the selected detectors.")
-    first = min(meta.mjd_mid for _, meta in plan)
-    last = max(meta.mjd_mid for _, meta in plan)
-    center = await anyio.to_thread.run_sync(position_at, request.target, fmean((first, last)))
-    size_deg = cutout_size_deg(request.params.fov_arcmin, request.target, last - first)
-    progress("downloading", 0, len(plan))
-    return await fetch_cutouts(
-        http, plan, center, size_deg, progress=lambda _stage, done, total: progress("downloading", done, total)
-    )
 
 
 def build_and_measure(
@@ -239,7 +191,7 @@ class JobRunner:
                 job.report("searching", 0, 0)
                 job.result = await self._build_bundle(job, request)
             job.state = "done"
-        except JobError as exc:
+        except (JobError, NoCoverageError) as exc:
             self._fail(job, str(exc))
         except ArchiveError as exc:
             logger.warning("Job %s: archive failed: %s", job.id, exc)
