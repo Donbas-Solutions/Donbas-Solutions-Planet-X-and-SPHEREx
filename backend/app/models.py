@@ -141,12 +141,12 @@ class Spectrum(BaseModel):
 
 
 class GaiaStar(BaseModel):
-    source_id: int
-    ra: float
-    dec: float
-    g: float | None
-    pmra: float | None
-    pmdec: float | None
+    source_id: str = Field(description="Gaia DR3 source_id; a string because it exceeds 2^53 (JSON numbers in JS)")
+    ra: float = Field(description="ICRS degrees at the requested mjd")
+    dec: float = Field(description="ICRS degrees at the requested mjd")
+    g: float | None = Field(description="G magnitude")
+    pmra: float | None = Field(description="mas/yr, includes cos(dec); null for two-parameter solutions")
+    pmdec: float | None = Field(description="mas/yr")
 
 
 class Asteroid(BaseModel):
@@ -159,4 +159,4 @@ class Asteroid(BaseModel):
 class Overlays(BaseModel):
     gaia: list[GaiaStar]
     asteroids: list[Asteroid]
-    unavailable: list[str] = Field([], description="Overlay sources that failed (e.g. 'skybot')")
+    unavailable: list[str] = Field([], description="Overlay sources without data: 'gaia', 'skybot'")

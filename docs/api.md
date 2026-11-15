@@ -42,11 +42,37 @@ bit — saturation shows up as `OVERFLOW` / `NONLINEAR`.
 | `GET /api/jobs/{job_id}` | `JobStatus` | poll every 1–2 s; `result` present when `done` |
 | `GET /api/spectrum?ra=&dec=&pmra=&pmdec=&ref_epoch=` | `Spectrum` | P1; the target of a sequence: measured by its sequence job, `404` until one has finished (or after the 24 h cache TTL); offline fallback: `meta.spectrum` of the bundle |
 | `GET /api/lightcurve?…same…` | `Spectrum` | P1; the same points as `/api/spectrum`; client groups by detector / λ bin |
-| `GET /api/overlays?ra=&dec=&fov=&mjd=` | `Overlays` | P1; failed sources listed in `unavailable` |
+| `GET /api/overlays?ra=&dec=&fov=&mjd=` | `Overlays` | P1; Gaia DR3 stars of the field at their positions on `mjd`; sources without data are listed in `unavailable` (see Overlays) |
 | `GET /files/...` | binary | processed frames |
 
 Diff frames are computed client-side from two `visit_stack` frames; the API does not need to send them.
 Errors: FastAPI default `{"detail": "..."}`; `501` = not implemented yet.
+
+## Overlays (FR-18)
+
+`ra`, `dec`, `fov` are the grid centre and field of a sequence (`grid.ra`, `grid.dec`, `grid.fov_arcmin`); `mjd`
+(40000–90000) is the epoch the positions are wanted for, usually a frame's `mjd_mid`.
+
+```jsonc
+{
+  "gaia": [{"source_id": "4472832130942575872", "ra": 269.446237, "dec": 4.768603, "g": 8.19,
+            "pmra": -801.55, "pmdec": 10362.39}],
+  "asteroids": [],
+  "unavailable": ["skybot"]
+}
+```
+
+- `gaia`: Gaia DR3 stars with G ≤ 19 inside the square field at `mjd`, brightest first, at most the 500 brightest
+  of the query circle. `ra`/`dec` are propagated from Gaia's epoch 2016.0 to `mjd` with the catalog proper motion
+  (ICRS, parallax ignored, SR-3). `pmra`/`pmdec` are `null` for stars without a measured proper motion; those stay
+  at their 2016.0 position. With `pmra`/`pmdec` a client can step linearly to nearby epochs instead of asking
+  again (< 0.001″ off within a year).
+- `source_id` is a **string**: Gaia ids exceed 2^53 and would be rounded by JavaScript's JSON parser.
+- `unavailable` lists the sources that have no data in this answer: `gaia` when no Gaia server answered (the
+  response is still `200`, with `gaia: []`), `skybot` always for now (asteroids, FR-25, are not implemented), so
+  an empty list is never read as "nothing there".
+- Gaia servers, in order: MAST, GAVO, ESA (15 s each; the one that answered last is tried first). The stars of a
+  field are cached, so the frames of one sequence cost one catalog query.
 
 ## Models (abridged; see `backend/app/models.py`)
 

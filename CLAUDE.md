@@ -65,6 +65,8 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - **WISE 0855 is blended with a field star:** at its propagated position a 3-px aperture gets 957 µJy at λ < 1.6 µm
   (S/N 83), where WISE 0855 itself (J ≈ 25) is invisible. In D5–D6 the source moves toward PA 276–277° (expected 275°),
   shortened by the blend; the 412 ± 26 µJy at λ ≥ 3.8 µm is an upper bound, not WISE 0855's flux.
+- **The blending star is Gaia DR3 5756956644387831296** (G 16.31, proper motion 6 mas/yr): 11.8″ from WISE 0855's
+  expected position in the 2025-05 visit and 4.6″ in 2026-04/05, inside the 3-px (18.6″) aperture both times.
 - **Saturation confirmed at full depth:** Barnard in every band; RW Aur in D2–D6 (161 of 178 points); R Dra in all
   128 points. ε Indi B is not saturated (2 of 357 points).
 - **ε Indi B's QR3 visit (2026-09/10) has no D1 and D4 exposures** — those frame sets have a shorter baseline.
@@ -101,6 +103,11 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - **WISE 0855 challenge coordinates are epoch ≈2010.5**, 85″ from the SIMBAD J2000 position. Use `science/targets.json`
   (SIMBAD J2000 + PM) for propagation, never the challenge coordinates as J2000.
 - SIMBAD Strasbourg was down on 2026-11-14 (404); the mirror `simbad.harvard.edu` worked → always have a fallback.
+- **Gaia DR3 TAP** (2026-11-15): ESA (`gea.esac.esa.int`), its Heidelberg mirror and VizieR did not answer; MAST
+  (`mast.stsci.edu/vo-tap/api/v0.1/gaiadr3/sync`, table `dbo.gaia_source`) and GAVO (`dc.g-vo.org/tap/sync`,
+  `gaia.dr3lite`) did: 1.3 s and 0.6 s for a 10′ field; GAVO timed out on a 30′ field at the Galactic centre.
+  `source_id` exceeds 2^53: send it as a string. Barnard (4472832130942575872) and ε Indi B
+  (6412596012146801152, G 18.0) propagated from 2016.0 land within 0.01 px of the frames' `expected_px`.
 - **HiPS for Aladin** (CDS): `CDS/P/SPHEREx/QR2/D1`…`D6`, `CDS/P/SPHEREx/QR2/color` (order 7, png).
 - Pixel 6.2″; 6 detectors = 6 bands (D1 0.75–1.11 µm … D6 4.42–5.00 µm); λ varies across each frame (LVF).
 - macOS python.org Python fails HTTPS to IRSA with `CERTIFICATE_VERIFY_FAILED` → run `Install Certificates.command` or use `certifi`.

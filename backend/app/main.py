@@ -8,11 +8,13 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from typing import Annotated, Literal
 
+import anyio
 from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .archive.collections import CollectionDiscovery
+from .archive.gaia import GaiaCatalog, GaiaError, stars_at
 from .archive.http import Http, make_http
 from .archive.resolve import ResolveError, Resolver
 from .config import configure_ssl, settings
@@ -35,14 +37,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         discovery.start(http)
     pool = ProcessPoolExecutor(max_workers=settings.pipeline_workers)
     runner = JobRunner(partial(fetch_for_request, http, discovery), settings.processed_dir, executor=pool)
+    gaia = GaiaCatalog()
     app.state.http = http
     app.state.resolver = Resolver()
     app.state.discovery = discovery
     app.state.runner = runner
+    app.state.gaia = gaia
     try:
         yield
     finally:
         await discovery.aclose()
+        await gaia.aclose()
         await runner.aclose()
         await http.client.aclose()
         pool.shutdown(wait=False, cancel_futures=True)
@@ -78,10 +83,16 @@ def get_resolver(request: Request) -> Resolver:
     return resolver
 
 
+def get_gaia(request: Request) -> GaiaCatalog:
+    gaia: GaiaCatalog = request.app.state.gaia
+    return gaia
+
+
 Runner = Annotated[JobRunner, Depends(get_runner)]
 SharedHttp = Annotated[Http, Depends(get_http)]
 NameResolver = Annotated[Resolver, Depends(get_resolver)]
 Discovery = Annotated[CollectionDiscovery, Depends(get_discovery)]
+Gaia = Annotated[GaiaCatalog, Depends(get_gaia)]
 
 
 def _cache_stats() -> CacheStats:
@@ -95,15 +106,12 @@ def health(discovery: Discovery) -> Health:
     return Health(status="ok", collections=list(discovery.current), cache=_cache_stats())
 
 
-def _not_yet(track: str) -> HTTPException:
-    return HTTPException(status_code=501, detail=f"Not implemented yet ({track})")
-
-
 Ra = Annotated[float, Query(ge=0, lt=360, description="ICRS degrees")]
 Dec = Annotated[float, Query(ge=-90, le=90, description="ICRS degrees")]
 Pm = Annotated[float | None, Query(description="mas/yr; pmra includes cos(dec)")]
 RefEpoch = Annotated[float, Query(description="Julian year of ra/dec")]
 Fov = Annotated[float, Query(ge=2, le=30, description="arcmin")]
+Mjd = Annotated[float, Query(ge=40000, le=90000, description="MJD (UTC) of the frame")]
 JobId = Annotated[str, Path(pattern=r"^[0-9a-f]{32}$")]
 
 
@@ -188,5 +196,12 @@ async def lightcurve(
 
 
 @app.get("/api/overlays", response_model=Overlays)
-def overlays(ra: Ra, dec: Dec, fov: Fov, mjd: float) -> Overlays:
-    raise _not_yet("Track A, P1")
+async def overlays(http: SharedHttp, gaia: Gaia, ra: Ra, dec: Dec, fov: Fov, mjd: Mjd) -> Overlays:
+    """Gaia DR3 stars of the field at their positions on `mjd` (FR-18). Asteroids (FR-25) are not implemented:
+    `skybot` is always listed as unavailable, so an empty list is not read as "no asteroids here"."""
+    try:
+        sources = await gaia.sources(http, ra, dec, fov)
+    except GaiaError:
+        return Overlays(gaia=[], asteroids=[], unavailable=["gaia", "skybot"])
+    stars = await anyio.to_thread.run_sync(stars_at, sources, ra, dec, fov, mjd)
+    return Overlays(gaia=stars, asteroids=[], unavailable=["skybot"])

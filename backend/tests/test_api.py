@@ -7,9 +7,11 @@ from typing import Any
 import httpx
 import pytest
 from fastapi.testclient import TestClient
+from test_gaia import BARNARD_FIELD_CSV, BARNARD_ID, CENTER_DEC, CENTER_RA, LAST_VISIT_MJD
 from test_jobs import fetch_synthetic
 from test_resolve import BARNARD_CSV, HEADER
 
+from app.archive.gaia import GaiaCatalog
 from app.archive.http import make_http
 from app.archive.resolve import Resolver
 from app.config import settings
@@ -50,11 +52,6 @@ def test_health_ok(client: TestClient) -> None:
     assert body["status"] == "ok"
     assert "spherex_dr1" in body["collections"]
     assert body["cache"]["raw_mb"] >= 0
-
-
-def test_unimplemented_endpoints_say_so(client: TestClient) -> None:
-    r = client.get("/api/overlays", params={"ra": 269.45, "dec": 4.69, "fov": 10, "mjd": 61000})
-    assert r.status_code == 501
 
 
 @pytest.mark.parametrize(
@@ -142,3 +139,46 @@ def test_live_sequence_links_its_spectrum(client: TestClient) -> None:
 @pytest.mark.usefixtures("synthetic_runner")
 def test_spectrum_before_any_sequence_is_404(client: TestClient) -> None:
     assert client.get("/api/spectrum", params={"ra": 12.0, "dec": -30.0}).status_code == 404
+
+
+BARNARD_FIELD = {"ra": CENTER_RA, "dec": CENTER_DEC, "fov": 4, "mjd": LAST_VISIT_MJD}
+
+
+def use_gaia(answer: httpx.Response) -> None:
+    app.state.http = make_http(transport=httpx.MockTransport(lambda request: answer))
+    app.state.gaia = GaiaCatalog()
+
+
+def test_overlays_return_gaia_stars_at_the_frame_epoch(client: TestClient) -> None:
+    use_gaia(httpx.Response(200, text=BARNARD_FIELD_CSV))
+    r = client.get("/api/overlays", params=BARNARD_FIELD)
+    assert r.status_code == 200
+    star = r.json()["gaia"][0]
+    assert star["source_id"] == BARNARD_ID
+    assert (star["dec"], star["pmdec"], star["g"]) == pytest.approx((4.770049, 10362.394, 8.194), abs=1e-3)
+
+
+def test_overlays_say_that_asteroids_are_not_available(client: TestClient) -> None:
+    use_gaia(httpx.Response(200, text=BARNARD_FIELD_CSV))
+    body = client.get("/api/overlays", params=BARNARD_FIELD).json()
+    assert (body["asteroids"], body["unavailable"]) == ([], ["skybot"])
+
+
+def test_overlays_without_gaia_list_it_as_unavailable(client: TestClient) -> None:
+    use_gaia(httpx.Response(404, text="<!doctype html>"))
+    r = client.get("/api/overlays", params=BARNARD_FIELD)
+    assert r.status_code == 200
+    assert (r.json()["gaia"], r.json()["unavailable"]) == ([], ["gaia", "skybot"])
+
+
+@pytest.mark.parametrize(
+    "change",
+    [{"mjd": 0}, {"mjd": "nan"}, {"fov": 1}, {"fov": 31}, {"ra": 360}, {"dec": -91}],
+)
+def test_overlays_reject_out_of_contract_params(client: TestClient, change: dict[str, float | str]) -> None:
+    assert client.get("/api/overlays", params=BARNARD_FIELD | change).status_code == 422
+
+
+def test_overlays_need_the_frame_epoch(client: TestClient) -> None:
+    params = {k: v for k, v in BARNARD_FIELD.items() if k != "mjd"}
+    assert client.get("/api/overlays", params=params).status_code == 422
