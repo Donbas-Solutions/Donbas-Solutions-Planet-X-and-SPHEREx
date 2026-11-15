@@ -1,6 +1,6 @@
 // API contract types. Source of truth: docs/api.md and backend/app/models.py — keep in sync.
 
-export type FrameKind = 'visit_stack' | 'exposure' | 'diff' | 'allwise'
+export type FrameKind = 'visit_stack' | 'exposure' | 'diff'
 export type FlagGroup = 'bad' | 'saturation' | 'artifact' | 'info'
 export type WarningCode = 'saturated' | 'few_exposures' | 'incomplete_lambda'
 

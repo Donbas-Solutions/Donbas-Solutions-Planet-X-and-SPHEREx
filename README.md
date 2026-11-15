@@ -67,6 +67,39 @@ All images are rendered by our pipeline from real SPHEREx data. None of them is 
 | RW Aurigae | T Tauri star, variable | 2.5× brightening at 0.75 µm (16.6σ); saturated in the other bands |
 | R Draconis | Mira variable in the deep field | saturated in every exposure: shown as "saturated", not as numbers |
 
+## Links and embedding
+
+Every view is a URL: open a link and you get the same target, frames, mode and overlays. Parameters of the page:
+
+| Parameter | Values | Default |
+|---|---|---|
+| `target` | test target: `barnard`, `eps_ind_b`, `wise0855`, `rw_aur`, `r_dra` | — |
+| `name` | object name, resolved with SIMBAD | — |
+| `ra`, `dec` | ICRS, decimal degrees or URL-encoded sexagesimal (`17 57 48.5`) | — |
+| `pmra`, `pmdec`, `epoch` | proper motion in mas/yr (`pmra` includes cos δ) and the Julian year of `ra`/`dec`; draws the expected-position marker | from SIMBAD |
+| `fov` | field of view, 2–30 arcmin | `10` |
+| `det` | `all`, or detectors `1`–`6` as a comma list | `all` |
+| `view` | `blink` or `diff` (difference B − A) | `blink` |
+| `a`, `b` | frame ids, `v<visit>-<D1…D6 or all>`, e.g. `v1-all` | first, last |
+| `fps` | 0.5–3 frames per second | `2` |
+| `stretch` | `asinh`, `linear`, `log` | `asinh` |
+| `flags` | overlay layers: `saturation`, `bad`, `artifact` (comma list) | none |
+| `gaia` | `1` draws Gaia DR3 stars at each frame's epoch | off |
+
+`target` wins over `name`, and `name` over `ra`/`dec`. Unknown parameters are ignored; an invalid value falls back to
+the default with a notice on the page. Examples:
+
+- Barnard's Star, difference of the first and last visit: [`/?target=barnard&view=diff`](https://spherex-blink-web.victoriousmeadow-02021db7.polandcentral.azurecontainerapps.io/?target=barnard&view=diff)
+- ε Indi B in detector 3 only, with Gaia stars: [`/?target=eps_ind_b&det=3&gaia=1`](https://spherex-blink-web.victoriousmeadow-02021db7.polandcentral.azurecontainerapps.io/?target=eps_ind_b&det=3&gaia=1)
+
+**Embedding.** `/embed` takes the same parameters and shows only the player, with a link to the full tool and its
+limitations. Paste this into any HTML page:
+
+```html
+<iframe src="https://spherex-blink-web.victoriousmeadow-02021db7.polandcentral.azurecontainerapps.io/embed?target=eps_ind_b&view=diff&a=v1-all&b=v4-all"
+        width="480" height="560" style="border:0" title="SPHEREx Blink: ε Indi B, 2026-09 minus 2025-04"></iframe>
+```
+
 ## How it works
 
 1. The backend finds SPHEREx exposures covering the position (IRSA SIA / TAP) and downloads small cutouts.
@@ -80,7 +113,7 @@ All images are rendered by our pipeline from real SPHEREx data. None of them is 
 
 | Path | Contents |
 |---|---|
-| `backend/` | Python 3.11.5+ / FastAPI API: data discovery, cutouts, stacking |
+| `backend/` | Python 3.13 / FastAPI API: data discovery, cutouts, stacking |
 | `frontend/` | React + TypeScript + Vite viewer, Aladin Lite sky context |
 | `science/` | Test targets and validation scripts |
 | `scripts/` | Mock and prebaked data bundles |
@@ -88,7 +121,8 @@ All images are rendered by our pipeline from real SPHEREx data. None of them is 
 
 ## Quick start
 
-Requirements: [uv](https://docs.astral.sh/uv/) and Node.js with npm.
+Requirements: [uv](https://docs.astral.sh/uv/) and Node.js 24 with npm. uv installs the pinned Python 3.13
+(`backend/.python-version`) by itself.
 
 ```sh
 cd backend && uv sync && uv run uvicorn app.main:app --reload --port 8000
@@ -119,11 +153,23 @@ one-time setup in [`docs/deploy.md`](docs/deploy.md).
 
 ## Limitations
 
+- **Can it find Planet X / Planet Nine? No.** The challenge is named after it, but this tool cannot find it, for
+  two reasons. A Planet Nine–like body a few hundred AU away is 3–5 magnitudes fainter than a single SPHEREx image
+  can see ([`docs/spherex-research.md`](docs/spherex-research.md)). And it would not creep across the field like a
+  nearby star: as the Earth goes round the Sun, its position jumps by about 9′ (at 800 AU) to 23′ (at 300 AU)
+  between SPHEREx visits half a year apart, which is 80–220 pixels, on top of its own motion of 9–40 pixels a year.
+  A blink of one fixed patch of sky cannot link such jumps. The tool is built for what SPHEREx can show today:
+  nearby stars and brown dwarfs that move 1–2 pixels over the year of data, and stars that change brightness. It
+  makes no Planet X claims.
 - SPHEREx pixels are 6.2″, so even the fastest nearby stars move only ~1–2 px over the available ~1 year baseline.
 - Each detector covers a range of wavelengths that varies across the frame; frames are compared per detector,
   and incomplete wavelength coverage is reported.
 - Faint targets near the detection limit are shown with their expected position and an upper limit, without
   claiming a detection.
+- A live search uses at most 8 exposures per detector and visit (`LIVE_CAP_PER_DETECTOR`), so it takes ~2 min
+  instead of ~5. Its frames are noisier and cover only part of each detector's wavelength range, which the frame
+  details report, and its spectrum has about half the points. The five test targets are built from all exposures
+  (up to 20 per detector and visit).
 
 ## Use of AI
 
@@ -143,7 +189,21 @@ one-time setup in [`docs/deploy.md`](docs/deploy.md).
 
 ## Data
 
-SPHEREx data: NASA / IPAC Infrared Science Archive (IRSA). Object names resolved with SIMBAD (CDS).
+**SPHEREx releases.** The backend asks IRSA's TAP service which SPHEREx collections exist and searches the newest
+data release and the newest quick release, each with its wide and deep survey. Today that is **DR1**
+(`spherex_dr1`, `spherex_dr1_deep`) and **QR3** (`spherex_qr3`, `spherex_qr3_deep`). A new release is picked up
+without a code change; processed results are cached for 24 h.
+
+**Reading from S3.** The pixels come from the public AWS bucket **`nasa-irsa-spherex`** (anonymous HTTPS,
+us-east-1), which mirrors the IRSA file paths. A SPHEREx image file is 62 MB, and IRSA's cutout service returns
+~4 MB per cutout whatever its size, because it always includes the full PSF extension. Instead, the backend reads
+only the image rows that cover the field, with HTTP range requests: one range per request, since S3 answers a
+multi-range request with the whole file. The pixels are identical to the cutout service's, and 8 parallel requests
+take ~0.6 s per exposure. The cutout service needs 3–6 s per cutout at 2 parallel requests and answers `503` to many
+requests at 3–4. If S3 fails, the backend falls back to IRSA's file server (up to 100 ranges per request) and then
+to the cutout service.
+
+**Other sources.** SPHEREx data: NASA / IPAC Infrared Science Archive (IRSA). Object names resolved with SIMBAD (CDS).
 Star overlay: Gaia DR3 (ESA / Gaia DPAC), read from the MAST, GAVO or ESA archives.
 Sky context: [Aladin Lite](https://aladin.cds.unistra.fr/AladinLite/) (CDS), with HiPS surveys from the IRSA mirror.
 

@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-FrameKind = Literal["visit_stack", "exposure", "diff", "allwise"]
+FrameKind = Literal["visit_stack", "exposure", "diff"]
 FlagGroup = Literal["bad", "saturation", "artifact", "info"]
 JobState = Literal["queued", "running", "done", "error"]
 WarningCode = Literal["saturated", "few_exposures", "incomplete_lambda"]

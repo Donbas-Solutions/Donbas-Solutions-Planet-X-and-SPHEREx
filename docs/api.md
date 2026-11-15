@@ -38,7 +38,7 @@ bit — saturation shows up as `OVERFLOW` / `NONLINEAR`.
 |---|---|---|
 | `GET /api/health` | `Health` | `{status, collections, cache:{raw_mb, processed_items}}` |
 | `GET /api/resolve?name=` | `ResolveResult` | SIMBAD with mirror fallback (`simbad.harvard.edu`); 404 if unknown |
-| `GET /api/sequence?ra=&dec=&fov=&det=&mode=&pmra=&pmdec=&ref_epoch=&allwise=` | `200 Sequence` or `202 JobAccepted` | `fov` arcmin (2–30, default 10); `det` = `all` or `1..6` (comma list); `mode` = `visit_stack` (default) \| `exposures` |
+| `GET /api/sequence?ra=&dec=&fov=&det=&mode=&pmra=&pmdec=&ref_epoch=` | `200 Sequence` or `202 JobAccepted` | `fov` arcmin (2–30, default 10); `det` = `all` or `1..6` (comma list); `mode` = `visit_stack` (default) \| `exposures`. The AllWISE old-epoch frame (FR-22) is not implemented: the `allwise` parameter and frame kind were removed on 2026-11-15 |
 | `GET /api/jobs/{job_id}` | `JobStatus` | poll every 1–2 s; `result` present when `done` |
 | `GET /api/spectrum?ra=&dec=&pmra=&pmdec=&ref_epoch=` | `Spectrum` | P1; the target of a sequence: measured by its sequence job, `404` until one has finished (or after the 24 h cache TTL); offline fallback: `meta.spectrum` of the bundle |
 | `GET /api/lightcurve?…same…` | `Spectrum` | P1; the same points as `/api/spectrum`; client groups by detector / λ bin |
