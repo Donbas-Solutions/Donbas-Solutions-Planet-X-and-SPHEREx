@@ -80,7 +80,7 @@ All images are rendered by our pipeline from real SPHEREx data. None of them is 
 
 | Path | Contents |
 |---|---|
-| `backend/` | Python 3.11.5+ / FastAPI API: data discovery, cutouts, stacking |
+| `backend/` | Python 3.13 / FastAPI API: data discovery, cutouts, stacking |
 | `frontend/` | React + TypeScript + Vite viewer, Aladin Lite sky context |
 | `science/` | Test targets and validation scripts |
 | `scripts/` | Mock and prebaked data bundles |
@@ -88,7 +88,8 @@ All images are rendered by our pipeline from real SPHEREx data. None of them is 
 
 ## Quick start
 
-Requirements: [uv](https://docs.astral.sh/uv/) and Node.js with npm.
+Requirements: [uv](https://docs.astral.sh/uv/) and Node.js 24 with npm. uv installs the pinned Python 3.13
+(`backend/.python-version`) by itself.
 
 ```sh
 cd backend && uv sync && uv run uvicorn app.main:app --reload --port 8000
@@ -124,6 +125,10 @@ one-time setup in [`docs/deploy.md`](docs/deploy.md).
   and incomplete wavelength coverage is reported.
 - Faint targets near the detection limit are shown with their expected position and an upper limit, without
   claiming a detection.
+- A live search uses at most 8 exposures per detector and visit (`LIVE_CAP_PER_DETECTOR`), so it takes ~2 min
+  instead of ~5. Its frames are noisier and cover only part of each detector's wavelength range, which the frame
+  details report, and its spectrum has about half the points. The five test targets are built from all exposures
+  (up to 20 per detector and visit).
 
 ## Use of AI
 
