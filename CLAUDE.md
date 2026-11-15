@@ -109,6 +109,13 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   `source_id` exceeds 2^53: send it as a string. Barnard (4472832130942575872) and ε Indi B
   (6412596012146801152, G 18.0) propagated from 2016.0 land within 0.01 px of the frames' `expected_px`.
 - **HiPS for Aladin** (CDS): `CDS/P/SPHEREx/QR2/D1`…`D6`, `CDS/P/SPHEREx/QR2/color` (order 7, png).
+  CDS's HiPS servers (`alasky`, `alaskybis`) were down on 2026-11-14/15. The IRSA mirror answered throughout:
+  `irsa.ipac.caltech.edu/data/hips/CDS/2MASS/Color`, `…/CDS/AllWISE/RGB-W4-W2-W1`, `…/CDS/DSS2/color` (list:
+  `irsa.ipac.caltech.edu/data/hips/list`); it has no SPHEREx colour mosaic, only the DR1 cube.
+- **IRSA SIA and TAP flapping** (2026-11-15, 08:40–09:20 UTC): `502 Proxy Error` within 0.6 s for most requests,
+  now and then a `200` after ~21 s; sequential and parallel requests failed alike. The file servers (`ibe`, S3)
+  were unaffected. The backend therefore keeps the SIA answer of each collection for an hour
+  (`archive.sia.SiaCache`): a retried search converged on the third attempt while direct probes still failed.
 - Pixel 6.2″; 6 detectors = 6 bands (D1 0.75–1.11 µm … D6 4.42–5.00 µm); λ varies across each frame (LVF).
 - macOS python.org Python fails HTTPS to IRSA with `CERTIFICATE_VERIFY_FAILED` → run `Install Certificates.command` or use `certifi`.
 
