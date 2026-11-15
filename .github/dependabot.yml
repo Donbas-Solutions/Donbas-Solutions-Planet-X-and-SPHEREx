@@ -7,8 +7,15 @@ updates:
       actions: { patterns: ["*"] }
 
   - package-ecosystem: docker
-    directories: [/backend, /frontend]
+    directories: [/backend, /frontend, /infra]
     schedule: { interval: weekly }
+    ignore:
+      # Python is pinned by backend/.python-version and uv.lock (UV_PYTHON_DOWNLOADS=never): a newer base image has
+      # no Python 3.13 and `uv sync` fails. Node majors follow the CI's node-version.
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
     groups:
       base-images: { patterns: ["*"] }
 
