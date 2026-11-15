@@ -17,6 +17,7 @@ from app.archive.resolve import Resolver
 from app.config import settings
 from app.jobs import JobRunner
 from app.main import app
+from app.storage import BundleStore
 
 # Synthetic cutouts sit at the MOVER test target.
 MOVER_QUERY = {"ra": 150.0, "dec": 10.0, "ref_epoch": 2025.0, "pmra": 0.0, "pmdec": 12400.0, "fov": 3.0}
@@ -30,7 +31,8 @@ def client() -> Iterator[TestClient]:
 
 @pytest.fixture
 def synthetic_runner(client: TestClient) -> JobRunner:
-    runner = JobRunner(fetch_synthetic, settings.processed_dir)
+    store = BundleStore(settings.processed_dir, url_prefix="/files", ttl_s=3600.0)
+    runner = JobRunner(fetch_synthetic, store)
     app.state.runner = runner
     return runner
 

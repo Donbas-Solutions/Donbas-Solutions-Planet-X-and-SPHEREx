@@ -23,6 +23,7 @@ from .domain import DETECTORS, SequenceParams, Target
 from .jobs import JobRunner, SequenceRequest, fetch_for_request
 from .models import CacheStats, Health, JobAccepted, JobStatus, Overlays, ResolveResult, Sequence, Spectrum
 from .pipeline.bundle import MANIFEST
+from .storage import BundleStore
 
 configure_ssl()
 
@@ -38,7 +39,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         discovery.start(http)
     pool = ProcessPoolExecutor(max_workers=settings.pipeline_workers)
     fetch = partial(fetch_for_request, http, discovery, sia_cache=SiaCache())
-    runner = JobRunner(fetch, settings.processed_dir, executor=pool)
+    store = BundleStore(settings.processed_dir, url_prefix="/files", ttl_s=settings.processed_ttl_h * 3600)
+    runner = JobRunner(fetch, store, executor=pool)
     gaia = GaiaCatalog()
     app.state.http = http
     app.state.resolver = Resolver()

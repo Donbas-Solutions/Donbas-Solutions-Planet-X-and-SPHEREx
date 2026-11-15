@@ -1,7 +1,6 @@
 """Background jobs behind `/api/sequence` (FR-13): one job per request key, bundles cached in `processed/<key>/`.
 
-Each job also measures the target's spectrum (FR-16, FR-17) on the same cutouts: `spectrum.json` in the bundle,
-and a copy per target in `processed/spectra/`, which `/api/spectrum` and `/api/lightcurve` serve.
+Each job also measures the target's spectrum (FR-16, FR-17) on the same cutouts; `storage.BundleStore` keeps both.
 """
 
 from __future__ import annotations
@@ -9,14 +8,12 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
-import threading
 import time
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from concurrent.futures import Executor
 from dataclasses import dataclass, field
 from functools import partial
-from pathlib import Path
 from statistics import fmean
 from typing import Final
 
@@ -33,18 +30,14 @@ from .config import settings
 from .domain import Cutout, ExposureMeta, ProgressCallback, SequenceParams, SequenceResult, Target, Visit
 from .models import JobProgress, JobState, JobStatus, Spectrum
 from .models import Sequence as SequenceModel
-from .pipeline.bundle import MANIFEST, write_bundle
 from .pipeline.photometry import measure_spectrum
 from .pipeline.sequence import SequenceError, build_sequence
+from .storage import SPECTRUM, BundleStore
 
 logger = logging.getLogger(__name__)
 
 JOB_RETENTION_S: Final = 3600.0
 DISCOVERY_WAIT_S: Final = 30.0
-FILES_PREFIX: Final = "/files"
-SPECTRUM: Final = "spectrum.json"
-SPECTRA_DIR: Final = "spectra"
-_SPECTRA_LOCK: Final = threading.Lock()
 ARCHIVE_DOWN: Final = (
     "The IRSA archive is unreachable or overloaded right now. Try again in a few minutes or open a preset target."
 )
@@ -161,54 +154,6 @@ def with_spectrum_link(result: SequenceResult) -> SequenceResult:
     return SequenceResult(sequence=result.sequence.model_copy(update={"meta": meta}), arrays=result.arrays)
 
 
-def with_file_urls(sequence: SequenceModel, key: str) -> SequenceModel:
-    """Bundle URLs are relative to the manifest; the API serves them under `/files/<key>/` (docs/api.md)."""
-    prefix = f"{FILES_PREFIX}/{key}"
-    frames = [
-        frame.model_copy(update={"data": f"{prefix}/{frame.data}", "flags": f"{prefix}/{frame.flags}"})
-        for frame in sequence.frames
-    ]
-    meta = sequence.meta
-    if meta.spectrum is not None:
-        meta = meta.model_copy(update={"spectrum": f"{prefix}/{meta.spectrum}"})
-    return sequence.model_copy(update={"frames": frames, "meta": meta})
-
-
-def _write_atomic(path: Path, text: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_name(f"{path.name}.{uuid.uuid4().hex}.part")
-    try:
-        temp.write_text(text, encoding="utf-8")
-        temp.replace(path)
-    finally:
-        temp.unlink(missing_ok=True)
-
-
-def store_spectrum(
-    processed_dir: Path, bundle_key: str, target_id: str, spectrum: Spectrum, *, stale_before: float
-) -> None:
-    """The bundle's copy always; the per-target copy unless a fresh earlier job measured more exposures (all
-    detectors, where this job had a selection). A per-target copy last written before `stale_before` (Unix time)
-    has outlived the TTL and is replaced whatever its size."""
-    text = spectrum.model_dump_json(indent=1) + "\n"
-    _write_atomic(processed_dir / bundle_key / SPECTRUM, text)
-    per_target = processed_dir / SPECTRA_DIR / f"{target_id}.json"
-    # Jobs of one target with different FOV or detectors finish in parallel worker threads.
-    with _SPECTRA_LOCK:
-        existing = _fresh_spectrum(per_target, stale_before)
-        if existing is None or len(spectrum.points) >= len(existing.points):
-            _write_atomic(per_target, text)
-
-
-def _fresh_spectrum(path: Path, stale_before: float) -> Spectrum | None:
-    try:
-        if path.stat().st_mtime < stale_before:
-            return None
-        return Spectrum.model_validate_json(path.read_text(encoding="utf-8"))
-    except (FileNotFoundError, ValueError):
-        return None
-
-
 @dataclass
 class Job:
     id: str
@@ -232,21 +177,19 @@ class JobRunner:
     def __init__(
         self,
         fetch: FetchFn,
-        processed_dir: Path,
+        store: BundleStore,
         executor: Executor | None = None,
         build: BuildFn = build_sequence,
         measure: MeasureFn = measure_spectrum,
         max_running: int = settings.max_running_jobs,
-        ttl_s: float = settings.processed_ttl_h * 3600,
         clock: Callable[[], float] = time.time,
     ) -> None:
         self._fetch = fetch
-        self._processed_dir = processed_dir
+        self._store = store
         self._executor = executor
         self._build = build
         self._measure = measure
         self._running = asyncio.Semaphore(max_running)
-        self._ttl_s = ttl_s
         self._clock = clock
         self._jobs: dict[str, Job] = {}
         self._job_by_key: dict[str, str] = {}
@@ -257,19 +200,11 @@ class JobRunner:
 
     async def cached(self, request: SequenceRequest) -> SequenceModel | None:
         """The finished bundle of this request, unless it is older than the TTL (new data releases arrive weekly)."""
-        return await self._load(request.key, fresh_only=True)
+        return await self._store.load(request.key, fresh_only=True)
 
     async def spectrum(self, target: Target) -> Spectrum | None:
         """The target's spectrum from its latest sequence job, unless older than the TTL."""
-        path = anyio.Path(self._processed_dir / SPECTRA_DIR / f"{target_key(target)}.json")
-        try:
-            stat = await path.stat()
-            if self._clock() - stat.st_mtime > self._ttl_s:
-                return None
-            text = await path.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            return None
-        return Spectrum.model_validate_json(text)
+        return await self._store.spectrum(target_key(target))
 
     def submit(self, request: SequenceRequest) -> Job:
         """The queued, running or finished job of this request; a failed one is retried as a new job."""
@@ -337,33 +272,15 @@ class JobRunner:
             request.params,
         )
         if spectrum is not None:
-            store = partial(
-                store_spectrum,
-                self._processed_dir,
-                job.key,
-                target_key(request.target),
-                spectrum,
-                stale_before=self._clock() - self._ttl_s,
-            )
+            store = partial(self._store.store_spectrum, job.key, target_key(request.target), spectrum)
             await anyio.to_thread.run_sync(store)
             result = with_spectrum_link(result)
-        await anyio.to_thread.run_sync(write_bundle, result, self._processed_dir / job.key)
+        await anyio.to_thread.run_sync(self._store.write_bundle, result, job.key)
         job.report("stacking", len(fetched.cutouts), len(fetched.cutouts))
-        sequence = await self._load(job.key, fresh_only=False)
+        sequence = await self._store.load(job.key, fresh_only=False)
         if sequence is None:
             raise JobError("The finished sequence could not be read back.")
         return sequence
-
-    async def _load(self, key: str, *, fresh_only: bool) -> SequenceModel | None:
-        manifest = anyio.Path(self._processed_dir / key / MANIFEST)
-        try:
-            stat = await manifest.stat()
-            if fresh_only and self._clock() - stat.st_mtime > self._ttl_s:
-                return None
-            text = await manifest.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            return None
-        return with_file_urls(SequenceModel.model_validate_json(text), key)
 
     def _fail(self, job: Job, message: str) -> None:
         job.state = "error"
