@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import csv
 import logging
 import math
 import sys
@@ -67,6 +68,23 @@ MOTION_TARGETS = {
 # 2MASS bands and Vega zero points (Cohen et al. 2003); the windows select SPHEREx points inside each band.
 TWO_MASS = (Band("J", 1.15, 1.32, 1594.0), Band("H", 1.55, 1.77, 1024.0), Band("Ks", 2.03, 2.30, 666.7))
 EPS_IND_B_2MASS_MAG = {"J": 11.91, "H": 11.31, "Ks": 11.21}
+# FR-16 acceptance star: unsaturated (G 13.9), slow (5 mas/yr), 2.5′ east of ε Indi B, no Gaia star within 40″
+# brighter than G + 4. Its IRSA Spectrophotometry Tool table (Tractor forced PSF photometry, point source, DR1+QR3
+# wide, run on 2026-11-15) is kept in science/reference/.
+FR16_STAR = Target(
+    ra_deg=331.1718829420257,
+    dec_deg=-56.79333744618183,
+    ref_epoch=2016.0,
+    pmra_masyr=-0.21665867,
+    pmdec_masyr=5.330207,
+    name="Gaia DR3 6412593435166417536",
+)
+IRSA_REFERENCE = ROOT / "science" / "reference" / "irsa_spectrophotometry_gaia6412593435166417536.csv"
+FR16_RATIO_RANGE = (0.8, 1.25)
+# The tool's FLAGS bits that make a point unusable (its help page): 7 DICHROIC, 33 FIT_ERROR.
+IRSA_UNUSABLE_FLAGS = (1 << 7) | (1 << 33)
+# Both tables give each exposure's MJD-AVG; consecutive exposures are ~1.5 min (0.001 d) apart.
+MJD_MATCH_D = 2e-4
 # WISE W2 (4.6 µm) Vega zero point (Jarrett et al. 2011) and WISE 0855's W2 magnitude.
 W2_ZERO_POINT_JY, WISE0855_W2_MAG = 171.787, 14.0
 MWIR_MIN_UM = 3.82
@@ -223,9 +241,90 @@ def spectrum_section(data: Data) -> list[str]:
             lines.append(f"| {band.name} | {reference:.1f} | — | 0 | — |")
     lines += [
         "",
-        "Acceptance (FR-16) asks for a ratio within 0.8–1.25 against IRSA's Spectrophotometry Tool; 2MASS (epoch 1999) "
-        "is an independent sanity check, not that test. The SPHEREx points sample narrow LVF channels while 2MASS "
-        "integrates the whole band, so deep T-dwarf absorption inside a band lowers the SPHEREx median.",
+        "2MASS (epoch 1999) is an independent sanity check; the acceptance test against IRSA's Spectrophotometry Tool "
+        "follows. The SPHEREx points sample narrow LVF channels while 2MASS integrates the whole band, so deep T-dwarf "
+        "absorption inside a band lowers the SPHEREx median.",
+        "",
+    ]
+    return lines
+
+
+@dataclass(frozen=True)
+class IrsaPoint:
+    mjd: float
+    detector: int
+    flags: int
+    lambda_um: float
+    flux_ujy: float
+
+
+def irsa_reference() -> list[IrsaPoint]:
+    with IRSA_REFERENCE.open(encoding="utf-8", newline="") as table:
+        return [
+            IrsaPoint(
+                mjd=float(row["mjd"]),
+                detector=int(row["det_id"]),
+                flags=int(row["flags"]),
+                lambda_um=float(row["lambda_um"]),
+                flux_ujy=float(row["flux_ujy"]),
+            )
+            for row in csv.DictReader(table)
+        ]
+
+
+@dataclass(frozen=True)
+class FluxPair:
+    detector: int
+    ours_ujy: float
+    irsa_ujy: float
+
+
+def matched_irsa(points: Sequence[SpectrumPoint], reference: Sequence[IrsaPoint]) -> list[FluxPair]:
+    """Our usable points with the tool's flux of the same exposure (detector and MJD), unusable tool rows dropped."""
+    pairs = []
+    for point in points:
+        if point.flux_ujy is None:
+            continue
+        same = [r for r in reference if r.detector == point.detector and abs(r.mjd - point.mjd) < MJD_MATCH_D]
+        if len(same) == 1 and not same[0].flags & IRSA_UNUSABLE_FLAGS and same[0].flux_ujy > 0:
+            pairs.append(FluxPair(point.detector, point.flux_ujy, same[0].flux_ujy))
+    return pairs
+
+
+def irsa_section(data: Data) -> list[str]:
+    points = measure_spectrum(data.sample.cutouts, FR16_STAR).points
+    usable = [p for p in points if p.flux_ujy is not None]
+    pairs = matched_irsa(points, irsa_reference())
+    ratios = np.array([p.ours_ujy / p.irsa_ujy for p in pairs])
+    median = float(np.median(ratios))
+    low, high = FR16_RATIO_RANGE
+    verdict = "✓" if low <= median <= high else "✗"
+    lines = [
+        f"## FR-16 — {FR16_STAR.name} vs IRSA's Spectrophotometry Tool",
+        "",
+        f"Unsaturated field star (G 13.9) 2.5′ east of ε Indi B, measured by our forced aperture photometry on the "
+        f"same cutouts: {len(points)} exposures, {len(usable)} usable. Matched to the tool's table "
+        f"(`{IRSA_REFERENCE.relative_to(ROOT).as_posix()}`) by detector and MJD: {len(pairs)} pairs.",
+        "",
+        f"**Median ratio ours / IRSA = {median:.3f}** (16–84 %: {np.percentile(ratios, 16):.3f}–"
+        f"{np.percentile(ratios, 84):.3f}); acceptance {low}–{high}: {verdict}",
+        "",
+        "| Detector | Pairs | Ours, median (µJy) | IRSA, median (µJy) | Median ratio |",
+        "|---|---|---|---|---|",
+    ]
+    for detector in range(1, 7):
+        selected = [p for p in pairs if p.detector == detector]
+        if not selected:
+            continue
+        ours = np.median([p.ours_ujy for p in selected])
+        theirs = np.median([p.irsa_ujy for p in selected])
+        ratio = np.median([p.ours_ujy / p.irsa_ujy for p in selected])
+        lines.append(f"| D{detector} | {len(selected)} | {ours:.0f} | {theirs:.0f} | {ratio:.3f} |")
+    lines += [
+        "",
+        "The tool fits the PSF (The Tractor) with a simultaneous local background and uses the per-pixel solid angle "
+        "map; we sum a 3-px aperture after subtracting ZODI and an annulus median, with the solid angle from the WCS "
+        "and no aperture correction.",
         "",
     ]
     return lines
@@ -411,7 +510,11 @@ HEADINGS = {
 }
 SECTIONS: dict[str, list[Section]] = {
     "barnard": [lambda d: motion_section("barnard", MOTION_TARGETS["barnard"], d)],
-    "eps_ind_b": [lambda d: motion_section("eps_ind_b", MOTION_TARGETS["eps_ind_b"], d), spectrum_section],
+    "eps_ind_b": [
+        lambda d: motion_section("eps_ind_b", MOTION_TARGETS["eps_ind_b"], d),
+        spectrum_section,
+        irsa_section,
+    ],
     "wise0855": [wise0855_section],
     "rw_aur": [lambda d: light_curve_section("T-4", d, "T Tauri star with irregular dimming.")],
     "r_dra": [lambda d: light_curve_section("T-5", d, "Mira variable in the deep field; 30-day bins.")],
@@ -473,7 +576,7 @@ def main() -> None:
             lines += section(data)
         print(f"validated {target_id}")
     lines.append(CAVEATS)
-    REPORT.write_text("\n".join(lines), encoding="utf-8")
+    REPORT.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print(f"wrote {REPORT.relative_to(ROOT)}")
 
 

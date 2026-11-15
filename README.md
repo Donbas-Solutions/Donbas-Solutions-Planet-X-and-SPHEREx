@@ -136,7 +136,8 @@ one-time setup in [`docs/deploy.md`](docs/deploy.md).
 - **Research**: Claude Code also helped read the SPHEREx documentation and IRSA tutorials, probe the archive
   services, and summarise the background in `docs/spherex-research.md`.
 - **Checking the results**: the science was checked against real data, not taken on trust. Measured proper motions
-  and fluxes were compared with SIMBAD, Gaia DR3 and 2MASS catalogue values (`science/VALIDATION.md`), and each
+  and fluxes were compared with SIMBAD, Gaia DR3 and 2MASS catalogue values, and our spectrum of a field star with
+  IRSA's own Spectrophotometry Tool (median ratio 0.998; `science/VALIDATION.md`), and each
   result was looked at by a person before it went into this README.
 - **The running app uses no AI**: there are no AI calls at run time, and every image is computed from SPHEREx data.
 
