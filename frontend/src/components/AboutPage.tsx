@@ -96,6 +96,10 @@ export default function AboutPage() {
       <p>
         Star positions and proper motions: Gaia DR3 (ESA / Gaia DPAC), read from the MAST, GAVO or ESA archives.
       </p>
+      <p>
+        Context view: Aladin Lite (CDS, Strasbourg) showing 2MASS, AllWISE (NASA / JPL-Caltech, UCLA) and DSS2 images
+        from the IRSA HiPS mirror, or the SPHEREx colour mosaic from CDS.
+      </p>
     </main>
   )
 }

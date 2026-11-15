@@ -8,7 +8,7 @@ function stageLabel(stage: string): string {
 
 /** Every non-ready state of spec §5.2, plus the notices that go with a ready sequence. */
 export default function LoadStatus() {
-  const { load, retry, cancel, frames, source } = useAppState()
+  const { load, retry, cancel, playlist, source } = useAppState()
   switch (load.status) {
     case 'idle':
       return <Landing />
@@ -67,24 +67,27 @@ export default function LoadStatus() {
         </div>
       )
     case 'ready': {
-      const partial = frames.filter((f) => hasPartialData(f.frame)).length
+      // Only the frames being blinked: other detectors' frames are not on screen.
+      const shown = playlist.frames
+      const partial = shown.filter((f) => hasPartialData(f.frame)).length
       if (!load.notice && partial === 0) return null
       // A notice means the live request fell back to a prebaked bundle: the frames are not live stacks then.
       const isLiveData = source.kind === 'live' && !load.notice
       return (
-        <div className="status warn" aria-live="polite">
+        <div className={load.notice ? 'status warn' : 'status note'} aria-live="polite">
           {load.notice && <p>{load.notice}</p>}
-          {partial > 0 && partial === frames.length && (
+          {partial > 0 && partial === shown.length && (
             <p>
-              Every frame has few exposures or incomplete wavelength coverage
-              {isLiveData ? ': live requests stack only a few exposures per detector and visit' : ''}. Motion still
-              shows; compare brightness with care.
+              Every frame shown stacks few exposures or samples only part of its wavelength band
+              {isLiveData ? ': live requests take only a few exposures per detector and visit' : ''}. Motion still
+              shows; compare brightness between frames with care.
             </p>
           )}
-          {partial > 0 && partial < frames.length && (
+          {partial > 0 && partial < shown.length && (
             <p>
-              Partial data: {partial} of {frames.length} frames have few exposures or incomplete wavelength coverage
-              (see the frame details).
+              {partial} of the {shown.length} frames shown {partial === 1 ? 'comes from a visit' : 'come from visits'}{' '}
+              in which SPHEREx took fewer exposures or covered less of the wavelength band than in the fullest visit
+              (see the frame details). Motion still shows; compare brightness between frames with care.
             </p>
           )}
         </div>

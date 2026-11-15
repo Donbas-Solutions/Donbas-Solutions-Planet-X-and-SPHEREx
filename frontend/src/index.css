@@ -141,6 +141,11 @@ button[aria-pressed='true'] {
   max-width: 400px;
 }
 
+.status.note {
+  color: var(--muted);
+  max-width: 100ch;
+}
+
 .landing h2 {
   margin: 0 0 8px;
   font-size: 1.2rem;
