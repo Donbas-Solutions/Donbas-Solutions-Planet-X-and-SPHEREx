@@ -18,7 +18,7 @@ Built for the NASA Space Apps Challenge 2026, challenge "Planet X and SPHEREx".
 
 | Path | Contents |
 |---|---|
-| `backend/` | Python 3.11+ / FastAPI API: data discovery, cutouts, stacking |
+| `backend/` | Python 3.11.5+ / FastAPI API: data discovery, cutouts, stacking |
 | `frontend/` | React + TypeScript + Vite viewer, Aladin Lite sky context |
 | `science/` | Test targets and validation scripts |
 | `scripts/` | Mock and prebaked data bundles |

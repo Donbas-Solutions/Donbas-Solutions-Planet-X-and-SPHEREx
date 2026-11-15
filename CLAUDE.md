@@ -20,7 +20,7 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
 - No comments that restate the code, no commented-out code, no section banners or changelog notes.
 
 ## Stack and layout
-- `backend/` — Python ≥3.11 (dev machine: 3.13), FastAPI, astropy 8, astroquery, pyvo, reproject, photutils, numpy.
+- `backend/` — Python ≥3.11.5 (dev machine: 3.13), FastAPI, astropy 8, astroquery, pyvo, reproject, photutils, numpy.
   Env: **uv** — `backend/pyproject.toml` + `backend/uv.lock`, Python pinned by `backend/.python-version` (3.13).
   Lint/format: **ruff** — `ruff.toml` at the repo root covers `backend/`, `scripts/`, `science/`.
   Types: **mypy --strict** (`backend/pyproject.toml`). Python conventions: skill `.claude/skills/fastapi-backend`.
