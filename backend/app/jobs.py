@@ -92,7 +92,6 @@ class SequenceRequest:
                 f"{p.fov_arcmin:.1f}",
                 ",".join(str(d) for d in sorted(set(p.detectors))),
                 p.mode,
-                str(p.include_allwise),
             )
         )
 

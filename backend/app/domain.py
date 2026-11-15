@@ -100,7 +100,6 @@ class SequenceParams:
     fov_arcmin: float = 10.0
     detectors: tuple[int, ...] = DETECTORS
     mode: Literal["visit_stack", "exposures"] = "visit_stack"
-    include_allwise: bool = False
 
 
 @dataclass(frozen=True, eq=False)

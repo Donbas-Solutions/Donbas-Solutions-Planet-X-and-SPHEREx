@@ -146,12 +146,11 @@ async def sequence(
     pmra: Pm = None,
     pmdec: Pm = None,
     ref_epoch: RefEpoch = 2000.0,
-    allwise: bool = False,
 ) -> Sequence | JobAccepted:
     """200 with the cached sequence, or 202 with a job to poll at `/api/jobs/{job_id}`."""
     request = SequenceRequest(
         target=Target(ra_deg=ra, dec_deg=dec, ref_epoch=ref_epoch, pmra_masyr=pmra, pmdec_masyr=pmdec),
-        params=SequenceParams(fov_arcmin=fov, detectors=_detectors(det), mode=mode, include_allwise=allwise),
+        params=SequenceParams(fov_arcmin=fov, detectors=_detectors(det), mode=mode),
     )
     cached = await runner.cached(request)
     if cached is not None:
