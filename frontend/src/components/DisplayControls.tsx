@@ -31,8 +31,9 @@ function fmt(v: number): string {
 export default function DisplayControls(props: Props) {
   const { zoom, onZoomChange, showMarkers, onShowMarkersChange, range, bounds, onRangeChange } = props
   const { diffRange, diffBound, onDiffRangeChange } = props
-  const { params, setParams } = useAppState()
+  const { params, setParams, sequence } = useAppState()
   const isDiff = params.view === 'diff'
+  const hasExpected = sequence?.frames.some((f) => f.expected_px !== null) ?? false
   const step = (bounds.vmax - bounds.vmin) / 500 || 1e-6
 
   const setView = (view: ViewMode) => setParams({ view })
@@ -62,11 +63,16 @@ export default function DisplayControls(props: Props) {
         </select>
       </label>
       <label>
-        <input type="checkbox" checked={showMarkers} onChange={(e) => onShowMarkersChange(e.target.checked)} /> Expected
-        position
+        <input
+          type="checkbox"
+          checked={showMarkers && hasExpected}
+          disabled={!hasExpected}
+          onChange={(e) => onShowMarkersChange(e.target.checked)}
+        />{' '}
+        Expected position
       </label>
       <span className="muted small">
-        from <Term id="proper_motion">proper motion</Term>
+        {hasExpected ? 'from' : 'needs a known'} <Term id="proper_motion">proper motion</Term>
       </span>
       <label>
         <input type="checkbox" checked={params.gaia} onChange={(e) => setParams({ gaia: e.target.checked })} /> Gaia

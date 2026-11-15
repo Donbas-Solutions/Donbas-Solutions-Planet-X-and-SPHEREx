@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Spectrum, SpectrumPoint } from '../../api/types'
+import { useAppState } from '../../hooks/useAppState'
 import { extent, pad, type ScaleKind } from '../../lib/chart'
 import {
   defaultVisitSlots,
@@ -51,7 +52,8 @@ function toChartPoint(p: SpectrumPoint, i: number, slot: number, visit: VisitInf
 
 export default function SpectrumChart({ spectrum, targetName }: Props) {
   const { points } = spectrum
-  const visits = useMemo(() => visitsOf(points), [points])
+  const { sequence } = useAppState()
+  const visits = useMemo(() => visitsOf(points, sequence?.frames), [points, sequence])
   const [slots, setSlots] = useState(() => defaultVisitSlots(visits))
   const [yScale, setYScale] = useState<ScaleKind>(() => (prefersLogScale(points) ? 'log' : 'linear'))
 
