@@ -120,6 +120,10 @@ of NASA SPHEREx images of that sky patch, so moving and variable objects stand o
   now and then a `200` after ~21 s; sequential and parallel requests failed alike. The file servers (`ibe`, S3)
   were unaffected. The backend therefore keeps the SIA answer of each collection for an hour
   (`archive.sia.SiaCache`): a retried search converged on the third attempt while direct probes still failed.
+- **IRSA Spectrophotometry Tool** (`irsa.ipac.caltech.edu/applications/spherex/tool-spectrophotometry`): web UI only,
+  no documented API; Tractor forced PSF photometry, one row per exposure in µJy; ~14 min for ε Indi B's field
+  (459 exposures). Our aperture photometry agrees with it: median ratio 0.998 on an unsaturated G 13.9 star
+  (FR-16, `science/VALIDATION.md`).
 - Pixel 6.2″; 6 detectors = 6 bands (D1 0.75–1.11 µm … D6 4.42–5.00 µm); λ varies across each frame (LVF).
 - macOS python.org Python fails HTTPS to IRSA with `CERTIFICATE_VERIFY_FAILED` → run `Install Certificates.command` or use `certifi`.
 

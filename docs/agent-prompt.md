@@ -111,7 +111,7 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
   **M3 🟡** (Aladin context, Gaia markers, README and submission open).
 - IRSA was unstable on 2026-11-14 (SIA/TAP `502` or hanging for minutes): prebaked bundles are the demo path.
 
-### Status of round 3 (2026-11-15, 16:10 UTC)
+### Status of round 3 (2026-11-15, 16:35 UTC)
 Done — in `main`: `fix/spectrum-store` (#17: expired spectra replaced, race-free writes, a hung TAP waited out once).
 
 Done — in `main`: `feat/gaia-overlays` (#18):
@@ -146,20 +146,22 @@ Done — in `main`:
 - **Live search works on the hosted site despite the flapping IRSA SIA** (direct probes still `502` at 15:41 UTC):
   Barnard's Star by name succeeded on the first attempt (48 exposures); Teegarden's Star showed "IRSA archive is
   unreachable" after ~2 min, and "Retry" then built the sequence (144 exposures) in ~1.5 min.
+- **FR-16 accepted:** Gaia DR3 6412593435166417536 (G 13.9, unsaturated, 2.5′ east of ε Indi B) against IRSA's
+  Spectrophotometry Tool: median ratio ours / IRSA **0.998** over 248 matched exposures (16–84 %: 0.974–1.086;
+  per detector 0.98–1.06). The tool's table is in `science/reference/`; `validate.py` reports it in
+  `science/VALIDATION.md`.
 
 Still open, in order of importance:
 1. **Submission (C):** Team Owner and Kyiv cutoff confirmed, video ≤ 30 s or ≤ 7 slides, submission text, links
    tested in a private window. The README credits (NFR-10), AI-use section and live-site link are done.
 2. **IRSA SIA flapping:** a live search can fail once and succeed on "Retry"; an automatic second attempt in the
    backend would hide it. When IRSA is stable: M1 live numbers for Barnard and ε Indi B (A).
-3. **FR-16 acceptance (C):** one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25); only the
-   2MASS sanity check exists (J 1.02, H 1.03, Ks 1.23).
-4. **Announce the #18 contract changes** if not done (`GaiaStar.source_id` is a string, `unavailable` always lists
+3. **Announce the #18 contract changes** if not done (`GaiaStar.source_id` is a string, `unavailable` always lists
    `skybot`, new page parameter `gaia`).
-5. **Not started, drop first:** FR-20 measured proper motion in the UI (it exists only in `VALIDATION.md`), FR-22
+4. **Not started, drop first:** FR-20 measured proper motion in the UI (it exists only in `VALIDATION.md`), FR-22
    AllWISE old-epoch frame, "copy embed code" for FR-21, optional error `code` in `JobStatus`, on-demand frame
    loading (NFR-2; the hosted R Dra bundle already loads in 1.4 s).
-6. Not checked: narrow screens (< 768 px), browsers other than Chrome, the "no SPHEREx coverage" state (FR-13; needs
+5. Not checked: narrow screens (< 768 px), browsers other than Chrome, the "no SPHEREx coverage" state (FR-13; needs
    a working IRSA). Dependabot's backend base-image update failed CI (14:24 UTC); not merged, not blocking.
 
 The round-3 track lists below are kept as written on 2026-11-14; this section overrides them where they differ.
