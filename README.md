@@ -5,6 +5,8 @@ sequence of SPHEREx images of that sky patch, so moving and variable objects sta
 
 Built for the NASA Space Apps Challenge 2026, challenge "Planet X and SPHEREx".
 
+**Live site: <https://spherex-blink-web.victoriousmeadow-02021db7.polandcentral.azurecontainerapps.io/>**
+
 <p align="center">
   <img src="frontend/public/prebaked/barnard/blink.gif" width="300" alt="Barnard's Star blinking between three SPHEREx visits, all detectors combined">
   &nbsp;

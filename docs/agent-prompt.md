@@ -111,7 +111,7 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
   **M3 🟡** (Aladin context, Gaia markers, README and submission open).
 - IRSA was unstable on 2026-11-14 (SIA/TAP `502` or hanging for minutes): prebaked bundles are the demo path.
 
-### Status of round 3 (2026-11-15, 14:35 UTC)
+### Status of round 3 (2026-11-15, 16:10 UTC)
 Done — in `main`: `fix/spectrum-store` (#17: expired spectra replaced, race-free writes, a hung TAP waited out once).
 
 Done — in `main`: `feat/gaia-overlays` (#18):
@@ -138,24 +138,28 @@ Done — in `main`:
 - README: features, test-target results, GIFs and the motion figure, use of AI, Docker quick start.
 - The repository is public (GitHub API answers anonymously, 14:31 UTC).
 - Licence (OD-2): LGPL-3.0 (`LICENSE`, with the GPL-3.0 text in `COPYING`), compatible with Aladin Lite.
+- **Deployed and checked** (Deploy #6 green after #24–#26, checked 15:45–16:05 UTC in Chrome and anonymously with
+  `curl`): <https://spherex-blink-web.victoriousmeadow-02021db7.polandcentral.azurecontainerapps.io/>, linked
+  from the README. All five presets, spectrum, flags overlay, context panel (2MASS), Gaia overlay (`gaia=1`),
+  `/about`, `/embed`, `/api/health` and `/api/resolve` work; no console errors. R Dra loads 124 files, 2.4 MB
+  compressed, in 1.4 s. `WISE 0855-0714` now resolves in 1.6 s.
+- **Live search works on the hosted site despite the flapping IRSA SIA** (direct probes still `502` at 15:41 UTC):
+  Barnard's Star by name succeeded on the first attempt (48 exposures); Teegarden's Star showed "IRSA archive is
+  unreachable" after ~2 min, and "Retry" then built the sequence (144 exposures) in ~1.5 min.
 
 Still open, in order of importance:
-1. **Deploy:** the first Deploy run on `main` was in progress at 14:31 UTC. Once it is green, open the site URL in a
-   private window: the five presets, `/about`, `/embed`, the context panel and the Gaia overlay.
-2. **Submission (C):** Team Owner and Kyiv cutoff confirmed, video ≤ 30 s or ≤ 7 slides, submission text, links
-   tested in a private window. The README credits (NFR-10) and AI-use section are done.
-3. **IRSA SIA/TAP still `502`** (14:31 UTC, as at 08:40 and 12:17), so live searches fail on the hosted site too;
-   the presets and the offline fallback work. When IRSA recovers: M1 live numbers for Barnard and ε Indi B (A).
-   Short designations (`WISE 0855-0714`) timed out on Harvard's SIMBAD `LIKE` query (15 s); presets are unaffected.
-4. **Hosted load time (NFR-1):** every frame of a sequence is loaded before the first is shown. Bundles are
-   1.7–2.2 MB, R Dra 5.6 MB (≈ 3 s at 20 Mbit/s): on-demand frame loading (NFR-2) would fix it.
-5. **FR-16 acceptance (C):** one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25); only the
+1. **Submission (C):** Team Owner and Kyiv cutoff confirmed, video ≤ 30 s or ≤ 7 slides, submission text, links
+   tested in a private window. The README credits (NFR-10), AI-use section and live-site link are done.
+2. **IRSA SIA flapping:** a live search can fail once and succeed on "Retry"; an automatic second attempt in the
+   backend would hide it. When IRSA is stable: M1 live numbers for Barnard and ε Indi B (A).
+3. **FR-16 acceptance (C):** one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25); only the
    2MASS sanity check exists (J 1.02, H 1.03, Ks 1.23).
-6. **Announce the #18 contract changes** if not done (`GaiaStar.source_id` is a string, `unavailable` always lists
+4. **Announce the #18 contract changes** if not done (`GaiaStar.source_id` is a string, `unavailable` always lists
    `skybot`, new page parameter `gaia`).
-7. **Not started, drop first:** FR-20 measured proper motion in the UI (it exists only in `VALIDATION.md`), FR-22
-   AllWISE old-epoch frame, "copy embed code" for FR-21, optional error `code` in `JobStatus`.
-8. Not checked: narrow screens (< 768 px), browsers other than Chrome, the "no SPHEREx coverage" state (FR-13; needs
+5. **Not started, drop first:** FR-20 measured proper motion in the UI (it exists only in `VALIDATION.md`), FR-22
+   AllWISE old-epoch frame, "copy embed code" for FR-21, optional error `code` in `JobStatus`, on-demand frame
+   loading (NFR-2; the hosted R Dra bundle already loads in 1.4 s).
+6. Not checked: narrow screens (< 768 px), browsers other than Chrome, the "no SPHEREx coverage" state (FR-13; needs
    a working IRSA). Dependabot's backend base-image update failed CI (14:24 UTC); not merged, not blocking.
 
 The round-3 track lists below are kept as written on 2026-11-14; this section overrides them where they differ.
