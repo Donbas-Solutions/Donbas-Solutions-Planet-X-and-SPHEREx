@@ -138,6 +138,9 @@ Still open, in order of importance:
    AllWISE old-epoch frame, FR-21 embed acceptance (the view works; "copy embed code" is missing), optional error
    `code` in `JobStatus`.
 7. Not checked: narrow screens (< 768 px) and the "no SPHEREx coverage" state.
+8. Only if the site is ever hosted (NFR-1): every frame of a sequence is loaded before the first one is shown.
+   Locally a preset appears in 0.25–0.33 s (R Dra 1.2 s). Over a 20 Mbit/s link the 1.6–2.0 MB bundles take
+   under 1 s, but R Dra's 4.6 MB about 3 s: it needs the on-demand loading that NFR-2 mentions.
 
 The round-3 track lists below are kept as written on 2026-11-14; this section overrides them where they differ.
 

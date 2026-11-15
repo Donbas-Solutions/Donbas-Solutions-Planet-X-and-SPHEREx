@@ -129,6 +129,8 @@ export default function Player({ isCompact = false }: Props) {
     }
   }
 
+  const unknownFrames = [params.a, params.b].filter((id) => id !== null && !list.some((f) => f.frame.id === id))
+
   const name = sequence.meta.target_name ?? 'Field'
   const { frame } = currentFrame
   const missing = missingDetectors(frame.detectors, playlist.key)
@@ -139,6 +141,13 @@ export default function Player({ isCompact = false }: Props) {
       {!playlist.isRequested && (
         <p className="warn">
           This sequence has no frames for the chosen detectors; showing {detectorLabel(playlist.key)} instead.
+        </p>
+      )}
+      {unknownFrames.length > 0 && (
+        <p className="warn">
+          This link asks for {unknownFrames.length === 1 ? 'a frame' : 'frames'} that the shown sequence does not have
+          ({unknownFrames.join(', ')}); the {unknownFrames.length === 1 ? 'default is' : 'first and last frames are'}{' '}
+          used instead.
         </p>
       )}
       {isDiff && diff && !diff.ok && <p className="error">{diff.error}</p>}

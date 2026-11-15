@@ -19,6 +19,8 @@ export interface AppState {
   /** View params mirrored in the page URL (docs/spec.md §5.3). */
   params: ViewParams
   setParams: SetViewParams
+  /** Shows one notice in the page banner. */
+  notify: (text: string) => void
   source: SequenceSource
   load: SequenceLoad
   retry: () => void

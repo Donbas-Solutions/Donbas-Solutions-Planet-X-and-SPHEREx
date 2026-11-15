@@ -1,13 +1,14 @@
 import { useId, useState, type FormEvent } from 'react'
 import { useAppState } from '../hooks/useAppState'
 import { formatDegrees, looksLikeCoordinates, parseCoordinates } from '../lib/coords'
+import { findPreset, PRESET_EPOCH } from '../lib/presets'
 import { clampFov, DETECTOR_IDS, FOV_MAX_ARCMIN, FOV_MIN_ARCMIN, parseViewParams, type ViewParams } from '../lib/urlState'
 
 const NEW_TARGET: Partial<ViewParams> = { target: null, manifest: null, pm: null, a: null, b: null }
 
 export default function SearchBar() {
-  const { params, setParams } = useAppState()
-  const [message, setMessage] = useState<{ kind: 'error' | 'note'; text: string } | null>(null)
+  const { params, setParams, notify, sequence } = useAppState()
+  const [message, setMessage] = useState<string | null>(null)
   const messageId = useId()
 
   const initialQuery =
@@ -19,12 +20,27 @@ export default function SearchBar() {
     const form = new FormData(e.currentTarget)
     const query = String(form.get('q') ?? '').trim()
     const fovInput = Number(form.get('fov'))
-    if (!query) return setMessage({ kind: 'error', text: 'Enter an object name or RA Dec coordinates.' })
-    if (!Number.isFinite(fovInput)) return setMessage({ kind: 'error', text: 'Field of view must be a number.' })
+    if (!Number.isFinite(fovInput)) return setMessage('Field of view must be a number.')
 
     const fovArcmin = clampFov(fovInput)
-    const fovNote =
-      fovArcmin === fovInput ? null : `Field of view limited to ${FOV_MIN_ARCMIN}–${FOV_MAX_ARCMIN}′; using ${fovArcmin}′.`
+    // The search bar is remounted with the new sequence, so the note goes to the page banner.
+    const noteClampedFov = () => {
+      if (fovArcmin !== fovInput) {
+        notify(`Field of view limited to ${FOV_MIN_ARCMIN}–${FOV_MAX_ARCMIN}′ (asked for ${fovInput}′): using ${fovArcmin}′.`)
+      }
+    }
+
+    if (!query) {
+      // A test target is prebaked at one field of view: another one means a live search at its catalog position.
+      const preset = params.target ? findPreset(params.target) : undefined
+      if (!preset || !sequence || fovArcmin === sequence.grid.fov_arcmin) {
+        return setMessage('Enter an object name or RA Dec coordinates.')
+      }
+      const pm = { pmra: preset.pmra, pmdec: preset.pmdec, epoch: PRESET_EPOCH }
+      setParams({ ...NEW_TARGET, name: preset.name, ra: preset.ra, dec: preset.dec, pm, fovArcmin }, 'push')
+      noteClampedFov()
+      return setMessage(null)
+    }
 
     const coords = looksLikeCoordinates(query) ? parseCoordinates(query) : null
     if (coords?.ok) {
@@ -32,9 +48,10 @@ export default function SearchBar() {
     } else if (/\p{L}/u.test(query)) {
       setParams({ ...NEW_TARGET, name: query, ra: null, dec: null, fovArcmin }, 'push')
     } else {
-      return setMessage({ kind: 'error', text: coords?.error ?? 'Enter an object name or RA Dec coordinates.' })
+      return setMessage(coords?.error ?? 'Enter an object name or RA Dec coordinates.')
     }
-    setMessage(fovNote ? { kind: 'note', text: fovNote } : null)
+    noteClampedFov()
+    setMessage(null)
   }
 
   const handleDetChange = (value: string) => {
@@ -53,7 +70,7 @@ export default function SearchBar() {
           placeholder="Name or RA Dec, e.g. 17 57 48.5 +04 41 36"
           autoComplete="off"
           spellCheck={false}
-          aria-invalid={message?.kind === 'error'}
+          aria-invalid={message !== null}
           aria-describedby={messageId}
         />
       </label>
@@ -85,8 +102,8 @@ export default function SearchBar() {
         </select>
       </label>
       <button type="submit">Show</button>
-      <p id={messageId} className={message?.kind === 'error' ? 'error search-message' : 'muted search-message'} aria-live="polite">
-        {message?.text}
+      <p id={messageId} className="error search-message" aria-live="polite">
+        {message}
       </p>
     </form>
   )

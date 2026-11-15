@@ -13,6 +13,7 @@ import type { SetViewParams } from '../hooks/useViewParams'
 interface Props {
   params: ViewParams
   setParams: SetViewParams
+  notify: (text: string) => void
   source: SequenceSource
   children: ReactNode
 }
@@ -45,7 +46,7 @@ function loadableSource(s: SequenceSource): LoadableSource | null {
   }
 }
 
-export default function AppStateProvider({ params, setParams, source, children }: Props) {
+export default function AppStateProvider({ params, setParams, notify, source, children }: Props) {
   const sequence = useSequence(loadableSource(source))
 
   const handleResolved = useCallback(
@@ -81,6 +82,7 @@ export default function AppStateProvider({ params, setParams, source, children }
     return {
       params,
       setParams,
+      notify,
       source,
       load,
       retry: sequence.retry,
@@ -97,7 +99,7 @@ export default function AppStateProvider({ params, setParams, source, children }
       setFrameIndex,
       setSelectedPixel,
     }
-  }, [params, setParams, source, load, sequence.retry, sequence.cancel, frameIndex, selectedPixel])
+  }, [params, setParams, notify, source, load, sequence.retry, sequence.cancel, frameIndex, selectedPixel])
 
   return <AppStateContext value={value}>{children}</AppStateContext>
 }
