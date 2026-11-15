@@ -36,12 +36,13 @@ if [ -z "$app_id" ]; then
 fi
 sp_id=$(az ad sp show --id "$app_id" --query id -o tsv 2>/dev/null || az ad sp create --id "$app_id" --query id -o tsv)
 
-credential=github-production
-if [ -z "$(az ad app federated-credential list --id "$app_id" --query "[?name=='$credential'].name" -o tsv)" ]; then
+# Keyed by subject: GitHub signs tokens with the repo's current owner/name, so a moved repo needs its own credential.
+subject="repo:$repo:environment:production"
+if [ -z "$(az ad app federated-credential list --id "$app_id" --query "[?subject=='$subject'].name" -o tsv)" ]; then
   az ad app federated-credential create --id "$app_id" --output none --parameters "{
-    \"name\": \"$credential\",
+    \"name\": \"github-${repo//\//-}-production\",
     \"issuer\": \"https://token.actions.githubusercontent.com\",
-    \"subject\": \"repo:$repo:environment:production\",
+    \"subject\": \"$subject\",
     \"audiences\": [\"api://AzureADTokenExchange\"]
   }"
 fi

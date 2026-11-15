@@ -39,7 +39,7 @@ Azure: spherex-blink-web (nginx, public HTTPS, 0–2 replicas) ──/api, /file
 Files: `infra/main.bicep`, `infra/bootstrap.sh`, `.github/workflows/{ci,deploy}.yml`, `.github/dependabot.yml`.
 
 **One-time setup** (a subscription Owner, Git Bash or any shell with `az`):
-1. `az login`, then `infra/bootstrap.sh levch6/Donbas-Solutions-Planet-X-and-SPHEREx [rg-spherex-blink] [polandcentral]`.
+1. `az login`, then `infra/bootstrap.sh Donbas-Solutions/Donbas-Solutions-Planet-X-and-SPHEREx [rg-spherex-blink] [polandcentral]`.
    It registers the resource providers, creates the resource group and the app registration
    `spherex-blink-github-deploy` with a federated credential for the GitHub environment `production`, and gives it
    Contributor on that resource group plus the right to grant only `AcrPull` (an ABAC condition).
