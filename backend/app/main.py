@@ -22,7 +22,7 @@ from .archive.sia import SiaCache
 from .config import configure_ssl, settings
 from .domain import ProgressCallback
 from .jobs import FetchFn, JobRunner, SequenceRequest
-from .storage import BundleStore
+from .storage import BundleStore, CacheMeter
 
 FILES_PREFIX: Final = "/files"
 
@@ -59,6 +59,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.discovery = discovery
     app.state.runner = runner
     app.state.gaia = gaia
+    app.state.cache = CacheMeter(settings.raw_dir, settings.processed_dir)
     try:
         yield
     finally:

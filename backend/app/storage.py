@@ -17,7 +17,7 @@ from typing import Final
 import anyio
 
 from .domain import SequenceResult
-from .models import Sequence, Spectrum
+from .models import CacheStats, Sequence, Spectrum
 from .pipeline.bundle import MANIFEST, write_bundle
 
 SPECTRUM: Final = "spectrum.json"
@@ -106,3 +106,30 @@ class BundleStore:
             return await file.read_text(encoding="utf-8")
         except FileNotFoundError:
             return None
+
+
+class CacheMeter:
+    """Disk use of the raw and processed caches, counted at most once per `ttl_s`: `/api/health` is also the
+    container's liveness probe, and walking a raw cache of several GB on every probe is wasted I/O."""
+
+    def __init__(
+        self, raw_dir: Path, processed_dir: Path, *, ttl_s: float = 60.0, clock: Callable[[], float] = time.monotonic
+    ) -> None:
+        self._raw_dir = raw_dir
+        self._processed_dir = processed_dir
+        self._ttl_s = ttl_s
+        self._clock = clock
+        self._lock = threading.Lock()
+        self._last: tuple[float, CacheStats] | None = None
+
+    def stats(self) -> CacheStats:
+        with self._lock:
+            now = self._clock()
+            if self._last is None or now - self._last[0] >= self._ttl_s:
+                self._last = (now, self._count())
+            return self._last[1]
+
+    def _count(self) -> CacheStats:
+        raw_bytes = sum(p.stat().st_size for p in self._raw_dir.rglob("*") if p.is_file())
+        processed = sum(1 for p in self._processed_dir.glob(f"*/{MANIFEST}") if p.is_file())
+        return CacheStats(raw_mb=round(raw_bytes / 1e6, 1), processed_items=processed)

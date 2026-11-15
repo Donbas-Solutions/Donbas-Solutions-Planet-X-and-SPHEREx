@@ -11,6 +11,7 @@ from ..archive.gaia import GaiaCatalog
 from ..archive.http import Http
 from ..archive.resolve import Resolver
 from ..jobs import JobRunner
+from ..storage import CacheMeter
 
 
 def get_runner(request: Request) -> JobRunner:
@@ -38,8 +39,14 @@ def get_gaia(request: Request) -> GaiaCatalog:
     return gaia
 
 
+def get_cache(request: Request) -> CacheMeter:
+    cache: CacheMeter = request.app.state.cache
+    return cache
+
+
 Runner = Annotated[JobRunner, Depends(get_runner)]
 SharedHttp = Annotated[Http, Depends(get_http)]
 NameResolver = Annotated[Resolver, Depends(get_resolver)]
 Discovery = Annotated[CollectionDiscovery, Depends(get_discovery)]
 Gaia = Annotated[GaiaCatalog, Depends(get_gaia)]
+Cache = Annotated[CacheMeter, Depends(get_cache)]
