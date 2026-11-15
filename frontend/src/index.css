@@ -510,6 +510,16 @@ h1 {
   height: 400px;
 }
 
+.context label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.context p {
+  max-width: 75ch;
+}
+
 .term {
   position: relative;
   display: inline;
