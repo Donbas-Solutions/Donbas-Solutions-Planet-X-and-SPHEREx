@@ -3,6 +3,7 @@ name = "spherex-blink-backend"
 version = "0.1.0"
 description = "SPHEREx Blink backend: SPHEREx cutouts -> per-visit stacks for the web viewer"
 requires-python = ">=3.11.5"
+license = "LGPL-3.0-only"
 dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.30",

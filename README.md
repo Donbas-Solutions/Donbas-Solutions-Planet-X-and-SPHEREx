@@ -142,3 +142,11 @@ one-time setup in [`docs/deploy.md`](docs/deploy.md).
 
 SPHEREx data: NASA / IPAC Infrared Science Archive (IRSA). Object names resolved with SIMBAD (CDS).
 Star overlay: Gaia DR3 (ESA / Gaia DPAC), read from the MAST, GAVO or ESA archives.
+Sky context: [Aladin Lite](https://aladin.cds.unistra.fr/AladinLite/) (CDS), with HiPS surveys from the IRSA mirror.
+
+## Licence
+
+SPHEREx Blink is free software under the GNU Lesser General Public License v3.0 ([`LICENSE`](LICENSE)), which
+extends the GNU General Public License v3.0 ([`COPYING`](COPYING)). Aladin Lite, which the viewer uses, is
+LGPL-3.0/GPL-3.0 as well. SPHEREx, Gaia, 2MASS, AllWISE and DSS2 data belong to their archives and are used under
+their own terms.
