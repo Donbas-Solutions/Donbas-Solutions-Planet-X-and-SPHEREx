@@ -1,0 +1,53 @@
+name: spherex-blink
+
+x-hardening: &hardening
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+services:
+  backend:
+    <<: *hardening
+    build: ./backend
+    image: spherex-blink-backend:local
+    environment:
+      # The root filesystem is read-only; astropy/astroquery keep their config and cache under $HOME.
+      HOME: /tmp
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      IRSA_MAX_CONCURRENCY: ${IRSA_MAX_CONCURRENCY:-8}
+      MAX_RUNNING_JOBS: ${MAX_RUNNING_JOBS:-2}
+      PIPELINE_WORKERS: ${PIPELINE_WORKERS:-2}
+      LIVE_CAP_PER_DETECTOR: ${LIVE_CAP_PER_DETECTOR:-8}
+      RAW_CACHE_MAX_MB: ${RAW_CACHE_MAX_MB:-5000}
+      PROCESSED_TTL_H: ${PROCESSED_TTL_H:-24}
+    volumes:
+      - cache:/data/cache
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    expose: ["8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  frontend:
+    <<: *hardening
+    build: ./frontend
+    image: spherex-blink-frontend:local
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      # Loopback only by default; set BIND_ADDR=0.0.0.0 to expose the app on the network.
+      - "${BIND_ADDR:-127.0.0.1}:${PORT:-8080}:8080"
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+
+volumes:
+  cache:

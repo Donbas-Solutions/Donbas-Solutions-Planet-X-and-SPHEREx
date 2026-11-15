@@ -36,6 +36,19 @@ cd frontend && npm ci && npm run dev
 Open <http://localhost:5173>. The five test targets open from prebaked real SPHEREx data, also without the
 backend; a search by name or coordinates asks the live archive through the backend.
 
+### With Docker
+
+Requirements: Docker with Compose v2.
+
+```sh
+docker compose up -d --build
+```
+
+Open <http://localhost:8080>. nginx serves the built frontend and the prebaked bundles and proxies `/api` and
+`/files` to the backend, which is not published on the host. Downloaded and processed data live in the `cache`
+volume (`docker compose down -v` removes it). Settings: copy `.env.example` to `.env`; no secrets are needed.
+The port is bound to `127.0.0.1` unless `BIND_ADDR` says otherwise.
+
 ## Limitations
 
 - SPHEREx pixels are 6.2″, so even the fastest nearby stars move only ~1–2 px over the available ~1 year baseline.
