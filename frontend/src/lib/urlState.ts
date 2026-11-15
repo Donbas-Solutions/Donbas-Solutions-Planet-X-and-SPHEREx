@@ -38,6 +38,8 @@ export interface ViewParams {
   fps: number
   stretch: StretchKind
   flags: readonly OverlayGroup[]
+  /** Gaia DR3 stars drawn over the frames (FR-18). */
+  gaia: boolean
   pm: ProperMotion | null
   manifest: string | null
 }
@@ -55,6 +57,7 @@ export const DEFAULT_PARAMS: ViewParams = {
   fps: FPS_DEFAULT,
   stretch: 'asinh',
   flags: [],
+  gaia: false,
   pm: null,
   manifest: null,
 }
@@ -171,6 +174,12 @@ export function parseViewParams(search: string): { params: ViewParams; notices: 
     else invalid('flags', 'use saturation, bad, artifact')
   }
 
+  const gaia = q.get('gaia')
+  if (gaia !== null) {
+    if (gaia === '1' || gaia === '0') p.gaia = gaia === '1'
+    else invalid('gaia', 'use 1 or 0')
+  }
+
   const pmra = q.get('pmra')
   const pmdec = q.get('pmdec')
   if (pmra !== null || pmdec !== null) {
@@ -207,6 +216,7 @@ export function viewParamsToSearch(p: ViewParams): string {
   if (p.fps !== FPS_DEFAULT) q.set('fps', String(p.fps))
   if (p.stretch !== 'asinh') q.set('stretch', p.stretch)
   if (p.flags.length > 0) q.set('flags', p.flags.join(','))
+  if (p.gaia) q.set('gaia', '1')
   if (p.pm) {
     q.set('pmra', String(p.pm.pmra))
     q.set('pmdec', String(p.pm.pmdec))

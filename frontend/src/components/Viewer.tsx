@@ -12,7 +12,7 @@ export const MAX_ZOOM = 8
 export interface Marker {
   id: string
   px: PixelPos
-  variant: 'expected' | 'earlier' | 'later'
+  variant: 'expected' | 'earlier' | 'later' | 'gaia' | 'gaia-mover' | 'gaia-earlier'
   title: string
 }
 

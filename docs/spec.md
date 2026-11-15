@@ -151,6 +151,7 @@ shareable URLs and embedding; static bundles for the five test targets.
 | `fps` | 0.5–3 | 2 | §5.4 |
 | `stretch` | `asinh` · `linear` · `log` | `asinh` | |
 | `flags` | comma list of `saturation`, `bad`, `artifact` | none | |
+| `gaia` | `1` | off | Gaia DR3 stars over the frames (FR-18) |
 | `pmra`, `pmdec`, `epoch` | mas/yr (pmra includes cos δ), Julian year | from resolve | Enables FR-10 for raw coordinates |
 | `manifest` | bundle URL | — | Development and testing only |
 

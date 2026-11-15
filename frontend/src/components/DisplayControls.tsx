@@ -68,6 +68,10 @@ export default function DisplayControls(props: Props) {
       <span className="muted small">
         from <Term id="proper_motion">proper motion</Term>
       </span>
+      <label>
+        <input type="checkbox" checked={params.gaia} onChange={(e) => setParams({ gaia: e.target.checked })} /> Gaia
+        DR3 stars
+      </label>
       {isDiff ? (
         <label>
           Range ±

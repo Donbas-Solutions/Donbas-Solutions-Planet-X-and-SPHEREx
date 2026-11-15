@@ -31,6 +31,11 @@ export default function AboutPage() {
           a prediction, not a detection.
         </li>
         <li>
+          “Gaia DR3 stars” draws a small diamond on every known star of the field, moved to each frame’s date with
+          its catalog proper motion. A source that moves together with its diamond is a known star; a moving
+          source without one is not in Gaia (very red or faint objects, asteroids, image artifacts).
+        </li>
+        <li>
           Click a pixel to read its value in every shown frame. Flagged pixels can be tinted: yellow saturated, red
           bad data, cyan artifacts.
         </li>
@@ -88,6 +93,9 @@ export default function AboutPage() {
       <h2>Data credits</h2>
       <p>SPHEREx data: NASA / Caltech-IPAC, via the NASA/IPAC Infrared Science Archive (IRSA).</p>
       <p>Name resolution: SIMBAD (CDS, Strasbourg, and its Harvard mirror).</p>
+      <p>
+        Star positions and proper motions: Gaia DR3 (ESA / Gaia DPAC), read from the MAST, GAVO or ESA archives.
+      </p>
     </main>
   )
 }

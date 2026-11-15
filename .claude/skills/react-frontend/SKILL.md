@@ -192,7 +192,7 @@ plausible-looking but scientifically wrong picture, so they are not optional.
   Params: `target` (preset id), `name`, `ra`/`dec` (decimal degrees or URL-encoded sexagesimal), `fov` (arcmin,
   2–30, default 10), `det` (`all` or a comma list of `1..6`), `view` (`blink` | `diff`), `a`/`b` (frame ids),
   `fps` (0.5–3, default 2), `stretch` (`asinh` | `linear` | `log`), `flags` (comma list of `saturation`, `bad`,
-  `artifact`), `pmra`/`pmdec`/`epoch`, and `manifest` (development only).
+  `artifact`), `gaia` (`1` = Gaia DR3 stars overlay), `pmra`/`pmdec`/`epoch`, and `manifest` (development only).
 - Precedence: `target` > `name` > `ra`/`dec`.
 - Page params are not API params: the page has `view` and `epoch`, the API has `mode` and `ref_epoch`
   (`docs/api.md`). Map them in one place in `api/`.

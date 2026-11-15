@@ -46,3 +46,4 @@ Open <http://localhost:5173>. Without real data yet, the viewer shows a syntheti
 ## Data
 
 SPHEREx data: NASA / IPAC Infrared Science Archive (IRSA). Object names resolved with SIMBAD (CDS).
+Star overlay: Gaia DR3 (ESA / Gaia DPAC), read from the MAST, GAVO or ESA archives.

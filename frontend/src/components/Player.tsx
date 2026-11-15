@@ -1,20 +1,28 @@
 import { useMemo, useState } from 'react'
 import type { Stretch } from '../api/types'
 import { useAppState } from '../hooks/useAppState'
+import { useGaiaOverlay } from '../hooks/useGaiaOverlay'
 import { prefersReducedMotion, usePlayback } from '../hooks/usePlayback'
 import { usePlayerKeys } from '../hooks/usePlayerKeys'
 import { BLUE_ORANGE, GREY } from '../lib/colormap'
 import { diffFrames } from '../lib/diff'
 import { overlayLayers } from '../lib/flags'
+import { gaiaMarkers, type GaiaMarker } from '../lib/gaia'
 import { detectorKey, detectorLabel, missingDetectors } from '../lib/playlist'
 import { finitePercentiles } from '../lib/stats'
 import DiffLegend from './DiffLegend'
 import DisplayControls, { type Range } from './DisplayControls'
+import GaiaStatus from './GaiaStatus'
 import TransportControls from './TransportControls'
 import Viewer, { type Marker, type Zoom } from './Viewer'
 
 interface Props {
   isCompact?: boolean
+}
+
+function gaiaMarker(m: GaiaMarker, variant: Marker['variant'], when: string): Marker {
+  const id = `${variant}-${m.star.source_id}`
+  return { id, px: m.px, variant, title: `Gaia DR3 ${m.star.source_id}: catalog position ${when}` }
 }
 
 export default function Player({ isCompact = false }: Props) {
@@ -27,6 +35,7 @@ export default function Player({ isCompact = false }: Props) {
   const [showMarkers, setShowMarkers] = useState(true)
   const [range, setRange] = useState<Range | null>(null)
   const [diffRange, setDiffRange] = useState<number | null>(null)
+  const gaia = useGaiaOverlay()
 
   const list = playlist.frames
   const n = list.length
@@ -91,6 +100,24 @@ export default function Player({ isCompact = false }: Props) {
   const diffStretch: Stretch = { kind: 'linear', vmin: -diffHalf, vmax: diffHalf, a: 1 }
 
   const markers: Marker[] = []
+  if (gaia.status === 'ready') {
+    const at = (mjd: number) => gaiaMarkers(gaia.field, sequence.grid, mjd, gaia.spanYears)
+    if (isDiff && diff?.ok) {
+      const { earlier, later } = diff.diff
+      const moved = at(earlier.frame.mjd_mid).filter((m) => m.isMover)
+      markers.push(...moved.map((m) => gaiaMarker(m, 'gaia-earlier', `on ${earlier.frame.label}`)))
+      markers.push(
+        ...at(later.frame.mjd_mid).map((m) =>
+          gaiaMarker(m, m.isMover ? 'gaia-mover' : 'gaia', `on ${later.frame.label}`),
+        ),
+      )
+    } else {
+      const when = `on ${currentFrame.frame.label}`
+      markers.push(
+        ...at(currentFrame.frame.mjd_mid).map((m) => gaiaMarker(m, m.isMover ? 'gaia-mover' : 'gaia', when)),
+      )
+    }
+  }
   if (showMarkers) {
     const title = 'Expected position from catalog proper motion (not a detection)'
     if (isDiff && diff?.ok) {
@@ -146,6 +173,7 @@ export default function Player({ isCompact = false }: Props) {
         </p>
       )}
       {isDiff && diff?.ok && <DiffLegend diff={diff.diff} range={diffHalf} />}
+      <GaiaStatus load={gaia} />
       <TransportControls
         isPlaying={isPlaying && !isDiff}
         isAbBlink={isAbBlink}
