@@ -39,14 +39,18 @@ Azure: spherex-blink-web (nginx, public HTTPS, 0–2 replicas) ──/api, /file
 Files: `infra/main.bicep`, `infra/bootstrap.sh`, `.github/workflows/{ci,deploy}.yml`, `.github/dependabot.yml`.
 
 **One-time setup** (a subscription Owner, Git Bash or any shell with `az`):
-1. `az login`, then `infra/bootstrap.sh levch6/Donbas-Solutions-Planet-X-and-SPHEREx [rg-spherex-blink] [westeurope]`.
+1. `az login`, then `infra/bootstrap.sh levch6/Donbas-Solutions-Planet-X-and-SPHEREx [rg-spherex-blink] [polandcentral]`.
    It registers the resource providers, creates the resource group and the app registration
    `spherex-blink-github-deploy` with a federated credential for the GitHub environment `production`, and gives it
    Contributor on that resource group plus the right to grant only `AcrPull` (an ABAC condition).
 2. GitHub → Settings → Environments: create `production` (add required reviewers for a manual approval gate).
 3. GitHub → Settings → Secrets and variables → Actions → **Variables, repository level** (environment variables are
    not visible to the job's `if`): `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`,
-   `AZURE_RESOURCE_GROUP` (printed by the script); optional `BUDGET_EMAIL`, `WEB_MIN_REPLICAS`, `API_MIN_REPLICAS`.
+   `AZURE_RESOURCE_GROUP`, `AZURE_LOCATION` (printed by the script). They are IDs, not secrets: the job reads
+   `vars.*`, so values stored under Secrets leave it skipped. Optional: `BUDGET_EMAIL`, `WEB_MIN_REPLICAS`,
+   `API_MIN_REPLICAS`. Our subscription is Azure for Students: its policy allows only `spaincentral`,
+   `switzerlandnorth`, `francecentral`, `germanywestcentral`, `polandcentral` (checked 2026-11-15; `westeurope` is
+   refused with `RequestDisallowedByAzure`). Our resource group is in `westeurope`, its resources in `polandcentral`.
 4. Actions → Deploy → Run workflow. The site URL appears on the run and in the environment.
 
 Until step 3 is done the Deploy job is skipped, so `main` stays green.

@@ -13,7 +13,8 @@ export MSYS_NO_PATHCONV=1
 
 repo=${1:?usage: infra/bootstrap.sh <github-owner>/<repo> [resource-group] [location]}
 group=${2:-rg-spherex-blink}
-location=${3:-westeurope}
+# Azure for Students allows only spaincentral, switzerlandnorth, francecentral, germanywestcentral, polandcentral.
+location=${3:-polandcentral}
 app_name=spherex-blink-github-deploy
 acr_pull=7f951dda-4ed3-4680-a7ca-43fe172d538d
 
@@ -68,6 +69,7 @@ Done. In GitHub → Settings → Secrets and variables → Actions → Variables
   AZURE_TENANT_ID        $tenant
   AZURE_SUBSCRIPTION_ID  $subscription
   AZURE_RESOURCE_GROUP   $group
+  AZURE_LOCATION         $location
 Optional: BUDGET_EMAIL (monthly cost alert), WEB_MIN_REPLICAS=1 to keep the site warm.
 Then create the environment "production" (Settings → Environments) and run the Deploy workflow.
 EOF

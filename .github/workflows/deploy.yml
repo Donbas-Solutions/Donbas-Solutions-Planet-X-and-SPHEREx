@@ -32,6 +32,8 @@ jobs:
       url: ${{ steps.apps.outputs.url }}
     env:
       RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      # Empty: the resource group's region. Azure for Students allows only a few regions (docs/deploy.md).
+      LOCATION: ${{ vars.AZURE_LOCATION }}
       BUDGET_EMAIL: ${{ vars.BUDGET_EMAIL }}
       WEB_MIN_REPLICAS: ${{ vars.WEB_MIN_REPLICAS || '0' }}
       API_MIN_REPLICAS: ${{ vars.API_MIN_REPLICAS || '0' }}
@@ -57,7 +59,7 @@ jobs:
             --resource-group "$RESOURCE_GROUP" \
             --name "base-$GITHUB_RUN_ID" \
             --template-file infra/main.bicep \
-            --parameters deployApps=false budgetEmail="$BUDGET_EMAIL" \
+            --parameters deployApps=false budgetEmail="$BUDGET_EMAIL" ${LOCATION:+"location=$LOCATION"} \
             --query properties.outputs --output json > base.json
           echo "acr=$(jq -r .acrName.value base.json)" >> "$GITHUB_OUTPUT"
           echo "registry=$(jq -r .acrLoginServer.value base.json)" >> "$GITHUB_OUTPUT"
@@ -100,7 +102,7 @@ jobs:
             --name "apps-$GITHUB_RUN_ID" \
             --template-file infra/main.bicep \
             --parameters deployApps=true imageTag="$IMAGE_TAG" budgetEmail="$BUDGET_EMAIL" \
-              webMinReplicas="$WEB_MIN_REPLICAS" apiMinReplicas="$API_MIN_REPLICAS" \
+              webMinReplicas="$WEB_MIN_REPLICAS" apiMinReplicas="$API_MIN_REPLICAS" ${LOCATION:+"location=$LOCATION"} \
             --query properties.outputs --output json > apps.json
           echo "url=$(jq -r .webUrl.value apps.json)" >> "$GITHUB_OUTPUT"
 
