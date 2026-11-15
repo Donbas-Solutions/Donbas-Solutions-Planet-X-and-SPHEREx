@@ -110,8 +110,8 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
         external: false
         targetPort: 8000
         transport: 'http'
-        // Plain HTTP inside the environment only; the public side is the frontend's HTTPS ingress.
-        allowInsecure: true
+        // No allowInsecure: express environments reject it (ExpressAllowInsecureNotSupported, 2026-11-15) and
+        // redirect plain HTTP to HTTPS, so the frontend calls the backend over HTTPS.
       }
     }
     template: {
@@ -179,7 +179,7 @@ resource web 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
           name: 'web'
           image: '${acr.properties.loginServer}/${prefix}-frontend:${imageTag}'
           resources: { cpu: json('0.25'), memory: '0.5Gi' }
-          env: [{ name: 'BACKEND_URL', value: 'http://${apiName}' }]
+          env: [{ name: 'BACKEND_URL', value: 'https://${apiName}.internal.${env.properties.defaultDomain}' }]
           probes: [
             {
               type: 'Liveness'
