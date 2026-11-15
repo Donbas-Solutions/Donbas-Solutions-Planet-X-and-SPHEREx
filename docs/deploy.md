@@ -33,7 +33,7 @@ GitHub ── PR / push ──► CI: ruff · mypy · pytest · oxlint · vite b
                                                        · gitleaks (blocking) · trivy (report only)
 main, CI green ──► Deploy (OIDC, no stored secret): bicep pass 1 (ACR, env, logs, budget)
                    → build + push both images (tag = commit SHA) → bicep pass 2 (apps) → smoke test → prune ACR
-Azure: spherex-blink-web (nginx, public HTTPS, 0–2 replicas) ──/api, /files──► spherex-blink-api (internal, 0–1)
+Azure: one app spherex-blink-web, 0–1 replica: nginx (public HTTPS) ──/api, /files via 127.0.0.1:8000──► backend
 ```
 
 Files: `infra/main.bicep`, `infra/bootstrap.sh`, `.github/workflows/{ci,deploy}.yml`, `.github/dependabot.yml`.
@@ -49,8 +49,8 @@ Files: `infra/main.bicep`, `infra/bootstrap.sh`, `.github/workflows/{ci,deploy}.
 3. GitHub → Settings → Secrets and variables → Actions → **Variables, repository level** (environment variables are
    not visible to the job's `if`): `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`,
    `AZURE_RESOURCE_GROUP`, `AZURE_LOCATION` (printed by the script). They are IDs, not secrets: the job reads
-   `vars.*`, so values stored under Secrets leave it skipped. Optional: `BUDGET_EMAIL`, `WEB_MIN_REPLICAS`,
-   `API_MIN_REPLICAS`. Our subscription is Azure for Students: its policy allows only `spaincentral`,
+   `vars.*`, so values stored under Secrets leave it skipped. Optional: `BUDGET_EMAIL`,
+   `MIN_REPLICAS`. Our subscription is Azure for Students: its policy allows only `spaincentral`,
    `switzerlandnorth`, `francecentral`, `germanywestcentral`, `polandcentral` (checked 2026-11-15; `westeurope` is
    refused with `RequestDisallowedByAzure`). Our resource group is in `westeurope`, its resources in `polandcentral`.
 4. Actions → Deploy → Run workflow. The site URL appears on the run and in the environment.
@@ -58,13 +58,18 @@ Files: `infra/main.bicep`, `infra/bootstrap.sh`, `.github/workflows/{ci,deploy}.
 Until step 3 is done the Deploy job is skipped, so `main` stays green.
 
 **Cost** (estimates; check the Azure pricing calculator): idle ≈ ACR Basic ~$5/month + a few cents of logs (ingestion
-capped at 0.1 GB/day). Apps scale to zero and bill per second while they run; the backend at 1 vCPU / 2 GiB costs
-roughly $0.10 per busy hour. `WEB_MIN_REPLICAS=1` (site always warm, e.g. during judging) adds a few dollars a month.
+capped at 0.1 GB/day). The app scales to zero and bills per second while it runs; at 1.25 vCPU / 2.5 GiB it costs
+roughly $0.13 per busy hour. `MIN_REPLICAS=1` (always warm, e.g. during judging) bills the idle rate around the clock,
+roughly $25–30 a month.
 `BUDGET_EMAIL` sets a $20/month alert at 80 % actual and 100 % forecast.
 
-**Limits of this setup:** the backend has at most one replica (jobs live in memory) and its cache is the container's
-ephemeral disk, lost on scale-to-zero or restart; the prebaked bundles are part of the frontend image. A cold backend
-start takes up to a minute (850 MB image), during which the UI shows the offline banner and the presets still work.
+**Why one app with two containers:** the environment came up as an *express* environment (2026-11-15): it rejects
+`allowInsecure` and gave an `external: false` app a public FQDN, so a separate backend app would be reachable past
+nginx. As sidecars in one replica they talk over localhost and only nginx is exposed.
+
+**Limits of this setup:** one replica at most (jobs live in the backend's memory); the cache is the container's
+ephemeral disk, lost on scale-to-zero or restart; the prebaked bundles are part of the frontend image. A cold start
+pulls both images (backend ~850 MB) and can take a minute or more; with `MIN_REPLICAS=1` there is none.
 To tear everything down: `az group delete -n rg-spherex-blink`.
 
 ## OD-1 — hosting (deferred, superseded by the Azure section above)
