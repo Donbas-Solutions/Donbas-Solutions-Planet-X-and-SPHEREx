@@ -52,9 +52,10 @@ work for the live API and the static bundles.
 backend/app/
   domain.py       shared types — Target, ExposureMeta, Visit, Cutout, SequenceParams, FrameArrays, SequenceResult
   astrometry.py   proper-motion propagation (SR-3)
-  archive/        Track A — sia.py, visits.py, cutouts.py, http.py, collections.py, ranges.py, fetch.py (done); naive.py (temporary)
-  pipeline/       Track C — bundle.py (write_bundle, done); sequence.py (build_sequence, to implement)
-  jobs.py         Track A — job runner (to create)
+  archive/        Track A — sia.py, visits.py, cutouts.py, http.py, collections.py, ranges.py, fetch.py, resolve.py,
+                  gaia.py (all done); naive.py (only for scripts/fetch_sample.py)
+  pipeline/       Track C — sequence.py (build_sequence), bundle.py (write_bundle), photometry.py, variability.py (done)
+  jobs.py         Track A — job runner (done)
   main.py         Track A — endpoints
 ```
 
@@ -82,7 +83,7 @@ the challenge coordinates): `science/targets.json`. Recorded SIA responses of al
 ### Phase 0 — done
 Skeletons (FastAPI with `/api/health` and validated 501 stubs; Vite + React + TS with a Float32 frame renderer and a
 lazy Aladin panel), contract `docs/api.md`, mock bundle `frontend/public/mock/`, `science/targets.json`,
-uv + ruff + mypy, Commands in `CLAUDE.md`. Not yet verified: Aladin rendering in a real browser.
+uv + ruff + mypy, Commands in `CLAUDE.md`. Aladin rendering was verified in a real browser on 2026-11-15.
 
 ### Phase 0.5 — done (the A/C seam)
 `domain.py`, `astrometry.py`; archive building blocks with tests on recorded SIA responses and a real stripped cutout
@@ -110,10 +111,10 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
   **M3 🟡** (Aladin context, Gaia markers, README and submission open).
 - IRSA was unstable on 2026-11-14 (SIA/TAP `502` or hanging for minutes): prebaked bundles are the demo path.
 
-### Status of round 3 (2026-11-15, 10:00 UTC)
+### Status of round 3 (2026-11-15, 11:00 UTC)
 Done — in `main`: `fix/spectrum-store` (#17: expired spectra replaced, race-free writes, a hung TAP waited out once).
 
-Done — on `feat/gaia-overlays` (pushed, PR open, not merged yet):
+Done — on `feat/gaia-overlays` (pushed, not merged into `main` yet):
 - **FR-18 complete:** `/api/overlays` (Gaia DR3 at the frame epoch; MAST → GAVO → ESA) and the "Gaia DR3 stars"
   overlay in the player (`gaia=1`). Barnard and ε Indi B markers land within 0.01 px of `expected_px`.
 - **FR-19 working:** context panel with 2MASS / AllWISE / DSS2 from the IRSA HiPS mirror (CDS is down), survey
@@ -121,7 +122,9 @@ Done — on `feat/gaia-overlays` (pushed, PR open, not merged yet):
 - Live search survives a flapping IRSA (SIA answers kept per collection); unique names for deep-field bins;
   partial-data note scoped to the frames on screen; error boundary.
 - Checked in a real browser: all five presets and user-found targets (Teegarden's star, raw coordinates,
-  Wolf 359), offline mode, embed, URL state.
+  Wolf 359), offline mode, embed, every URL parameter (FR-5), FOV limits and detector switching without refetch
+  (FR-4), first frame and render time (NFR-1). Every P0 requirement (FR-1 … FR-15) is implemented.
+- FOV-limit notice kept in the page banner; a preset searched live at another FOV; notice for unknown `a`/`b`.
 
 Still open, in order of importance:
 1. **Merge `feat/gaia-overlays`** and tell the team about the contract changes (`GaiaStar.source_id` is a string,
@@ -137,7 +140,8 @@ Still open, in order of importance:
 6. **Not started, drop first:** FR-20 measured proper motion in the UI (it exists only in `VALIDATION.md`), FR-22
    AllWISE old-epoch frame, FR-21 embed acceptance (the view works; "copy embed code" is missing), optional error
    `code` in `JobStatus`.
-7. Not checked: narrow screens (< 768 px) and the "no SPHEREx coverage" state.
+7. Not checked: narrow screens (< 768 px), browsers other than Chrome, and the "no SPHEREx coverage" state
+   (FR-13; it needs a sky position without images and a working IRSA).
 8. Only if the site is ever hosted (NFR-1): every frame of a sequence is loaded before the first one is shown.
    Locally a preset appears in 0.25–0.33 s (R Dra 1.2 s). Over a 20 Mbit/s link the 1.6–2.0 MB bundles take
    under 1 s, but R Dra's 4.6 MB about 3 s: it needs the on-demand loading that NFR-2 mentions.

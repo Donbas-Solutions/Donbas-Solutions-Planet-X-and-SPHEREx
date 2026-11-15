@@ -126,8 +126,8 @@ src/
   are the HiPS ids in `CLAUDE.md`. Present in the 3.8.2 bundle: `gotoRaDec`, `setFoV`, `setBaseImageLayer`,
   `newImageSurvey`, `A.catalogFromVizieR`. The package ships no types — check signatures against the 3.8.2 API
   docs and add each method you use to a typed interface in `src/aladin-lite.d.ts`.
-  `components/AladinPanel.tsx` is still the Phase 0 skeleton (it recreates the instance on every prop change);
-  B5 brings it in line with the rule above.
+  `components/AladinPanel.tsx` follows this rule: one instance per mount, updated through `setImageSurvey`,
+  `gotoRaDec`, `setFoV` and a catalog; surveys come from `lib/hips.ts` (IRSA mirror first, CDS is often down).
 
 ## Performance
 

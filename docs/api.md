@@ -46,7 +46,7 @@ bit — saturation shows up as `OVERFLOW` / `NONLINEAR`.
 | `GET /files/...` | binary | processed frames |
 
 Diff frames are computed client-side from two `visit_stack` frames; the API does not need to send them.
-Errors: FastAPI default `{"detail": "..."}`; `501` = not implemented yet.
+Errors: FastAPI default `{"detail": "..."}`. No endpoint answers `501` any more.
 
 ## Overlays (FR-18)
 
