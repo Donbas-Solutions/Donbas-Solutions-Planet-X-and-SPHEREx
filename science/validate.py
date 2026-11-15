@@ -35,7 +35,7 @@ from preview import load_target, tile, to_diverging, to_gray
 ROOT = Path(__file__).resolve().parents[1]
 # Same plan, window and cache as the bundles: reuse prebake's fetcher instead of a second copy of it.
 sys.path.insert(0, str(ROOT / "scripts"))
-from prebake import fetch_target  # noqa: E402
+from prebake import fetch_target, recorded_exposures  # noqa: E402
 
 FIGURES = ROOT / "science" / "figures"
 REPORT = ROOT / "science" / "VALIDATION.md"
@@ -84,10 +84,11 @@ class Data:
     points: list[SpectrumPoint]
 
 
-def load(target_id: str, cap_override: int | None) -> Data:
+def load(target_id: str, cap_override: int | None, *, recorded_sia: bool = False) -> Data:
     target, entry = load_target(target_id)
     cap = cap_override or int(str(entry["prebake_cap"]))
-    sample = asyncio.run(fetch_target(target, cap))
+    recorded = recorded_exposures(target_id) if recorded_sia else None
+    sample = asyncio.run(fetch_target(target, cap, recorded))
     result = build_sequence(sample.cutouts, target, SequenceParams())
     points = measure_spectrum(sample.cutouts, target).points
     return Data(target, entry, cap, sample, result, points)
@@ -431,10 +432,10 @@ def previous_sections(target_id: str) -> list[str]:
     return kept
 
 
-def load_or_none(target_id: str, cap_override: int | None) -> Data | None:
+def load_or_none(target_id: str, cap_override: int | None, *, recorded_sia: bool = False) -> Data | None:
     """None when IRSA fails for this target (the fetcher's task group wraps the error)."""
     try:
-        return load(target_id, cap_override)
+        return load(target_id, cap_override, recorded_sia=recorded_sia)
     except ArchiveError as exc:
         print(f"\n{target_id}: archive failed ({exc})")
     except ExceptionGroup as group:
@@ -448,6 +449,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("targets", nargs="*", help="ids from science/targets.json (default: all)")
     parser.add_argument("--max-per-detector", type=int, default=None, help="override prebake_cap (dev samples)")
+    parser.add_argument(
+        "--recorded-sia", action="store_true", help="exposure lists from backend/tests/fixtures/sia/, as in prebake"
+    )
     args = parser.parse_args()
     logging.getLogger("astropy").setLevel(logging.ERROR)
     configure_ssl()
@@ -459,7 +463,7 @@ def main() -> None:
         "",
     ]
     for target_id in args.targets or list(SECTIONS):
-        data = load_or_none(target_id, args.max_per_detector)
+        data = load_or_none(target_id, args.max_per_detector, recorded_sia=args.recorded_sia)
         if data is None:
             kept = previous_sections(target_id)
             print(f"{target_id}: kept {len(kept)} lines of the last report")
