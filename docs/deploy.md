@@ -39,7 +39,9 @@ Azure: spherex-blink-web (nginx, public HTTPS, 0–2 replicas) ──/api, /file
 Files: `infra/main.bicep`, `infra/bootstrap.sh`, `.github/workflows/{ci,deploy}.yml`, `.github/dependabot.yml`.
 
 **One-time setup** (a subscription Owner, Git Bash or any shell with `az`):
-1. `az login`, then `infra/bootstrap.sh Donbas-Solutions/Donbas-Solutions-Planet-X-and-SPHEREx [rg-spherex-blink] [polandcentral]`.
+1. `az login`, then `infra/bootstrap.sh Donbas-Solutions@356984066/Donbas-Solutions-Planet-X-and-SPHEREx@1457654112 [rg-spherex-blink] [polandcentral]`.
+   The organisation sends immutable OIDC subjects (`owner@id/repo@id`, seen 2026-11-15 in `AADSTS700213`); a
+   plain `owner/repo` subject is never matched there.
    It registers the resource providers, creates the resource group and the app registration
    `spherex-blink-github-deploy` with a federated credential for the GitHub environment `production`, and gives it
    Contributor on that resource group plus the right to grant only `AcrPull` (an ABAC condition).

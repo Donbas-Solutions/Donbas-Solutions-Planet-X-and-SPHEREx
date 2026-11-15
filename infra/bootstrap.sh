@@ -2,8 +2,10 @@
 # One-time Azure setup for .github/workflows/deploy.yml. Safe to rerun.
 # Needs `az login` as someone who may create app registrations and assign roles (subscription Owner).
 #
-#   infra/bootstrap.sh <github-owner>/<repo> [resource-group] [location]
+#   infra/bootstrap.sh <github-repo> [resource-group] [location]
 #
+# <github-repo> is the repo part of the OIDC subject GitHub sends: `owner/repo`, or `owner@<id>/repo@<id>` for
+# organisations that use immutable subject claims (ours does: the failed Azure login prints the exact subject).
 # Creates the resource group, an app registration that GitHub Actions signs in as through OIDC (no client secret),
 # and its rights on that resource group only: Contributor, plus the right to grant exactly one role (AcrPull),
 # which main.bicep needs for the apps' image-pull identity.
@@ -11,7 +13,7 @@ set -euo pipefail
 # Git Bash on Windows would otherwise turn /subscriptions/... into a file path.
 export MSYS_NO_PATHCONV=1
 
-repo=${1:?usage: infra/bootstrap.sh <github-owner>/<repo> [resource-group] [location]}
+repo=${1:?usage: infra/bootstrap.sh <github-repo> [resource-group] [location]}
 group=${2:-rg-spherex-blink}
 # Azure for Students allows only spaincentral, switzerlandnorth, francecentral, germanywestcentral, polandcentral.
 location=${3:-polandcentral}
@@ -39,11 +41,12 @@ if [ -z "$app_id" ]; then
 fi
 sp_id=$(az ad sp show --id "$app_id" --query id -o tsv 2>/dev/null || az ad sp create --id "$app_id" --query id -o tsv)
 
-# Keyed by subject: GitHub signs tokens with the repo's current owner/name, so a moved repo needs its own credential.
+# Keyed by subject: a moved or renamed repo needs its own credential.
 subject="repo:$repo:environment:production"
+credential="github-${repo//[^A-Za-z0-9_-]/-}-production"
 if [ -z "$(az ad app federated-credential list --id "$app_id" --query "[?subject=='$subject'].name" -o tsv)" ]; then
   az ad app federated-credential create --id "$app_id" --output none --parameters "{
-    \"name\": \"github-${repo//\//-}-production\",
+    \"name\": \"$credential\",
     \"issuer\": \"https://token.actions.githubusercontent.com\",
     \"subject\": \"$subject\",
     \"audiences\": [\"api://AzureADTokenExchange\"]
