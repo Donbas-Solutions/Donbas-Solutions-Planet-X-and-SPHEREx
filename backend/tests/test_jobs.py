@@ -7,7 +7,7 @@ import gzip
 import os
 import time
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
 
@@ -18,23 +18,19 @@ from test_pipeline import MOVER, two_visits
 from app.archive.collections import CollectionDiscovery
 from app.archive.fetch import FetchResult
 from app.archive.http import ArchiveError, make_http
+from app.archive.plan import NO_COVERAGE, NoCoverageError, collections_for_job, plan_exposures
 from app.archive.sia import parse_sia_csv
 from app.archive.visits import group_visits
 from app.domain import Cutout, ExposureMeta, ProgressCallback, SequenceParams, SequenceResult, Target
 from app.jobs import (
     ARCHIVE_DOWN,
-    SPECTRA_DIR,
-    SPECTRUM,
     Job,
-    JobError,
     JobRunner,
     SequenceRequest,
-    collections_for_job,
-    plan_exposures,
-    store_spectrum,
     target_key,
 )
 from app.models import Spectrum, SpectrumPoint
+from app.storage import SPECTRA_DIR, SPECTRUM, BundleStore, store_spectrum
 
 pytestmark = pytest.mark.anyio
 
@@ -57,6 +53,10 @@ async def finished(runner: JobRunner, job: Job) -> Job:
     async with asyncio.timeout(60):
         await runner.wait(job)
     return job
+
+
+def store_at(root: Path, *, ttl_s: float = 3600.0, clock: Callable[[], float] = time.time) -> BundleStore:
+    return BundleStore(root, url_prefix="/files", ttl_s=ttl_s, clock=clock)
 
 
 class FakeClock:
@@ -104,7 +104,7 @@ def test_plan_detector_selection_does_not_change_visits() -> None:
 
 
 async def test_job_builds_a_bundle_served_under_files(tmp_path: Path) -> None:
-    runner = JobRunner(fetch_synthetic, tmp_path)
+    runner = JobRunner(fetch_synthetic, store_at(tmp_path))
     job = await finished(runner, runner.submit(REQUEST))
     assert job.state == "done", job.error
     assert job.result is not None
@@ -116,7 +116,7 @@ async def test_job_builds_a_bundle_served_under_files(tmp_path: Path) -> None:
 
 async def test_finished_bundle_is_cached_until_the_ttl(tmp_path: Path) -> None:
     clock = FakeClock()
-    runner = JobRunner(fetch_synthetic, tmp_path, ttl_s=3600, clock=clock)
+    runner = JobRunner(fetch_synthetic, store_at(tmp_path, clock=clock), clock=clock)
     assert await runner.cached(REQUEST) is None
     await finished(runner, runner.submit(REQUEST))
     clock.now = (tmp_path / REQUEST.key / "sequence.json").stat().st_mtime + 60
@@ -126,7 +126,7 @@ async def test_finished_bundle_is_cached_until_the_ttl(tmp_path: Path) -> None:
 
 
 async def test_same_request_reuses_the_job(tmp_path: Path) -> None:
-    runner = JobRunner(fetch_synthetic, tmp_path)
+    runner = JobRunner(fetch_synthetic, store_at(tmp_path))
     first = runner.submit(REQUEST)
     assert runner.submit(REQUEST) is first
     await finished(runner, first)
@@ -134,11 +134,11 @@ async def test_same_request_reuses_the_job(tmp_path: Path) -> None:
 
 async def test_failed_job_is_retried_as_a_new_job(tmp_path: Path) -> None:
     async def no_coverage(request: SequenceRequest, progress: ProgressCallback) -> FetchResult:
-        raise JobError("No SPHEREx coverage at this position for the selected detectors.")
+        raise NoCoverageError
 
-    runner = JobRunner(no_coverage, tmp_path)
+    runner = JobRunner(no_coverage, store_at(tmp_path))
     first = await finished(runner, runner.submit(REQUEST))
-    assert first.error == "No SPHEREx coverage at this position for the selected detectors."
+    assert first.error == NO_COVERAGE
     assert runner.submit(REQUEST).id != first.id
 
 
@@ -146,7 +146,7 @@ async def test_archive_outage_reads_as_a_user_message(tmp_path: Path) -> None:
     async def irsa_down(request: SequenceRequest, progress: ProgressCallback) -> FetchResult:
         raise ArchiveError("HTTP 503 from irsa.ipac.caltech.edu", 503)
 
-    runner = JobRunner(irsa_down, tmp_path)
+    runner = JobRunner(irsa_down, store_at(tmp_path))
     job = await finished(runner, runner.submit(REQUEST))
     assert job.error == ARCHIVE_DOWN
 
@@ -155,7 +155,7 @@ async def test_all_downloads_failed_is_an_archive_outage(tmp_path: Path) -> None
     async def all_failed(request: SequenceRequest, progress: ProgressCallback) -> FetchResult:
         return FetchResult(cutouts=[], failed=[c.meta for c in two_visits()], off_detector=[])
 
-    runner = JobRunner(all_failed, tmp_path)
+    runner = JobRunner(all_failed, store_at(tmp_path))
     job = await finished(runner, runner.submit(REQUEST))
     assert job.error == ARCHIVE_DOWN
 
@@ -164,13 +164,13 @@ async def test_pipeline_bug_ends_the_job_with_an_error(tmp_path: Path) -> None:
     def broken_build(cutouts: Sequence[Cutout], target: Target, params: SequenceParams) -> SequenceResult:
         raise RuntimeError("boom")
 
-    runner = JobRunner(fetch_synthetic, tmp_path, build=broken_build)
+    runner = JobRunner(fetch_synthetic, store_at(tmp_path), build=broken_build)
     job = await finished(runner, runner.submit(REQUEST))
     assert job.error == "Internal error while building the sequence."
 
 
 async def test_progress_reports_stacking_after_download(tmp_path: Path) -> None:
-    runner = JobRunner(fetch_synthetic, tmp_path)
+    runner = JobRunner(fetch_synthetic, store_at(tmp_path))
     job = await finished(runner, runner.submit(REQUEST))
     assert job.progress.stage == "stacking"
     assert job.progress.done == job.progress.total
@@ -203,7 +203,7 @@ def test_target_key_ignores_fov_detectors_and_mode() -> None:
 
 
 async def test_job_measures_the_target_spectrum(tmp_path: Path) -> None:
-    runner = JobRunner(fetch_synthetic, tmp_path)
+    runner = JobRunner(fetch_synthetic, store_at(tmp_path))
     job = await finished(runner, runner.submit(REQUEST))
     assert job.result is not None
     assert job.result.meta.spectrum == f"/files/{REQUEST.key}/{SPECTRUM}"
@@ -217,7 +217,7 @@ async def test_photometry_bug_keeps_the_sequence_without_a_spectrum(tmp_path: Pa
     def broken_measure(cutouts: Sequence[Cutout], target: Target) -> Spectrum:
         raise RuntimeError("boom")
 
-    runner = JobRunner(fetch_synthetic, tmp_path, measure=broken_measure)
+    runner = JobRunner(fetch_synthetic, store_at(tmp_path), measure=broken_measure)
     job = await finished(runner, runner.submit(REQUEST))
     assert job.state == "done", job.error
     assert job.result is not None
@@ -227,7 +227,7 @@ async def test_photometry_bug_keeps_the_sequence_without_a_spectrum(tmp_path: Pa
 
 async def test_spectrum_expires_with_the_ttl(tmp_path: Path) -> None:
     clock = FakeClock()
-    runner = JobRunner(fetch_synthetic, tmp_path, ttl_s=3600, clock=clock)
+    runner = JobRunner(fetch_synthetic, store_at(tmp_path, clock=clock), clock=clock)
     await finished(runner, runner.submit(REQUEST))
     clock.now = (tmp_path / SPECTRA_DIR / f"{target_key(MOVER)}.json").stat().st_mtime + 3601
     assert await runner.spectrum(MOVER) is None
@@ -281,7 +281,7 @@ async def test_new_job_replaces_an_expired_spectrum(tmp_path: Path) -> None:
     per_target.write_text(spectrum_of(len(two_visits()) + 10).model_dump_json(), encoding="utf-8")
     expired = time.time() - 7200
     os.utime(per_target, (expired, expired))
-    runner = JobRunner(fetch_synthetic, tmp_path, ttl_s=3600)
+    runner = JobRunner(fetch_synthetic, store_at(tmp_path))
     assert await runner.spectrum(MOVER) is None
     await finished(runner, runner.submit(REQUEST))
     spectrum = await runner.spectrum(MOVER)
@@ -291,7 +291,7 @@ async def test_new_job_replaces_an_expired_spectrum(tmp_path: Path) -> None:
 
 async def test_job_runs_build_and_photometry_in_a_process_pool(tmp_path: Path) -> None:
     with ProcessPoolExecutor(max_workers=1) as pool:
-        runner = JobRunner(fetch_synthetic, tmp_path, executor=pool)
+        runner = JobRunner(fetch_synthetic, store_at(tmp_path), executor=pool)
         job = await finished(runner, runner.submit(REQUEST))
     assert job.state == "done", job.error
     assert await runner.spectrum(MOVER) is not None

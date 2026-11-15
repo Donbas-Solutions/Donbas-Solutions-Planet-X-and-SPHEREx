@@ -30,12 +30,12 @@ from app.archive.collections import CollectionDiscovery
 from app.archive.cutouts import cutout_size_deg
 from app.archive.fetch import FetchResult, fetch_cutouts, query_exposures
 from app.archive.http import make_http
+from app.archive.plan import collections_for_job
 from app.archive.sia import parse_sia_csv
 from app.archive.visits import cap_per_detector, group_visits
 from app.astrometry import position_at
 from app.config import configure_ssl
 from app.domain import ExposureMeta, SequenceParams, SequenceResult, Target, Visit
-from app.jobs import collections_for_job
 from app.pipeline.bundle import write_bundle
 from app.pipeline.photometry import measure_spectrum
 from app.pipeline.sequence import build_sequence

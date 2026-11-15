@@ -53,10 +53,12 @@ backend/app/
   domain.py       shared types — Target, ExposureMeta, Visit, Cutout, SequenceParams, FrameArrays, SequenceResult
   astrometry.py   proper-motion propagation (SR-3)
   archive/        Track A — sia.py, visits.py, cutouts.py, http.py, collections.py, ranges.py, fetch.py, resolve.py,
-                  gaia.py (all done); naive.py (only for scripts/fetch_sample.py)
+                  gaia.py, plan.py (target → capped plan → cutouts); naive.py (only for scripts/fetch_sample.py)
   pipeline/       Track C — sequence.py (build_sequence), bundle.py (write_bundle), photometry.py, variability.py (done)
-  jobs.py         Track A — job runner (done)
-  main.py         Track A — endpoints
+  storage.py      Track A — BundleStore (bundles + spectra on disk, TTL), CacheMeter (/api/health)
+  jobs/           Track A — keys.py (request keys), runner.py (JobRunner)
+  api/            Track A — one router per area (health, resolve, sequences, spectra, overlays), deps.py, params.py
+  main.py         Track A — composition root: create_app(), lifespan wiring
 ```
 
 Flow: `Target` → **A** `query_exposures` → `group_visits` → `cap_per_detector` → `fetch_cutouts` → `list[Cutout]`
@@ -178,7 +180,7 @@ The round-3 track lists below are kept as written on 2026-11-14; this section ov
 
 | Role | Who | Feature branches (in order) | Owns | Mission now |
 |---|---|---|---|---|
-| **A — Archive & API** | the A person | `fix/spectrum-store` → `feat/gaia-overlays` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`; contract files | ✓ spectrum-store fixes (#17), ✓ Gaia overlays (#18); live M1 numbers when IRSA is up |
+| **A — Archive & API** | the A person | `fix/spectrum-store` → `feat/gaia-overlays` | `backend/app/archive/`, `api/`, `jobs/`, `storage.py`, `main.py`, `config.py`; contract files | ✓ spectrum-store fixes (#17), ✓ Gaia overlays (#18); live M1 numbers when IRSA is up |
 | **B — Frontend core** | the B person | no new feature branch; `docs/…` screenshots with C | app shell, state, URL, player, panels, `package.json` | Support D (Aladin), Windows clean-clone test, screenshots/GIFs |
 | **C — Science & delivery** | the team lead | `fix/prebake-discovery-timeout` → `test/fr16-spectrophotometry` → `docs/readme-and-pitch` | `backend/app/pipeline/`, `science/`, `scripts/prebake.py`, `frontend/public/prebaked/`, README, pitch | Decisions, README and submission |
 | **D — P1 features** | the new person | `feat/aladin-context` → `feat/gaia-markers` | `frontend/src/components/{charts,context,embed}/` (+ their `lib/` helpers) | Aladin context panel, then Gaia markers |

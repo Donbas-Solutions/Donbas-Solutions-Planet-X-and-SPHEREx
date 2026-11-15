@@ -46,11 +46,11 @@ Project facts (stack, science rules, guardrails, commands) live in `CLAUDE.md`; 
   Changing either one means changing both and telling the team.
 - Every endpoint declares `response_model=` and the matching return annotation - never return bare dicts.
 - Validate query params with `Annotated` + `Query` constraints, not manual checks. Reuse the aliases in
-  `app/main.py` (`Ra`, `Dec`, `Fov`, `Pm`, `RefEpoch`); the limits come from `docs/api.md`.
+  `app/api/params.py` (`Ra`, `Dec`, `Fov`, `Pm`, `RefEpoch`); the limits come from `docs/api.md`.
 - Path params that become file names (`job_id`, ...) are validated (UUID or a strict `pattern`) - never build
   a path from raw user input (path traversal into `cache/`).
-- When `main.py` grows, move endpoints into `APIRouter`s under `app/routers/<area>.py` and keep `main.py` to app
-  creation, middleware, mounts and `include_router`. Endpoints stay thin: parse -> call a plain function in a domain
+- Endpoints live in one `APIRouter` per area under `app/api/<area>.py` (registered in `app/api/__init__.py`);
+  `main.py` is the composition root: `create_app()` (middleware, mounts, routers) and `lifespan` (shared resources). Endpoints stay thin: parse -> call a plain function in a domain
   module -> return a model. Science/processing modules must not import FastAPI.
 - Shared resources (one `httpx.AsyncClient`, semaphores, job registry) are created in a `lifespan` context manager
   and reach endpoints via `Depends` / `request.app.state`, not per request and not at import time.
