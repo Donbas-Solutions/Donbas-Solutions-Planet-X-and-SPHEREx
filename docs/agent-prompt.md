@@ -111,7 +111,7 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
   **M3 🟡** (Aladin context, Gaia markers, README and submission open).
 - IRSA was unstable on 2026-11-14 (SIA/TAP `502` or hanging for minutes): prebaked bundles are the demo path.
 
-### Status of round 3 (2026-11-15, 12:20 UTC)
+### Status of round 3 (2026-11-15, 14:35 UTC)
 Done — in `main`: `fix/spectrum-store` (#17: expired spectra replaced, race-free writes, a hung TAP waited out once).
 
 Done — in `main`: `feat/gaia-overlays` (#18):
@@ -126,34 +126,37 @@ Done — in `main`: `feat/gaia-overlays` (#18):
   (FR-4), first frame and render time (NFR-1). Every P0 requirement (FR-1 … FR-15) is implemented.
 - FOV-limit notice kept in the page banner; a preset searched live at another FOV; notice for unknown `a`/`b`.
 
-Done — on `docs/round-3-status` (not merged yet): all five bundles rebuilt at cap 20 from the recorded SIA answers
-(`prebake.py` / `validate.py --recorded-sia`: exposure lists from `backend/tests/fixtures/sia/`, pixels from S3,
-so IRSA SIA/TAP being down does not block it), and `science/VALIDATION.md` regenerated from the same plan.
-RW Aur 180 → 336 cutouts (full depth), R Dra 132 → 786; Barnard 342, ε Indi B 363, WISE 0855 244. Results unchanged
-in substance: Barnard 1.65 px @ 359°, ε Indi B 1.07 px @ 129°, WISE 0855 D5/D6 motion at PA 276–277°;
-RW Aur D1 matched-λ ×2.48 at 16.6σ (3 pairs; was ×2.43 at 12.5σ on 1 pair); R Dra saturated in all 759 points.
+Done — in `main`:
+- Full-depth bundles (#20): all five rebuilt at cap 20 from the recorded SIA answers (`prebake.py` /
+  `validate.py --recorded-sia`: exposure lists from `backend/tests/fixtures/sia/`, pixels from S3, so IRSA SIA/TAP
+  being down does not block it); `science/VALIDATION.md` regenerated from the same plan. RW Aur 180 → 336 cutouts
+  (full depth), R Dra 132 → 786; Barnard 342, ε Indi B 363, WISE 0855 244. Results unchanged in substance: Barnard
+  1.65 px @ 359°, ε Indi B 1.07 px @ 129°, WISE 0855 D5/D6 motion at PA 276–277°; RW Aur D1 matched-λ ×2.48 at
+  16.6σ (3 pairs; was ×2.43 at 12.5σ on 1 pair); R Dra saturated in all 759 points.
+- Docker Compose (#19) and CI/CD (#21): lint, types, tests, compose smoke test and scans on every PR; a green `main`
+  deploys to Azure Container Apps (`docs/deploy.md`). This replaces the earlier "no deploy" decision (OD-1).
+- README: features, test-target results, GIFs and the motion figure, use of AI, Docker quick start.
+- The repository is public (GitHub API answers anonymously, 14:31 UTC).
+- Licence (OD-2): LGPL-3.0 (`LICENSE`, with the GPL-3.0 text in `COPYING`), compatible with Aladin Lite.
 
 Still open, in order of importance:
-1. **Announce the #18 contract changes** to the team (`GaiaStar.source_id` is a string, `unavailable` always lists
+1. **Deploy:** the first Deploy run on `main` was in progress at 14:31 UTC. Once it is green, open the site URL in a
+   private window: the five presets, `/about`, `/embed`, the context panel and the Gaia overlay.
+2. **Submission (C):** Team Owner and Kyiv cutoff confirmed, video ≤ 30 s or ≤ 7 slides, submission text, links
+   tested in a private window. The README credits (NFR-10) and AI-use section are done.
+3. **IRSA SIA/TAP still `502`** (14:31 UTC, as at 08:40 and 12:17), so live searches fail on the hosted site too;
+   the presets and the offline fallback work. When IRSA recovers: M1 live numbers for Barnard and ε Indi B (A).
+   Short designations (`WISE 0855-0714`) timed out on Harvard's SIMBAD `LIKE` query (15 s); presets are unaffected.
+4. **Hosted load time (NFR-1):** every frame of a sequence is loaded before the first is shown. Bundles are
+   1.7–2.2 MB, R Dra 5.6 MB (≈ 3 s at 20 Mbit/s): on-demand frame loading (NFR-2) would fix it.
+5. **FR-16 acceptance (C):** one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25); only the
+   2MASS sanity check exists (J 1.02, H 1.03, Ks 1.23).
+6. **Announce the #18 contract changes** if not done (`GaiaStar.source_id` is a string, `unavailable` always lists
    `skybot`, new page parameter `gaia`).
-2. **Submission (C):** repository public + licence (OD-2, GPL/LGPL-3-compatible; `main` has no `LICENSE` yet), Team
-   Owner and Kyiv cutoff confirmed, README (today 50 lines with a generic quick start: still missing per-OS local
-   run on macOS and Windows, screenshots, charts / Gaia / context features, credits, AI-use disclosure), video
-   ≤ 30 s or ≤ 7 slides, submission text, links tested in a private window.
-3. **Clean-clone test on Windows** from the README (B), screenshots and GIFs.
-4. **FR-16 acceptance (C):** one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25); only the
-   2MASS sanity check exists.
-5. **When IRSA is stable:** M1 live numbers for Barnard and ε Indi B (A). Probe at 12:17 UTC: SIA and TAP still `502` (10 of 10), S3 and the IRSA HiPS mirror `200`, SIMBAD only via
-   Harvard. Live searches depend on SIA; the prebaked bundles stay the demo path.
-   Short designations (`WISE 0855-0714`) timed out on Harvard's `LIKE` query (15 s) — the presets are unaffected.
-6. **Not started, drop first:** FR-20 measured proper motion in the UI (it exists only in `VALIDATION.md`), FR-22
-   AllWISE old-epoch frame, FR-21 embed acceptance (the view works; "copy embed code" is missing), optional error
-   `code` in `JobStatus`.
-7. Not checked: narrow screens (< 768 px), browsers other than Chrome, and the "no SPHEREx coverage" state
-   (FR-13; it needs a sky position without images and a working IRSA).
-8. Only if the site is ever hosted (NFR-1): every frame of a sequence is loaded before the first one is shown.
-   Locally a preset appears in 0.25–0.33 s (R Dra 1.2 s). Over a 20 Mbit/s link the 1.6–2.0 MB bundles take
-   under 1 s, but R Dra's 4.6 MB about 3 s: it needs the on-demand loading that NFR-2 mentions.
+7. **Not started, drop first:** FR-20 measured proper motion in the UI (it exists only in `VALIDATION.md`), FR-22
+   AllWISE old-epoch frame, "copy embed code" for FR-21, optional error `code` in `JobStatus`.
+8. Not checked: narrow screens (< 768 px), browsers other than Chrome, the "no SPHEREx coverage" state (FR-13; needs
+   a working IRSA). Dependabot's backend base-image update failed CI (14:24 UTC); not merged, not blocking.
 
 The round-3 track lists below are kept as written on 2026-11-14; this section overrides them where they differ.
 
