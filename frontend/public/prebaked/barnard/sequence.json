@@ -1,7 +1,7 @@
 {
  "grid": {
-  "ra": 269.4462289413008,
-  "dec": 4.768706574518166,
+  "ra": 269.4462291893383,
+  "dec": 4.768703379356844,
   "fov_arcmin": 10.0,
   "npix": 97,
   "pixscale_arcsec": 6.2,
@@ -15,10 +15,10 @@
    "CUNIT2": "deg",
    "CTYPE1": "RA---TAN",
    "CTYPE2": "DEC--TAN",
-   "CRVAL1": 269.4462289413,
-   "CRVAL2": 4.7687065745182,
+   "CRVAL1": 269.44622918934,
+   "CRVAL2": 4.7687033793568,
    "LONPOLE": 180.0,
-   "LATPOLE": 4.7687065745182,
+   "LATPOLE": 4.7687033793568,
    "MJDREF": 0.0,
    "RADESYS": "ICRS",
    "NAXIS1": 97,
@@ -27,8 +27,8 @@
  },
  "stretch": {
   "kind": "asinh",
-  "vmin": -0.1176,
-  "vmax": 11.4972,
+  "vmin": -0.1209,
+  "vmax": 11.5343,
   "a": 0.1
  },
  "flag_bits": [
@@ -226,7 +226,7 @@
    "id": "v1-D2",
    "kind": "visit_stack",
    "label": "2025-08 · D2",
-   "mjd_mid": 60913.7362,
+   "mjd_mid": 60913.7826,
    "date_range": [
     "2025-08-21",
     "2025-08-30"
@@ -238,7 +238,7 @@
     1.101,
     1.629
    ],
-   "n_exposures": 18,
+   "n_exposures": 19,
    "data": "frames/v1-D2.f32",
    "flags": "frames/v1-D2.flags.u32",
    "shape": [
@@ -328,7 +328,7 @@
    "id": "v1-D5",
    "kind": "visit_stack",
    "label": "2025-08 · D5",
-   "mjd_mid": 60913.7362,
+   "mjd_mid": 60913.7826,
    "date_range": [
     "2025-08-21",
     "2025-08-30"
@@ -340,7 +340,7 @@
     3.821,
     4.407
    ],
-   "n_exposures": 18,
+   "n_exposures": 19,
    "data": "frames/v1-D5.f32",
    "flags": "frames/v1-D5.flags.u32",
    "shape": [
@@ -396,7 +396,7 @@
    "id": "v1-all",
    "kind": "visit_stack",
    "label": "2025-08 · all",
-   "mjd_mid": 60915.5703,
+   "mjd_mid": 60915.5535,
    "date_range": [
     "2025-08-15",
     "2025-10-01"
@@ -413,7 +413,7 @@
     0.75,
     5.001
    ],
-   "n_exposures": 111,
+   "n_exposures": 113,
    "data": "frames/v1-all.f32",
    "flags": "frames/v1-all.flags.u32",
    "shape": [
@@ -422,7 +422,7 @@
    ],
    "expected_px": {
     "x": 47.93,
-    "y": 47.13
+    "y": 47.14
    },
    "warnings": [
     {
@@ -469,7 +469,7 @@
    "id": "v2-D2",
    "kind": "visit_stack",
    "label": "2026-03 · D2",
-   "mjd_mid": 61116.1544,
+   "mjd_mid": 61116.3858,
    "date_range": [
     "2026-03-15",
     "2026-03-22"
@@ -481,7 +481,7 @@
     1.118,
     1.629
    ],
-   "n_exposures": 18,
+   "n_exposures": 19,
    "data": "frames/v2-D2.f32",
    "flags": "frames/v2-D2.flags.u32",
    "shape": [
@@ -490,7 +490,7 @@
    ],
    "expected_px": {
     "x": 48.0,
-    "y": 48.05
+    "y": 48.06
    },
    "warnings": [
     {
@@ -503,7 +503,7 @@
    "id": "v2-D3",
    "kind": "visit_stack",
    "label": "2026-03 · D3",
-   "mjd_mid": 61128.0836,
+   "mjd_mid": 61129.3499,
    "date_range": [
     "2026-03-19",
     "2026-05-05"
@@ -512,7 +512,7 @@
     3
    ],
    "lambda_um": [
-    1.662,
+    1.624,
     2.362
    ],
    "n_exposures": 20,
@@ -592,7 +592,7 @@
    ],
    "expected_px": {
     "x": 48.0,
-    "y": 48.05
+    "y": 48.06
    },
    "warnings": [
     {
@@ -605,7 +605,7 @@
    "id": "v2-D6",
    "kind": "visit_stack",
    "label": "2026-03 · D6",
-   "mjd_mid": 61128.0836,
+   "mjd_mid": 61129.3499,
    "date_range": [
     "2026-03-19",
     "2026-05-05"
@@ -614,7 +614,7 @@
     6
    ],
    "lambda_um": [
-    4.444,
+    4.412,
     4.966
    ],
    "n_exposures": 20,
@@ -639,7 +639,7 @@
    "id": "v2-all",
    "kind": "visit_stack",
    "label": "2026-03 · all",
-   "mjd_mid": 61118.6054,
+   "mjd_mid": 61119.0667,
    "date_range": [
     "2026-03-11",
     "2026-05-05"
@@ -656,7 +656,7 @@
     0.745,
     4.966
    ],
-   "n_exposures": 113,
+   "n_exposures": 114,
    "data": "frames/v2-all.f32",
    "flags": "frames/v2-all.flags.u32",
    "shape": [
@@ -664,8 +664,8 @@
     97
    ],
    "expected_px": {
-    "x": 48.0,
-    "y": 48.06
+    "x": 48.01,
+    "y": 48.07
    },
    "warnings": [
     {
@@ -678,7 +678,7 @@
    "id": "v3-D1",
    "kind": "visit_stack",
    "label": "2026-08 · D1",
-   "mjd_mid": 61278.3288,
+   "mjd_mid": 61278.4115,
    "date_range": [
     "2026-08-23",
     "2026-09-02"
@@ -687,7 +687,7 @@
     1
    ],
    "lambda_um": [
-    0.741,
+    0.759,
     1.097
    ],
    "n_exposures": 18,
@@ -699,7 +699,7 @@
    ],
    "expected_px": {
     "x": 48.06,
-    "y": 48.79
+    "y": 48.8
    },
    "warnings": [
     {
@@ -712,7 +712,7 @@
    "id": "v3-D2",
    "kind": "visit_stack",
    "label": "2026-08 · D2",
-   "mjd_mid": 61275.1598,
+   "mjd_mid": 61275.16,
    "date_range": [
     "2026-08-18",
     "2026-09-22"
@@ -721,7 +721,7 @@
     2
    ],
    "lambda_um": [
-    1.088,
+    1.114,
     1.661
    ],
    "n_exposures": 20,
@@ -780,7 +780,7 @@
    "id": "v3-D4",
    "kind": "visit_stack",
    "label": "2026-08 · D4",
-   "mjd_mid": 61278.3288,
+   "mjd_mid": 61278.3505,
    "date_range": [
     "2026-08-23",
     "2026-09-02"
@@ -792,7 +792,7 @@
     2.419,
     3.762
    ],
-   "n_exposures": 18,
+   "n_exposures": 19,
    "data": "frames/v3-D4.f32",
    "flags": "frames/v3-D4.flags.u32",
    "shape": [
@@ -801,7 +801,7 @@
    ],
    "expected_px": {
     "x": 48.06,
-    "y": 48.79
+    "y": 48.8
    },
    "warnings": [
     {
@@ -814,7 +814,7 @@
    "id": "v3-D5",
    "kind": "visit_stack",
    "label": "2026-08 · D5",
-   "mjd_mid": 61275.1598,
+   "mjd_mid": 61275.16,
    "date_range": [
     "2026-08-18",
     "2026-09-22"
@@ -823,7 +823,7 @@
     5
    ],
    "lambda_um": [
-    3.804,
+    3.838,
     4.43
    ],
    "n_exposures": 20,
@@ -848,10 +848,10 @@
    "id": "v3-D6",
    "kind": "visit_stack",
    "label": "2026-08 · D6",
-   "mjd_mid": 61272.0343,
+   "mjd_mid": 61272.0094,
    "date_range": [
     "2026-08-16",
-    "2026-09-22"
+    "2026-09-20"
    ],
    "detectors": [
     6
@@ -882,7 +882,7 @@
    "id": "v3-all",
    "kind": "visit_stack",
    "label": "2026-08 · all",
-   "mjd_mid": 61275.1145,
+   "mjd_mid": 61275.155,
    "date_range": [
     "2026-08-16",
     "2026-09-22"
@@ -896,10 +896,10 @@
     6
    ],
    "lambda_um": [
-    0.741,
+    0.759,
     4.977
    ],
-   "n_exposures": 114,
+   "n_exposures": 115,
    "data": "frames/v3-all.f32",
    "flags": "frames/v3-all.flags.u32",
    "shape": [
@@ -924,8 +924,8 @@
    "spherex_dr1",
    "spherex_qr3"
   ],
-  "n_exposures_total": 338,
-  "generated_at": "2026-11-14T15:51:24+00:00",
+  "n_exposures_total": 342,
+  "generated_at": "2026-11-15T12:56:15+00:00",
   "pipeline_tags": [
    "l2b-v27"
   ],

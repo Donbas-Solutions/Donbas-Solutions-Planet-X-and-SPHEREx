@@ -1,16 +1,6 @@
 {
  "points": [
   {
-   "lambda_um": 0.7414,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61277.25238,
-   "detector": 1,
-   "visit": "v3",
-   "saturated": true,
-   "flags": 69206087
-  },
-  {
    "lambda_um": 0.7449,
    "flux_ujy": null,
    "err_ujy": null,
@@ -531,16 +521,6 @@
    "flags": 69206023
   },
   {
-   "lambda_um": 1.088,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61273.38085,
-   "detector": 2,
-   "visit": "v3",
-   "saturated": true,
-   "flags": 69206023
-  },
-  {
    "lambda_um": 1.0917,
    "flux_ujy": null,
    "err_ujy": null,
@@ -607,6 +587,16 @@
    "mjd": 60911.49127,
    "detector": 2,
    "visit": "v1",
+   "saturated": true,
+   "flags": 69206023
+  },
+  {
+   "lambda_um": 1.1395,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61273.38383,
+   "detector": 2,
+   "visit": "v3",
    "saturated": true,
    "flags": 69206023
   },
@@ -701,16 +691,6 @@
    "flags": 69206023
   },
   {
-   "lambda_um": 1.2235,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61273.51701,
-   "detector": 2,
-   "visit": "v3",
-   "saturated": true,
-   "flags": 69206023
-  },
-  {
    "lambda_um": 1.2256,
    "flux_ujy": null,
    "err_ujy": null,
@@ -757,6 +737,16 @@
    "mjd": 60914.27843,
    "detector": 2,
    "visit": "v1",
+   "saturated": true,
+   "flags": 69206023
+  },
+  {
+   "lambda_um": 1.2825,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61273.64998,
+   "detector": 2,
+   "visit": "v3",
    "saturated": true,
    "flags": 69206023
   },
@@ -841,16 +831,6 @@
    "flags": 69206023
   },
   {
-   "lambda_um": 1.3764,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61273.65446,
-   "detector": 2,
-   "visit": "v3",
-   "saturated": true,
-   "flags": 69207047
-  },
-  {
    "lambda_um": 1.3787,
    "flux_ujy": null,
    "err_ujy": null,
@@ -899,6 +879,16 @@
    "visit": "v1",
    "saturated": true,
    "flags": 69206023
+  },
+  {
+   "lambda_um": 1.4429,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61273.72184,
+   "detector": 2,
+   "visit": "v3",
+   "saturated": true,
+   "flags": 69207047
   },
   {
    "lambda_um": 1.4452,
@@ -1041,10 +1031,10 @@
    "flags": 69206023
   },
   {
-   "lambda_um": 1.5766,
+   "lambda_um": 1.5851,
    "flux_ujy": null,
    "err_ujy": null,
-   "mjd": 61276.16696,
+   "mjd": 61270.87077,
    "detector": 2,
    "visit": "v3",
    "saturated": true,
@@ -1071,14 +1061,24 @@
    "flags": 69337095
   },
   {
-   "lambda_um": 1.6227,
+   "lambda_um": 1.6141,
    "flux_ujy": null,
    "err_ujy": null,
-   "mjd": 61271.34273,
+   "mjd": 61276.43835,
    "detector": 2,
    "visit": "v3",
    "saturated": true,
    "flags": 69206023
+  },
+  {
+   "lambda_um": 1.6244,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61122.65479,
+   "detector": 3,
+   "visit": "v2",
+   "saturated": true,
+   "flags": 69337095
   },
   {
    "lambda_um": 1.6288,
@@ -1251,16 +1251,6 @@
    "flags": 337641543
   },
   {
-   "lambda_um": 1.7931,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61140.03073,
-   "detector": 3,
-   "visit": "v2",
-   "saturated": true,
-   "flags": 69206023
-  },
-  {
    "lambda_um": 1.7934,
    "flux_ujy": null,
    "err_ujy": null,
@@ -1351,6 +1341,16 @@
    "flags": 69206087
   },
   {
+   "lambda_um": 1.9226,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61118.31437,
+   "detector": 3,
+   "visit": "v2",
+   "saturated": true,
+   "flags": 69206023
+  },
+  {
    "lambda_um": 1.9378,
    "flux_ujy": null,
    "err_ujy": null,
@@ -1369,16 +1369,6 @@
    "visit": "v1",
    "saturated": true,
    "flags": 69206023
-  },
-  {
-   "lambda_um": 1.9664,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61118.37771,
-   "detector": 3,
-   "visit": "v2",
-   "saturated": true,
-   "flags": 69337095
   },
   {
    "lambda_um": 1.9827,
@@ -1457,6 +1447,16 @@
    "mjd": 60912.03808,
    "detector": 3,
    "visit": "v1",
+   "saturated": true,
+   "flags": 69206023
+  },
+  {
+   "lambda_um": 2.1062,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61164.1338,
+   "detector": 3,
+   "visit": "v2",
    "saturated": true,
    "flags": 69206023
   },
@@ -1579,16 +1579,6 @@
    "visit": "v2",
    "saturated": true,
    "flags": 69206023
-  },
-  {
-   "lambda_um": 2.2566,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61121.36778,
-   "detector": 3,
-   "visit": "v2",
-   "saturated": true,
-   "flags": 69337095
   },
   {
    "lambda_um": 2.2741,
@@ -2231,16 +2221,6 @@
    "flags": 69206087
   },
   {
-   "lambda_um": 3.8043,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61273.38085,
-   "detector": 5,
-   "visit": "v3",
-   "saturated": true,
-   "flags": 69206023
-  },
-  {
    "lambda_um": 3.8214,
    "flux_ujy": null,
    "err_ujy": null,
@@ -2277,6 +2257,16 @@
    "mjd": 60911.49127,
    "detector": 5,
    "visit": "v1",
+   "saturated": true,
+   "flags": 69206023
+  },
+  {
+   "lambda_um": 3.8707,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61273.38383,
+   "detector": 5,
+   "visit": "v3",
    "saturated": true,
    "flags": 69206023
   },
@@ -2371,16 +2361,6 @@
    "flags": 69206023
   },
   {
-   "lambda_um": 3.9722,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61273.51701,
-   "detector": 5,
-   "visit": "v3",
-   "saturated": true,
-   "flags": 69206023
-  },
-  {
    "lambda_um": 3.975,
    "flux_ujy": null,
    "err_ujy": null,
@@ -2427,6 +2407,16 @@
    "mjd": 60914.27843,
    "detector": 5,
    "visit": "v1",
+   "saturated": true,
+   "flags": 69206023
+  },
+  {
+   "lambda_um": 4.042,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61273.64998,
+   "detector": 5,
+   "visit": "v3",
    "saturated": true,
    "flags": 69206023
   },
@@ -2511,16 +2501,6 @@
    "flags": 69206023
   },
   {
-   "lambda_um": 4.1487,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61273.65446,
-   "detector": 5,
-   "visit": "v3",
-   "saturated": true,
-   "flags": 337641479
-  },
-  {
    "lambda_um": 4.1514,
    "flux_ujy": null,
    "err_ujy": null,
@@ -2567,6 +2547,16 @@
    "mjd": 60916.65973,
    "detector": 5,
    "visit": "v1",
+   "saturated": true,
+   "flags": 69206023
+  },
+  {
+   "lambda_um": 4.2201,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61273.72184,
+   "detector": 5,
+   "visit": "v3",
    "saturated": true,
    "flags": 69206023
   },
@@ -2711,10 +2701,10 @@
    "flags": 69206087
   },
   {
-   "lambda_um": 4.3555,
+   "lambda_um": 4.364,
    "flux_ujy": null,
    "err_ujy": null,
-   "mjd": 61276.16696,
+   "mjd": 61270.87077,
    "detector": 5,
    "visit": "v3",
    "saturated": true,
@@ -2741,10 +2731,10 @@
    "flags": 69206023
   },
   {
-   "lambda_um": 4.3988,
+   "lambda_um": 4.3924,
    "flux_ujy": null,
    "err_ujy": null,
-   "mjd": 61271.34273,
+   "mjd": 61276.43835,
    "detector": 5,
    "visit": "v3",
    "saturated": true,
@@ -2766,6 +2756,16 @@
    "err_ujy": null,
    "mjd": 61114.30625,
    "detector": 5,
+   "visit": "v2",
+   "saturated": true,
+   "flags": 69206023
+  },
+  {
+   "lambda_um": 4.4122,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61122.65479,
+   "detector": 6,
    "visit": "v2",
    "saturated": true,
    "flags": 69206023
@@ -2901,16 +2901,6 @@
    "flags": 69206023
   },
   {
-   "lambda_um": 4.5509,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61140.03073,
-   "detector": 6,
-   "visit": "v2",
-   "saturated": true,
-   "flags": 337641479
-  },
-  {
    "lambda_um": 4.5511,
    "flux_ujy": null,
    "err_ujy": null,
@@ -3001,6 +2991,16 @@
    "flags": 69206023
   },
   {
+   "lambda_um": 4.6525,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61118.31437,
+   "detector": 6,
+   "visit": "v2",
+   "saturated": true,
+   "flags": 69206087
+  },
+  {
    "lambda_um": 4.664,
    "flux_ujy": null,
    "err_ujy": null,
@@ -3017,16 +3017,6 @@
    "mjd": 60908.64433,
    "detector": 6,
    "visit": "v1",
-   "saturated": true,
-   "flags": 69206023
-  },
-  {
-   "lambda_um": 4.6863,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61118.37771,
-   "detector": 6,
-   "visit": "v2",
    "saturated": true,
    "flags": 69206023
   },
@@ -3109,6 +3099,16 @@
    "visit": "v1",
    "saturated": true,
    "flags": 69206087
+  },
+  {
+   "lambda_um": 4.7889,
+   "flux_ujy": null,
+   "err_ujy": null,
+   "mjd": 61164.1338,
+   "detector": 6,
+   "visit": "v2",
+   "saturated": true,
+   "flags": 337641479
   },
   {
    "lambda_um": 4.7894,
@@ -3225,16 +3225,6 @@
    "flux_ujy": null,
    "err_ujy": null,
    "mjd": 61165.08364,
-   "detector": 6,
-   "visit": "v2",
-   "saturated": true,
-   "flags": 69206023
-  },
-  {
-   "lambda_um": 4.8943,
-   "flux_ujy": null,
-   "err_ujy": null,
-   "mjd": 61121.36778,
    "detector": 6,
    "visit": "v2",
    "saturated": true,

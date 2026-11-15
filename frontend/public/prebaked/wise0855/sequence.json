@@ -222,7 +222,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.07 of 0.37 µm"
+     "message": "incomplete λ coverage: 4 of 17 LVF channels"
     }
    ]
   },
@@ -260,7 +260,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.35 of 0.53 µm"
+     "message": "incomplete λ coverage: 8 of 17 LVF channels"
     }
    ]
   },
@@ -298,7 +298,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.20 of 0.75 µm"
+     "message": "incomplete λ coverage: 3 of 17 LVF channels"
     }
    ]
   },
@@ -336,7 +336,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.28 of 1.39 µm"
+     "message": "incomplete λ coverage: 4 of 17 LVF channels"
     }
    ]
   },
@@ -374,7 +374,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.37 of 0.59 µm"
+     "message": "incomplete λ coverage: 8 of 17 LVF channels"
     }
    ]
   },
@@ -412,7 +412,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.14 of 0.56 µm"
+     "message": "incomplete λ coverage: 2 of 17 LVF channels"
     }
    ]
   },
@@ -452,6 +452,10 @@
     {
      "code": "few_exposures",
      "message": "few exposures: 30 of up to 116"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 29 of 102 LVF channels"
     }
    ]
   },
@@ -694,6 +698,10 @@
     {
      "code": "few_exposures",
      "message": "few exposures: 14 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
     }
    ]
   },
@@ -728,6 +736,10 @@
     {
      "code": "few_exposures",
      "message": "few exposures: 15 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 12 of 17 LVF channels"
     }
    ]
   },
@@ -791,6 +803,10 @@
     {
      "code": "few_exposures",
      "message": "few exposures: 14 of up to 18"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
     }
    ]
   },
@@ -825,6 +841,10 @@
     {
      "code": "few_exposures",
      "message": "few exposures: 15 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 12 of 17 LVF channels"
     }
    ]
   },
@@ -898,7 +918,7 @@
    "spherex_dr1"
   ],
   "n_exposures_total": 244,
-  "generated_at": "2026-11-14T15:54:36+00:00",
+  "generated_at": "2026-11-15T12:57:06+00:00",
   "pipeline_tags": [
    "l2b-v27"
   ],
