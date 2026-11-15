@@ -156,8 +156,8 @@ Still open, in order of importance:
    tested in a private window. The README credits (NFR-10), AI-use section and live-site link are done.
 2. **IRSA SIA flapping:** a live search can fail once and succeed on "Retry"; an automatic second attempt in the
    backend would hide it. When IRSA is stable: M1 live numbers for Barnard and ε Indi B (A).
-3. **Announce the #18 contract changes** if not done (`GaiaStar.source_id` is a string, `unavailable` always lists
-   `skybot`, new page parameter `gaia`).
+3. **Announce the #18 contract changes** if not done (`GaiaStar.source_id` is a string, `unavailable` no longer
+   lists `skybot`: FR-25/FR-26 dropped, `asteroids` removed from `/api/overlays`; new page parameter `gaia`).
 4. **Not started, drop first:** FR-20 measured proper motion in the UI (it exists only in `VALIDATION.md`), FR-22
    AllWISE old-epoch frame, "copy embed code" for FR-21, optional error `code` in `JobStatus`, on-demand frame
    loading (NFR-2; the hosted R Dra bundle already loads in 1.4 s).
@@ -266,5 +266,5 @@ If time runs short, drop in this order: FR-21 (embed) → FR-22 (AllWISE) → FR
 | Sub-pixel motion invisible | longest baseline (first vs last visit), diff mode, upsampled display, AllWISE old epoch |
 | Saturation on Barnard / R Dra | FLAGS overlay; "saturated" labels instead of numbers; ε Indi B for PM measurement |
 | WISE 0855 not detected | expected-position marker + honest S/N / upper limit |
-| External APIs (SkyBoT, Gaia, SIMBAD) fail | caches, short timeouts, UI shows "unavailable" instead of breaking |
+| External APIs (Gaia, SIMBAD) fail | caches, short timeouts, UI shows "unavailable" instead of breaking |
 | Integration breaks at a milestone | seam fixed in `domain.py` + contract tests; PR per milestone, not one big merge |
