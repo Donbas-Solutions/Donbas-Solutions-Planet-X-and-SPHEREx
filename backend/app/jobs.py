@@ -26,6 +26,7 @@ from .archive.collections import CollectionDiscovery
 from .archive.cutouts import cutout_size_deg
 from .archive.fetch import FetchResult, fetch_cutouts, query_exposures
 from .archive.http import ArchiveError, Http
+from .archive.sia import SiaCache
 from .archive.visits import cap_per_detector, group_visits
 from .astrometry import position_at
 from .config import settings
@@ -121,10 +122,14 @@ async def collections_for_job(
 
 
 async def fetch_for_request(
-    http: Http, discovery: CollectionDiscovery, request: SequenceRequest, progress: ProgressCallback
+    http: Http,
+    discovery: CollectionDiscovery,
+    request: SequenceRequest,
+    progress: ProgressCallback,
+    sia_cache: SiaCache | None = None,
 ) -> FetchResult:
     collections = await collections_for_job(http, discovery)
-    exposures = await query_exposures(http, request.target, collections)
+    exposures = await query_exposures(http, request.target, collections, cache=sia_cache)
     plan = plan_exposures(exposures, request.params.detectors, settings.live_cap_per_detector)
     if not plan:
         raise JobError("No SPHEREx coverage at this position for the selected detectors.")

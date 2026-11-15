@@ -23,6 +23,8 @@ from app.archive.collections import (
 )
 from app.archive.fetch import query_exposures
 from app.archive.http import ArchiveError, Http, backoff_s, get, make_http
+from app.archive.sia import CACHE_TTL_S as SIA_CACHE_TTL_S
+from app.archive.sia import SiaCache
 from app.domain import Target
 
 pytestmark = pytest.mark.anyio
@@ -300,3 +302,46 @@ async def test_query_exposures_fails_when_one_collection_fails() -> None:
         with pytest.raises(ArchiveError, match="HTTP 400") as info:
             await query_exposures(http, BARNARD, ("spherex_dr1", "spherex_qr3"))
     assert info.value.status == 400
+
+
+def flaky_sia(calls: Counter[str], failing: set[str]) -> Handler:
+    by_collection = sia_rows_by_collection("barnard")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        collection = request.url.params["COLLECTION"]
+        calls[collection] += 1
+        if collection in failing:
+            return httpx.Response(502)
+        return httpx.Response(200, text=by_collection.get(collection, EMPTY_SIA))
+
+    return handler
+
+
+async def test_retried_query_asks_only_for_the_collections_that_failed() -> None:
+    calls = Counter[str]()
+    failing = {"spherex_qr3"}
+    cache = SiaCache()
+    http = mock_http(flaky_sia(calls, failing))
+    collections = ("spherex_dr1", "spherex_qr3")
+    async with http.client:
+        with pytest.raises(ArchiveError):
+            await query_exposures(http, BARNARD, collections, cache=cache)
+        failing.clear()
+        exposures = await query_exposures(http, BARNARD, collections, cache=cache)
+    assert calls == {"spherex_dr1": 1, "spherex_qr3": archive_http.ATTEMPTS + 1}
+    assert {e.collection for e in exposures} == {"spherex_dr1", "spherex_qr3"}
+
+
+async def test_sia_answers_are_asked_again_after_an_hour() -> None:
+    calls = Counter[str]()
+    clock = FakeClock()
+    cache = SiaCache(clock=clock)
+    http = mock_http(flaky_sia(calls, set()))
+    async with http.client:
+        await query_exposures(http, BARNARD, ("spherex_dr1",), cache=cache)
+        clock.now = SIA_CACHE_TTL_S - 1
+        await query_exposures(http, BARNARD, ("spherex_dr1",), cache=cache)
+        assert calls["spherex_dr1"] == 1
+        clock.now = SIA_CACHE_TTL_S + 1
+        await query_exposures(http, BARNARD, ("spherex_dr1",), cache=cache)
+    assert calls["spherex_dr1"] == 2

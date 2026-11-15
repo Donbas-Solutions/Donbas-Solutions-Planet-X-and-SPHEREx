@@ -17,6 +17,7 @@ from .archive.collections import CollectionDiscovery
 from .archive.gaia import GaiaCatalog, GaiaError, stars_at
 from .archive.http import Http, make_http
 from .archive.resolve import ResolveError, Resolver
+from .archive.sia import SiaCache
 from .config import configure_ssl, settings
 from .domain import DETECTORS, SequenceParams, Target
 from .jobs import JobRunner, SequenceRequest, fetch_for_request
@@ -36,7 +37,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if settings.warm_collections:
         discovery.start(http)
     pool = ProcessPoolExecutor(max_workers=settings.pipeline_workers)
-    runner = JobRunner(partial(fetch_for_request, http, discovery), settings.processed_dir, executor=pool)
+    fetch = partial(fetch_for_request, http, discovery, sia_cache=SiaCache())
+    runner = JobRunner(fetch, settings.processed_dir, executor=pool)
     gaia = GaiaCatalog()
     app.state.http = http
     app.state.resolver = Resolver()
