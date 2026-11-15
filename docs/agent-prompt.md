@@ -111,10 +111,10 @@ Measured on 2026-11-14: the IRSA cutout service answered **503** to many request
   **M3 🟡** (Aladin context, Gaia markers, README and submission open).
 - IRSA was unstable on 2026-11-14 (SIA/TAP `502` or hanging for minutes): prebaked bundles are the demo path.
 
-### Status of round 3 (2026-11-15, 11:00 UTC)
+### Status of round 3 (2026-11-15, 12:20 UTC)
 Done — in `main`: `fix/spectrum-store` (#17: expired spectra replaced, race-free writes, a hung TAP waited out once).
 
-Done — on `feat/gaia-overlays` (pushed, not merged into `main` yet):
+Done — in `main`: `feat/gaia-overlays` (#18):
 - **FR-18 complete:** `/api/overlays` (Gaia DR3 at the frame epoch; MAST → GAVO → ESA) and the "Gaia DR3 stars"
   overlay in the player (`gaia=1`). Barnard and ε Indi B markers land within 0.01 px of `expected_px`.
 - **FR-19 working:** context panel with 2MASS / AllWISE / DSS2 from the IRSA HiPS mirror (CDS is down), survey
@@ -126,17 +126,26 @@ Done — on `feat/gaia-overlays` (pushed, not merged into `main` yet):
   (FR-4), first frame and render time (NFR-1). Every P0 requirement (FR-1 … FR-15) is implemented.
 - FOV-limit notice kept in the page banner; a preset searched live at another FOV; notice for unknown `a`/`b`.
 
+Done — on `docs/round-3-status` (not merged yet): all five bundles rebuilt at cap 20 from the recorded SIA answers
+(`prebake.py` / `validate.py --recorded-sia`: exposure lists from `backend/tests/fixtures/sia/`, pixels from S3,
+so IRSA SIA/TAP being down does not block it), and `science/VALIDATION.md` regenerated from the same plan.
+RW Aur 180 → 336 cutouts (full depth), R Dra 132 → 786; Barnard 342, ε Indi B 363, WISE 0855 244. Results unchanged
+in substance: Barnard 1.65 px @ 359°, ε Indi B 1.07 px @ 129°, WISE 0855 D5/D6 motion at PA 276–277°;
+RW Aur D1 matched-λ ×2.48 at 16.6σ (3 pairs; was ×2.43 at 12.5σ on 1 pair); R Dra saturated in all 759 points.
+
 Still open, in order of importance:
-1. **Merge `feat/gaia-overlays`** and tell the team about the contract changes (`GaiaStar.source_id` is a string,
-   `unavailable` always lists `skybot`, new page parameter `gaia`).
-2. **Submission (C):** repository public + licence (OD-2, GPL/LGPL-3-compatible), Team Owner and Kyiv cutoff
-   confirmed, README (local run on macOS and Windows, screenshots, limitations, credits, AI-use disclosure), video
+1. **Announce the #18 contract changes** to the team (`GaiaStar.source_id` is a string, `unavailable` always lists
+   `skybot`, new page parameter `gaia`).
+2. **Submission (C):** repository public + licence (OD-2, GPL/LGPL-3-compatible; `main` has no `LICENSE` yet), Team
+   Owner and Kyiv cutoff confirmed, README (today 50 lines with a generic quick start: still missing per-OS local
+   run on macOS and Windows, screenshots, charts / Gaia / context features, credits, AI-use disclosure), video
    ≤ 30 s or ≤ 7 slides, submission text, links tested in a private window.
 3. **Clean-clone test on Windows** from the README (B), screenshots and GIFs.
 4. **FR-16 acceptance (C):** one unsaturated star against IRSA's Spectrophotometry Tool (ratio 0.8–1.25); only the
    2MASS sanity check exists.
-5. **When IRSA is stable:** M1 live numbers for Barnard and ε Indi B (A); regenerate the RW Aur (cap 10) and R Dra
-   (cap 3) bundles with fuller depth and rerun `science/validate.py` so `VALIDATION.md` matches (C).
+5. **When IRSA is stable:** M1 live numbers for Barnard and ε Indi B (A). Probe at 12:17 UTC: SIA and TAP still `502` (10 of 10), S3 and the IRSA HiPS mirror `200`, SIMBAD only via
+   Harvard. Live searches depend on SIA; the prebaked bundles stay the demo path.
+   Short designations (`WISE 0855-0714`) timed out on Harvard's `LIKE` query (15 s) — the presets are unaffected.
 6. **Not started, drop first:** FR-20 measured proper motion in the UI (it exists only in `VALIDATION.md`), FR-22
    AllWISE old-epoch frame, FR-21 embed acceptance (the view works; "copy embed code" is missing), optional error
    `code` in `JobStatus`.
@@ -152,7 +161,7 @@ The round-3 track lists below are kept as written on 2026-11-14; this section ov
 
 | Role | Who | Feature branches (in order) | Owns | Mission now |
 |---|---|---|---|---|
-| **A — Archive & API** | the A person | `fix/spectrum-store` → `feat/gaia-overlays` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`; contract files | Spectrum-store fixes, Gaia overlays, live M1 numbers |
+| **A — Archive & API** | the A person | `fix/spectrum-store` → `feat/gaia-overlays` | `backend/app/archive/`, `jobs.py`, `main.py`, `config.py`; contract files | ✓ spectrum-store fixes (#17), ✓ Gaia overlays (#18); live M1 numbers when IRSA is up |
 | **B — Frontend core** | the B person | no new feature branch; `docs/…` screenshots with C | app shell, state, URL, player, panels, `package.json` | Support D (Aladin), Windows clean-clone test, screenshots/GIFs |
 | **C — Science & delivery** | the team lead | `fix/prebake-discovery-timeout` → `test/fr16-spectrophotometry` → `docs/readme-and-pitch` | `backend/app/pipeline/`, `science/`, `scripts/prebake.py`, `frontend/public/prebaked/`, README, pitch | Decisions, README and submission |
 | **D — P1 features** | the new person | `feat/aladin-context` → `feat/gaia-markers` | `frontend/src/components/{charts,context,embed}/` (+ their `lib/` helpers) | Aladin context panel, then Gaia markers |

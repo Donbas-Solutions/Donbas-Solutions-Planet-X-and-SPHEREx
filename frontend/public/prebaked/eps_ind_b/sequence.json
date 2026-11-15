@@ -1,7 +1,7 @@
 {
  "grid": {
-  "ra": 331.09666310327134,
-  "dec": -56.80064725281175,
+  "ra": 331.0966611766712,
+  "dec": -56.80064660041023,
   "fov_arcmin": 10.0,
   "npix": 97,
   "pixscale_arcsec": 6.2,
@@ -15,10 +15,10 @@
    "CUNIT2": "deg",
    "CTYPE1": "RA---TAN",
    "CTYPE2": "DEC--TAN",
-   "CRVAL1": 331.09666310327,
-   "CRVAL2": -56.800647252812,
+   "CRVAL1": 331.09666117667,
+   "CRVAL2": -56.80064660041,
    "LONPOLE": 180.0,
-   "LATPOLE": -56.800647252812,
+   "LATPOLE": -56.80064660041,
    "MJDREF": 0.0,
    "RADESYS": "ICRS",
    "NAXIS1": 97,
@@ -27,8 +27,8 @@
  },
  "stretch": {
   "kind": "asinh",
-  "vmin": -0.2241,
-  "vmax": 1.3591,
+  "vmin": -0.2271,
+  "vmax": 1.3572,
   "a": 0.1
  },
  "flag_bits": [
@@ -192,7 +192,7 @@
    "id": "v1-D1",
    "kind": "visit_stack",
    "label": "2025-04 · D1",
-   "mjd_mid": 60791.5525,
+   "mjd_mid": 60792.1983,
    "date_range": [
     "2025-04-25",
     "2025-04-27"
@@ -219,6 +219,10 @@
     {
      "code": "few_exposures",
      "message": "few exposures: 4 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 3 of 17 LVF channels"
     }
    ]
   },
@@ -249,7 +253,12 @@
     "x": 48.41,
     "y": 48.25
    },
-   "warnings": []
+   "warnings": [
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 11 of 17 LVF channels"
+    }
+   ]
   },
   {
    "id": "v1-D3",
@@ -278,7 +287,12 @@
     "x": 48.42,
     "y": 48.26
    },
-   "warnings": []
+   "warnings": [
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 11 of 17 LVF channels"
+    }
+   ]
   },
   {
    "id": "v1-D4",
@@ -311,6 +325,10 @@
     {
      "code": "few_exposures",
      "message": "few exposures: 4 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 3 of 17 LVF channels"
     }
    ]
   },
@@ -318,7 +336,7 @@
    "id": "v1-D5",
    "kind": "visit_stack",
    "label": "2025-04 · D5",
-   "mjd_mid": 60808.7646,
+   "mjd_mid": 60808.8462,
    "date_range": [
     "2025-04-24",
     "2025-06-07"
@@ -341,13 +359,18 @@
     "x": 48.41,
     "y": 48.25
    },
-   "warnings": []
+   "warnings": [
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 12 of 17 LVF channels"
+    }
+   ]
   },
   {
    "id": "v1-D6",
    "kind": "visit_stack",
    "label": "2025-04 · D6",
-   "mjd_mid": 60800.841,
+   "mjd_mid": 60801.2347,
    "date_range": [
     "2025-04-29",
     "2025-06-10"
@@ -370,13 +393,18 @@
     "x": 48.42,
     "y": 48.26
    },
-   "warnings": []
+   "warnings": [
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
+    }
+   ]
   },
   {
    "id": "v1-all",
    "kind": "visit_stack",
    "label": "2025-04 · all",
-   "mjd_mid": 60803.697,
+   "mjd_mid": 60803.8344,
    "date_range": [
     "2025-04-24",
     "2025-06-10"
@@ -401,13 +429,17 @@
     97
    ],
    "expected_px": {
-    "x": 48.42,
+    "x": 48.41,
     "y": 48.26
    },
    "warnings": [
     {
      "code": "few_exposures",
      "message": "few exposures: 88 of up to 120"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 53 of 102 LVF channels"
     }
    ]
   },
@@ -415,7 +447,7 @@
    "id": "v2-D1",
    "kind": "visit_stack",
    "label": "2025-10 · D1",
-   "mjd_mid": 60962.7961,
+   "mjd_mid": 60962.7215,
    "date_range": [
     "2025-10-03",
     "2025-11-12"
@@ -424,7 +456,7 @@
     1
    ],
    "lambda_um": [
-    0.767,
+    0.75,
     1.105
    ],
    "n_exposures": 20,
@@ -467,7 +499,12 @@
     "x": 48.14,
     "y": 48.09
    },
-   "warnings": []
+   "warnings": [
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 12 of 17 LVF channels"
+    }
+   ]
   },
   {
    "id": "v2-D3",
@@ -502,7 +539,7 @@
    "id": "v2-D4",
    "kind": "visit_stack",
    "label": "2025-10 · D4",
-   "mjd_mid": 60963.6687,
+   "mjd_mid": 60962.6636,
    "date_range": [
     "2025-10-03",
     "2025-11-12"
@@ -522,7 +559,7 @@
     97
    ],
    "expected_px": {
-    "x": 48.13,
+    "x": 48.14,
     "y": 48.08
    },
    "warnings": []
@@ -589,7 +626,7 @@
    "id": "v2-all",
    "kind": "visit_stack",
    "label": "2025-09 · all",
-   "mjd_mid": 60959.3964,
+   "mjd_mid": 60959.2165,
    "date_range": [
     "2025-09-28",
     "2025-11-12"
@@ -603,7 +640,7 @@
     6
    ],
    "lambda_um": [
-    0.767,
+    0.75,
     4.99
    ],
    "n_exposures": 120,
@@ -623,7 +660,7 @@
    "id": "v3-D1",
    "kind": "visit_stack",
    "label": "2026-04 · D1",
-   "mjd_mid": 61151.9902,
+   "mjd_mid": 61151.8918,
    "date_range": [
     "2026-04-18",
     "2026-05-03"
@@ -682,7 +719,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.43 of 0.54 µm"
+     "message": "incomplete λ coverage: 6 of 17 LVF channels"
     }
    ]
   },
@@ -717,6 +754,10 @@
     {
      "code": "few_exposures",
      "message": "few exposures: 12 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 10 of 17 LVF channels"
     }
    ]
   },
@@ -753,7 +794,7 @@
    "id": "v3-D5",
    "kind": "visit_stack",
    "label": "2026-04 · D5",
-   "mjd_mid": 61155.8205,
+   "mjd_mid": 61155.9759,
    "date_range": [
     "2026-04-24",
     "2026-04-30"
@@ -765,7 +806,7 @@
     3.829,
     4.32
    ],
-   "n_exposures": 7,
+   "n_exposures": 6,
    "data": "frames/v3-D5.f32",
    "flags": "frames/v3-D5.flags.u32",
    "shape": [
@@ -779,7 +820,11 @@
    "warnings": [
     {
      "code": "few_exposures",
-     "message": "few exposures: 7 of up to 20"
+     "message": "few exposures: 6 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 6 of 17 LVF channels"
     }
    ]
   },
@@ -814,6 +859,10 @@
     {
      "code": "few_exposures",
      "message": "few exposures: 11 of up to 20"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 10 of 17 LVF channels"
     }
    ]
   },
@@ -821,7 +870,7 @@
    "id": "v3-all",
    "kind": "visit_stack",
    "label": "2026-04 · all",
-   "mjd_mid": 61155.1143,
+   "mjd_mid": 61155.0911,
    "date_range": [
     "2026-04-18",
     "2026-05-04"
@@ -838,7 +887,7 @@
     0.757,
     4.94
    ],
-   "n_exposures": 76,
+   "n_exposures": 75,
    "data": "frames/v3-all.f32",
    "flags": "frames/v3-all.flags.u32",
    "shape": [
@@ -852,7 +901,11 @@
    "warnings": [
     {
      "code": "few_exposures",
-     "message": "few exposures: 76 of up to 120"
+     "message": "few exposures: 75 of up to 120"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 66 of 102 LVF channels"
     }
    ]
   },
@@ -912,7 +965,12 @@
     "x": 47.53,
     "y": 47.71
    },
-   "warnings": []
+   "warnings": [
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
+    }
+   ]
   },
   {
    "id": "v4-D5",
@@ -970,7 +1028,12 @@
     "x": 47.53,
     "y": 47.71
    },
-   "warnings": []
+   "warnings": [
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
+    }
+   ]
   },
   {
    "id": "v4-all",
@@ -1006,6 +1069,10 @@
     {
      "code": "few_exposures",
      "message": "few exposures: 80 of up to 120"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 58 of 102 LVF channels"
     }
    ]
   }
@@ -1016,8 +1083,8 @@
    "spherex_dr1",
    "spherex_qr3"
   ],
-  "n_exposures_total": 364,
-  "generated_at": "2026-11-14T15:52:50+00:00",
+  "n_exposures_total": 363,
+  "generated_at": "2026-11-15T12:56:44+00:00",
   "pipeline_tags": [
    "l2b-v27"
   ],

@@ -1,7 +1,7 @@
 {
  "grid": {
-  "ra": 248.16723297797867,
-  "dec": 66.75502381618631,
+  "ra": 248.16723241396056,
+  "dec": 66.75502388249063,
   "fov_arcmin": 10.0,
   "npix": 97,
   "pixscale_arcsec": 6.2,
@@ -15,10 +15,10 @@
    "CUNIT2": "deg",
    "CTYPE1": "RA---TAN",
    "CTYPE2": "DEC--TAN",
-   "CRVAL1": 248.16723297798,
-   "CRVAL2": 66.755023816186,
+   "CRVAL1": 248.16723241396,
+   "CRVAL2": 66.755023882491,
    "LONPOLE": 180.0,
-   "LATPOLE": 66.755023816186,
+   "LATPOLE": 66.755023882491,
    "MJDREF": 0.0,
    "RADESYS": "ICRS",
    "NAXIS1": 97,
@@ -27,8 +27,8 @@
  },
  "stretch": {
   "kind": "asinh",
-  "vmin": -0.6519,
-  "vmax": 11.8718,
+  "vmin": -0.6584,
+  "vmax": 12.1116,
   "a": 0.1
  },
  "flag_bits": [
@@ -192,7 +192,7 @@
    "id": "v1-D3",
    "kind": "visit_stack",
    "label": "2025-04 · D3",
-   "mjd_mid": 60800.2757,
+   "mjd_mid": 60797.382,
    "date_range": [
     "2025-04-24",
     "2025-05-20"
@@ -201,10 +201,10 @@
     3
    ],
    "lambda_um": [
-    1.663,
-    1.855
+    1.626,
+    1.908
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v1-D3.f32",
    "flags": "frames/v1-D3.flags.u32",
    "shape": [
@@ -222,7 +222,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.19 of 0.78 µm"
+     "message": "incomplete λ coverage: 7 of 17 LVF channels"
     }
    ]
   },
@@ -230,7 +230,7 @@
    "id": "v1-D6",
    "kind": "visit_stack",
    "label": "2025-04 · D6",
-   "mjd_mid": 60800.2757,
+   "mjd_mid": 60797.3815,
    "date_range": [
     "2025-04-24",
     "2025-05-20"
@@ -239,10 +239,10 @@
     6
    ],
    "lambda_um": [
-    4.444,
-    4.599
+    4.407,
+    4.64
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v1-D6.f32",
    "flags": "frames/v1-D6.flags.u32",
    "shape": [
@@ -260,7 +260,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.16 of 0.43 µm"
+     "message": "incomplete λ coverage: 7 of 17 LVF channels"
     }
    ]
   },
@@ -268,7 +268,7 @@
    "id": "v1-all",
    "kind": "visit_stack",
    "label": "2025-04 · all",
-   "mjd_mid": 60800.2757,
+   "mjd_mid": 60797.3817,
    "date_range": [
     "2025-04-24",
     "2025-05-20"
@@ -278,10 +278,10 @@
     6
    ],
    "lambda_um": [
-    1.663,
-    4.599
+    1.626,
+    4.64
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v1-all.f32",
    "flags": "frames/v1-all.flags.u32",
    "shape": [
@@ -299,11 +299,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 2.94 of 3.87 µm"
+     "message": "incomplete λ coverage: 14 of 102 LVF channels"
     }
    ]
   },
@@ -311,7 +311,7 @@
    "id": "v2-D1",
    "kind": "visit_stack",
    "label": "2025-06 · D1",
-   "mjd_mid": 60832.477,
+   "mjd_mid": 60832.4768,
    "date_range": [
     "2025-06-06",
     "2025-06-06"
@@ -323,7 +323,7 @@
     0.944,
     1.013
    ],
-   "n_exposures": 3,
+   "n_exposures": 4,
    "data": "frames/v2-D1.f32",
    "flags": "frames/v2-D1.flags.u32",
    "shape": [
@@ -340,8 +340,12 @@
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
     },
     {
+     "code": "few_exposures",
+     "message": "few exposures: 4 of up to 20"
+    },
+    {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.07 of 0.34 µm"
+     "message": "incomplete λ coverage: 4 of 17 LVF channels"
     }
    ]
   },
@@ -349,7 +353,7 @@
    "id": "v2-D2",
    "kind": "visit_stack",
    "label": "2025-06-08 · D2",
-   "mjd_mid": 60839.8183,
+   "mjd_mid": 60839.8383,
    "date_range": [
     "2025-06-08",
     "2025-06-22"
@@ -358,10 +362,10 @@
     2
    ],
    "lambda_um": [
-    1.135,
-    1.405
+    1.11,
+    1.621
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v2-D2.f32",
    "flags": "frames/v2-D2.flags.u32",
    "shape": [
@@ -376,10 +380,6 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
-    },
-    {
-     "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.27 of 0.44 µm"
     }
    ]
   },
@@ -387,7 +387,7 @@
    "id": "v2-D3",
    "kind": "visit_stack",
    "label": "2025-06 · D3",
-   "mjd_mid": 60835.0818,
+   "mjd_mid": 60834.8131,
    "date_range": [
     "2025-06-02",
     "2025-06-12"
@@ -396,10 +396,10 @@
     3
    ],
    "lambda_um": [
-    1.819,
-    2.146
+    1.622,
+    2.403
    ],
-   "n_exposures": 3,
+   "n_exposures": 17,
    "data": "frames/v2-D3.f32",
    "flags": "frames/v2-D3.flags.u32",
    "shape": [
@@ -414,10 +414,6 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
-    },
-    {
-     "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.33 of 0.78 µm"
     }
    ]
   },
@@ -425,7 +421,7 @@
    "id": "v2-D4",
    "kind": "visit_stack",
    "label": "2025-06 · D4",
-   "mjd_mid": 60832.477,
+   "mjd_mid": 60832.4768,
    "date_range": [
     "2025-06-06",
     "2025-06-06"
@@ -437,7 +433,7 @@
     3.169,
     3.434
    ],
-   "n_exposures": 3,
+   "n_exposures": 4,
    "data": "frames/v2-D4.f32",
    "flags": "frames/v2-D4.flags.u32",
    "shape": [
@@ -454,8 +450,12 @@
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
     },
     {
+     "code": "few_exposures",
+     "message": "few exposures: 4 of up to 20"
+    },
+    {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.27 of 1.27 µm"
+     "message": "incomplete λ coverage: 4 of 17 LVF channels"
     }
    ]
   },
@@ -463,7 +463,7 @@
    "id": "v2-D5",
    "kind": "visit_stack",
    "label": "2025-06-08 · D5",
-   "mjd_mid": 60839.8183,
+   "mjd_mid": 60839.9097,
    "date_range": [
     "2025-06-08",
     "2025-06-22"
@@ -472,10 +472,10 @@
     5
    ],
    "lambda_um": [
-    3.866,
-    4.18
+    3.832,
+    4.399
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v2-D5.f32",
    "flags": "frames/v2-D5.flags.u32",
    "shape": [
@@ -490,10 +490,6 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
-    },
-    {
-     "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.31 of 0.47 µm"
     }
    ]
   },
@@ -501,7 +497,7 @@
    "id": "v2-D6",
    "kind": "visit_stack",
    "label": "2025-06 · D6",
-   "mjd_mid": 60835.0818,
+   "mjd_mid": 60834.5978,
    "date_range": [
     "2025-06-02",
     "2025-06-12"
@@ -510,10 +506,10 @@
     6
    ],
    "lambda_um": [
-    4.571,
-    4.817
+    4.41,
+    4.994
    ],
-   "n_exposures": 3,
+   "n_exposures": 16,
    "data": "frames/v2-D6.f32",
    "flags": "frames/v2-D6.flags.u32",
    "shape": [
@@ -528,10 +524,6 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
-    },
-    {
-     "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.25 of 0.43 µm"
     }
    ]
   },
@@ -539,7 +531,7 @@
    "id": "v2-all",
    "kind": "visit_stack",
    "label": "2025-06-02 · all",
-   "mjd_mid": 60835.7924,
+   "mjd_mid": 60837.039,
    "date_range": [
     "2025-06-02",
     "2025-06-22"
@@ -554,45 +546,11 @@
    ],
    "lambda_um": [
     0.944,
-    4.817
+    4.994
    ],
-   "n_exposures": 18,
+   "n_exposures": 81,
    "data": "frames/v2-all.f32",
    "flags": "frames/v2-all.flags.u32",
-   "shape": [
-    97,
-    97
-   ],
-   "expected_px": {
-    "x": 48.0,
-    "y": 48.0
-   },
-   "warnings": [
-    {
-     "code": "saturated",
-     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
-    }
-   ]
-  },
-  {
-   "id": "v3-D1",
-   "kind": "visit_stack",
-   "label": "2025-07 · D1",
-   "mjd_mid": 60870.8652,
-   "date_range": [
-    "2025-07-04",
-    "2025-07-22"
-   ],
-   "detectors": [
-    1
-   ],
-   "lambda_um": [
-    0.877,
-    1.071
-   ],
-   "n_exposures": 3,
-   "data": "frames/v3-D1.f32",
-   "flags": "frames/v3-D1.flags.u32",
    "shape": [
     97,
     97
@@ -608,7 +566,41 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.19 of 0.34 µm"
+     "message": "incomplete λ coverage: 70 of 102 LVF channels"
+    }
+   ]
+  },
+  {
+   "id": "v3-D1",
+   "kind": "visit_stack",
+   "label": "2025-07 · D1",
+   "mjd_mid": 60870.8181,
+   "date_range": [
+    "2025-07-04",
+    "2025-07-22"
+   ],
+   "detectors": [
+    1
+   ],
+   "lambda_um": [
+    0.745,
+    1.122
+   ],
+   "n_exposures": 19,
+   "data": "frames/v3-D1.f32",
+   "flags": "frames/v3-D1.flags.u32",
+   "shape": [
+    97,
+    97
+   ],
+   "expected_px": {
+    "x": 48.0,
+    "y": 48.0
+   },
+   "warnings": [
+    {
+     "code": "saturated",
+     "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
     }
    ]
   },
@@ -616,7 +608,7 @@
    "id": "v3-D2",
    "kind": "visit_stack",
    "label": "2025-06-25 · D2",
-   "mjd_mid": 60856.0542,
+   "mjd_mid": 60855.3528,
    "date_range": [
     "2025-06-25",
     "2025-07-02"
@@ -626,9 +618,9 @@
    ],
    "lambda_um": [
     1.109,
-    1.317
+    1.517
    ],
-   "n_exposures": 3,
+   "n_exposures": 15,
    "data": "frames/v3-D2.f32",
    "flags": "frames/v3-D2.flags.u32",
    "shape": [
@@ -645,8 +637,12 @@
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
     },
     {
+     "code": "few_exposures",
+     "message": "few exposures: 15 of up to 20"
+    },
+    {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.21 of 0.44 µm"
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
     }
    ]
   },
@@ -654,7 +650,7 @@
    "id": "v3-D4",
    "kind": "visit_stack",
    "label": "2025-07 · D4",
-   "mjd_mid": 60870.8652,
+   "mjd_mid": 60871.0683,
    "date_range": [
     "2025-07-04",
     "2025-07-22"
@@ -663,10 +659,10 @@
     4
    ],
    "lambda_um": [
-    2.91,
-    3.658
+    2.428,
+    3.757
    ],
-   "n_exposures": 3,
+   "n_exposures": 17,
    "data": "frames/v3-D4.f32",
    "flags": "frames/v3-D4.flags.u32",
    "shape": [
@@ -681,10 +677,6 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
-    },
-    {
-     "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.75 of 1.27 µm"
     }
    ]
   },
@@ -692,7 +684,7 @@
    "id": "v3-D5",
    "kind": "visit_stack",
    "label": "2025-06-25 · D5",
-   "mjd_mid": 60854.5609,
+   "mjd_mid": 60855.1862,
    "date_range": [
     "2025-06-25",
     "2025-07-02"
@@ -701,10 +693,10 @@
     5
    ],
    "lambda_um": [
-    4.035,
-    4.081
+    3.832,
+    4.296
    ],
-   "n_exposures": 3,
+   "n_exposures": 14,
    "data": "frames/v3-D5.f32",
    "flags": "frames/v3-D5.flags.u32",
    "shape": [
@@ -721,8 +713,12 @@
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
     },
     {
+     "code": "few_exposures",
+     "message": "few exposures: 14 of up to 20"
+    },
+    {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.05 of 0.47 µm"
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
     }
    ]
   },
@@ -730,7 +726,7 @@
    "id": "v3-all",
    "kind": "visit_stack",
    "label": "2025-06-25 · all",
-   "mjd_mid": 60863.0864,
+   "mjd_mid": 60863.9477,
    "date_range": [
     "2025-06-25",
     "2025-07-22"
@@ -742,10 +738,10 @@
     5
    ],
    "lambda_um": [
-    0.877,
-    4.081
+    0.745,
+    4.296
    ],
-   "n_exposures": 12,
+   "n_exposures": 65,
    "data": "frames/v3-all.f32",
    "flags": "frames/v3-all.flags.u32",
    "shape": [
@@ -762,8 +758,8 @@
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
     },
     {
-     "code": "few_exposures",
-     "message": "few exposures: 12 of up to 18"
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 54 of 102 LVF channels"
     }
    ]
   },
@@ -771,7 +767,7 @@
    "id": "v4-D1",
    "kind": "visit_stack",
    "label": "2025-08 · D1",
-   "mjd_mid": 60927.8068,
+   "mjd_mid": 60927.9393,
    "date_range": [
     "2025-08-29",
     "2025-09-20"
@@ -780,10 +776,10 @@
     1
    ],
    "lambda_um": [
-    0.858,
-    1.099
+    0.846,
+    1.112
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v4-D1.f32",
    "flags": "frames/v4-D1.flags.u32",
    "shape": [
@@ -801,7 +797,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.24 of 0.34 µm"
+     "message": "incomplete λ coverage: 10 of 17 LVF channels"
     }
    ]
   },
@@ -809,7 +805,7 @@
    "id": "v4-D4",
    "kind": "visit_stack",
    "label": "2025-08 · D4",
-   "mjd_mid": 60927.8068,
+   "mjd_mid": 60927.9393,
    "date_range": [
     "2025-08-29",
     "2025-09-20"
@@ -818,10 +814,10 @@
     4
    ],
    "lambda_um": [
-    2.841,
-    3.768
+    2.796,
+    3.818
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v4-D4.f32",
    "flags": "frames/v4-D4.flags.u32",
    "shape": [
@@ -839,7 +835,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.93 of 1.27 µm"
+     "message": "incomplete λ coverage: 9 of 17 LVF channels"
     }
    ]
   },
@@ -847,7 +843,7 @@
    "id": "v4-all",
    "kind": "visit_stack",
    "label": "2025-08 · all",
-   "mjd_mid": 60927.8068,
+   "mjd_mid": 60927.9393,
    "date_range": [
     "2025-08-29",
     "2025-09-20"
@@ -857,10 +853,10 @@
     4
    ],
    "lambda_um": [
-    0.858,
-    3.768
+    0.846,
+    3.818
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v4-all.f32",
    "flags": "frames/v4-all.flags.u32",
    "shape": [
@@ -878,11 +874,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 2.91 of 3.87 µm"
+     "message": "incomplete λ coverage: 19 of 102 LVF channels"
     }
    ]
   },
@@ -890,7 +886,7 @@
    "id": "v5-D1",
    "kind": "visit_stack",
    "label": "2025-09 · D1",
-   "mjd_mid": 60957.7149,
+   "mjd_mid": 60959.5476,
    "date_range": [
     "2025-09-24",
     "2025-10-19"
@@ -900,9 +896,9 @@
    ],
    "lambda_um": [
     0.748,
-    1.084
+    1.109
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v5-D1.f32",
    "flags": "frames/v5-D1.flags.u32",
    "shape": [
@@ -917,6 +913,10 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 12 of 17 LVF channels"
     }
    ]
   },
@@ -924,7 +924,7 @@
    "id": "v5-D4",
    "kind": "visit_stack",
    "label": "2025-09 · D4",
-   "mjd_mid": 60958.032,
+   "mjd_mid": 60959.5886,
    "date_range": [
     "2025-09-24",
     "2025-10-19"
@@ -934,9 +934,9 @@
    ],
    "lambda_um": [
     2.437,
-    3.71
+    3.767
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v5-D4.f32",
    "flags": "frames/v5-D4.flags.u32",
    "shape": [
@@ -951,6 +951,10 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 12 of 17 LVF channels"
     }
    ]
   },
@@ -958,7 +962,7 @@
    "id": "v5-all",
    "kind": "visit_stack",
    "label": "2025-09 · all",
-   "mjd_mid": 60957.8735,
+   "mjd_mid": 60959.5681,
    "date_range": [
     "2025-09-24",
     "2025-10-19"
@@ -969,9 +973,9 @@
    ],
    "lambda_um": [
     0.748,
-    3.71
+    3.767
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v5-all.f32",
    "flags": "frames/v5-all.flags.u32",
    "shape": [
@@ -989,11 +993,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 2.96 of 3.87 µm"
+     "message": "incomplete λ coverage: 24 of 102 LVF channels"
     }
    ]
   },
@@ -1001,7 +1005,7 @@
    "id": "v6-D1",
    "kind": "visit_stack",
    "label": "2025-10 · D1",
-   "mjd_mid": 60985.8078,
+   "mjd_mid": 60985.884,
    "date_range": [
     "2025-10-24",
     "2025-11-20"
@@ -1010,10 +1014,10 @@
     1
    ],
    "lambda_um": [
-    0.825,
+    0.752,
     1.11
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v6-D1.f32",
    "flags": "frames/v6-D1.flags.u32",
    "shape": [
@@ -1035,7 +1039,7 @@
    "id": "v6-D2",
    "kind": "visit_stack",
    "label": "2025-11-18 · D2",
-   "mjd_mid": 60997.7359,
+   "mjd_mid": 60997.7356,
    "date_range": [
     "2025-11-18",
     "2025-11-18"
@@ -1047,7 +1051,7 @@
     1.41,
     1.514
    ],
-   "n_exposures": 3,
+   "n_exposures": 4,
    "data": "frames/v6-D2.f32",
    "flags": "frames/v6-D2.flags.u32",
    "shape": [
@@ -1064,8 +1068,12 @@
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
     },
     {
+     "code": "few_exposures",
+     "message": "few exposures: 4 of up to 20"
+    },
+    {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.10 of 0.44 µm"
+     "message": "incomplete λ coverage: 4 of 17 LVF channels"
     }
    ]
   },
@@ -1073,7 +1081,7 @@
    "id": "v6-D4",
    "kind": "visit_stack",
    "label": "2025-10 · D4",
-   "mjd_mid": 60985.8073,
+   "mjd_mid": 60985.6389,
    "date_range": [
     "2025-10-24",
     "2025-11-20"
@@ -1082,10 +1090,10 @@
     4
    ],
    "lambda_um": [
-    2.715,
+    2.451,
     3.81
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v6-D4.f32",
    "flags": "frames/v6-D4.flags.u32",
    "shape": [
@@ -1100,6 +1108,10 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
     }
    ]
   },
@@ -1107,7 +1119,7 @@
    "id": "v6-D5",
    "kind": "visit_stack",
    "label": "2025-11-18 · D5",
-   "mjd_mid": 60997.7359,
+   "mjd_mid": 60997.7356,
    "date_range": [
     "2025-11-18",
     "2025-11-18"
@@ -1119,7 +1131,7 @@
     4.185,
     4.294
    ],
-   "n_exposures": 3,
+   "n_exposures": 4,
    "data": "frames/v6-D5.f32",
    "flags": "frames/v6-D5.flags.u32",
    "shape": [
@@ -1136,8 +1148,12 @@
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
     },
     {
+     "code": "few_exposures",
+     "message": "few exposures: 4 of up to 20"
+    },
+    {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.11 of 0.47 µm"
+     "message": "incomplete λ coverage: 4 of 17 LVF channels"
     }
    ]
   },
@@ -1145,7 +1161,7 @@
    "id": "v6-all",
    "kind": "visit_stack",
    "label": "2025-10 · all",
-   "mjd_mid": 60991.7717,
+   "mjd_mid": 60987.7572,
    "date_range": [
     "2025-10-24",
     "2025-11-20"
@@ -1157,10 +1173,10 @@
     5
    ],
    "lambda_um": [
-    0.825,
+    0.752,
     4.294
    ],
-   "n_exposures": 12,
+   "n_exposures": 48,
    "data": "frames/v6-all.f32",
    "flags": "frames/v6-all.flags.u32",
    "shape": [
@@ -1178,7 +1194,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 12 of up to 18"
+     "message": "few exposures: 48 of up to 81"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 36 of 102 LVF channels"
     }
    ]
   },
@@ -1186,7 +1206,7 @@
    "id": "v7-D2",
    "kind": "visit_stack",
    "label": "2025-11-28 · D2",
-   "mjd_mid": 61017.0659,
+   "mjd_mid": 61016.2871,
    "date_range": [
     "2025-11-28",
     "2025-12-14"
@@ -1195,10 +1215,10 @@
     2
    ],
    "lambda_um": [
-    1.395,
-    1.551
+    1.108,
+    1.659
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v7-D2.f32",
    "flags": "frames/v7-D2.flags.u32",
    "shape": [
@@ -1213,10 +1233,6 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
-    },
-    {
-     "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.16 of 0.44 µm"
     }
    ]
   },
@@ -1224,7 +1240,7 @@
    "id": "v7-D5",
    "kind": "visit_stack",
    "label": "2025-11-28 · D5",
-   "mjd_mid": 61017.0654,
+   "mjd_mid": 61016.2532,
    "date_range": [
     "2025-11-28",
     "2025-12-14"
@@ -1233,10 +1249,10 @@
     5
    ],
    "lambda_um": [
-    4.17,
-    4.331
+    3.827,
+    4.43
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v7-D5.f32",
    "flags": "frames/v7-D5.flags.u32",
    "shape": [
@@ -1251,10 +1267,6 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
-    },
-    {
-     "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.16 of 0.47 µm"
     }
    ]
   },
@@ -1262,7 +1274,7 @@
    "id": "v7-all",
    "kind": "visit_stack",
    "label": "2025-11 · all",
-   "mjd_mid": 61017.0656,
+   "mjd_mid": 61016.2702,
    "date_range": [
     "2025-11-28",
     "2025-12-14"
@@ -1272,10 +1284,10 @@
     5
    ],
    "lambda_um": [
-    1.395,
-    4.331
+    1.108,
+    4.43
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v7-all.f32",
    "flags": "frames/v7-all.flags.u32",
    "shape": [
@@ -1293,11 +1305,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 2.94 of 3.87 µm"
+     "message": "incomplete λ coverage: 29 of 102 LVF channels"
     }
    ]
   },
@@ -1305,7 +1317,7 @@
    "id": "v8-D3",
    "kind": "visit_stack",
    "label": "2025-12 · D3",
-   "mjd_mid": 61043.0721,
+   "mjd_mid": 61041.2102,
    "date_range": [
     "2025-12-26",
     "2026-01-13"
@@ -1315,9 +1327,9 @@
    ],
    "lambda_um": [
     1.642,
-    2.174
+    2.381
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v8-D3.f32",
    "flags": "frames/v8-D3.flags.u32",
    "shape": [
@@ -1332,10 +1344,6 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
-    },
-    {
-     "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.53 of 0.78 µm"
     }
    ]
   },
@@ -1343,7 +1351,7 @@
    "id": "v8-D6",
    "kind": "visit_stack",
    "label": "2025-12 · D6",
-   "mjd_mid": 61043.0721,
+   "mjd_mid": 61041.2102,
    "date_range": [
     "2025-12-26",
     "2026-01-13"
@@ -1353,9 +1361,9 @@
    ],
    "lambda_um": [
     4.427,
-    4.836
+    4.979
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v8-D6.f32",
    "flags": "frames/v8-D6.flags.u32",
    "shape": [
@@ -1377,7 +1385,7 @@
    "id": "v8-all",
    "kind": "visit_stack",
    "label": "2025-12 · all",
-   "mjd_mid": 61043.0721,
+   "mjd_mid": 61041.2102,
    "date_range": [
     "2025-12-26",
     "2026-01-13"
@@ -1388,9 +1396,9 @@
    ],
    "lambda_um": [
     1.642,
-    4.836
+    4.979
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v8-all.f32",
    "flags": "frames/v8-all.flags.u32",
    "shape": [
@@ -1408,7 +1416,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 28 of 102 LVF channels"
     }
    ]
   },
@@ -1416,7 +1428,7 @@
    "id": "v9-D3",
    "kind": "visit_stack",
    "label": "2026-02-08 · D3",
-   "mjd_mid": 61085.6631,
+   "mjd_mid": 61086.6691,
    "date_range": [
     "2026-02-08",
     "2026-02-18"
@@ -1425,10 +1437,10 @@
     3
    ],
    "lambda_um": [
-    2.263,
+    2.162,
     2.417
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v9-D3.f32",
    "flags": "frames/v9-D3.flags.u32",
    "shape": [
@@ -1446,7 +1458,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.15 of 0.78 µm"
+     "message": "incomplete λ coverage: 5 of 17 LVF channels"
     }
    ]
   },
@@ -1454,7 +1466,7 @@
    "id": "v9-D6",
    "kind": "visit_stack",
    "label": "2026-02-08 · D6",
-   "mjd_mid": 61085.6626,
+   "mjd_mid": 61086.6112,
    "date_range": [
     "2026-02-08",
     "2026-02-18"
@@ -1463,10 +1475,10 @@
     6
    ],
    "lambda_um": [
-    4.863,
+    4.828,
     5.007
    ],
-   "n_exposures": 3,
+   "n_exposures": 19,
    "data": "frames/v9-D6.f32",
    "flags": "frames/v9-D6.flags.u32",
    "shape": [
@@ -1484,7 +1496,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.14 of 0.43 µm"
+     "message": "incomplete λ coverage: 5 of 17 LVF channels"
     }
    ]
   },
@@ -1492,7 +1504,7 @@
    "id": "v9-all",
    "kind": "visit_stack",
    "label": "2026-02-08 · all",
-   "mjd_mid": 61085.6628,
+   "mjd_mid": 61086.6409,
    "date_range": [
     "2026-02-08",
     "2026-02-18"
@@ -1502,10 +1514,10 @@
     6
    ],
    "lambda_um": [
-    2.263,
+    2.162,
     5.007
    ],
-   "n_exposures": 6,
+   "n_exposures": 39,
    "data": "frames/v9-all.f32",
    "flags": "frames/v9-all.flags.u32",
    "shape": [
@@ -1523,11 +1535,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 39 of up to 81"
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 2.74 of 3.87 µm"
+     "message": "incomplete λ coverage: 10 of 102 LVF channels"
     }
    ]
   },
@@ -1535,7 +1547,7 @@
    "id": "v10-D3",
    "kind": "visit_stack",
    "label": "2026-02-20 · D3",
-   "mjd_mid": 61106.4153,
+   "mjd_mid": 61107.7403,
    "date_range": [
     "2026-02-20",
     "2026-03-20"
@@ -1544,10 +1556,10 @@
     3
    ],
    "lambda_um": [
-    1.857,
+    1.631,
     2.412
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v10-D3.f32",
    "flags": "frames/v10-D3.flags.u32",
    "shape": [
@@ -1565,7 +1577,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.55 of 0.78 µm"
+     "message": "incomplete λ coverage: 12 of 17 LVF channels"
     }
    ]
   },
@@ -1573,7 +1585,7 @@
    "id": "v10-D6",
    "kind": "visit_stack",
    "label": "2026-02-20 · D6",
-   "mjd_mid": 61106.4148,
+   "mjd_mid": 61107.7371,
    "date_range": [
     "2026-02-20",
     "2026-03-20"
@@ -1582,10 +1594,10 @@
     6
    ],
    "lambda_um": [
-    4.568,
+    4.417,
     5.002
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v10-D6.f32",
    "flags": "frames/v10-D6.flags.u32",
    "shape": [
@@ -1600,6 +1612,10 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
     }
    ]
   },
@@ -1607,7 +1623,7 @@
    "id": "v10-all",
    "kind": "visit_stack",
    "label": "2026-02-20 · all",
-   "mjd_mid": 61106.415,
+   "mjd_mid": 61107.7387,
    "date_range": [
     "2026-02-20",
     "2026-03-20"
@@ -1617,10 +1633,10 @@
     6
    ],
    "lambda_um": [
-    1.857,
+    1.631,
     5.002
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v10-all.f32",
    "flags": "frames/v10-all.flags.u32",
    "shape": [
@@ -1638,7 +1654,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 25 of 102 LVF channels"
     }
    ]
   },
@@ -1646,7 +1666,7 @@
    "id": "v11-D3",
    "kind": "visit_stack",
    "label": "2026-03 · D3",
-   "mjd_mid": 61133.3487,
+   "mjd_mid": 61133.0648,
    "date_range": [
     "2026-03-21",
     "2026-04-17"
@@ -1655,10 +1675,10 @@
     3
    ],
    "lambda_um": [
-    1.882,
-    2.323
+    1.639,
+    2.395
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v11-D3.f32",
    "flags": "frames/v11-D3.flags.u32",
    "shape": [
@@ -1676,7 +1696,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.44 of 0.78 µm"
+     "message": "incomplete λ coverage: 11 of 17 LVF channels"
     }
    ]
   },
@@ -1684,7 +1704,7 @@
    "id": "v11-D6",
    "kind": "visit_stack",
    "label": "2026-03 · D6",
-   "mjd_mid": 61133.3487,
+   "mjd_mid": 61133.0645,
    "date_range": [
     "2026-03-21",
     "2026-04-17"
@@ -1693,10 +1713,10 @@
     6
    ],
    "lambda_um": [
-    4.62,
-    4.939
+    4.424,
+    5.012
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v11-D6.f32",
    "flags": "frames/v11-D6.flags.u32",
    "shape": [
@@ -1714,7 +1734,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.32 of 0.43 µm"
+     "message": "incomplete λ coverage: 11 of 17 LVF channels"
     }
    ]
   },
@@ -1722,7 +1742,7 @@
    "id": "v11-all",
    "kind": "visit_stack",
    "label": "2026-03 · all",
-   "mjd_mid": 61133.3487,
+   "mjd_mid": 61133.0647,
    "date_range": [
     "2026-03-21",
     "2026-04-17"
@@ -1732,10 +1752,10 @@
     6
    ],
    "lambda_um": [
-    1.882,
-    4.939
+    1.639,
+    5.012
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v11-all.f32",
    "flags": "frames/v11-all.flags.u32",
    "shape": [
@@ -1753,11 +1773,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 3.06 of 3.87 µm"
+     "message": "incomplete λ coverage: 22 of 102 LVF channels"
     }
    ]
   },
@@ -1765,7 +1785,7 @@
    "id": "v12-D3",
    "kind": "visit_stack",
    "label": "2026-04 · D3",
-   "mjd_mid": 61163.7855,
+   "mjd_mid": 61163.4593,
    "date_range": [
     "2026-04-22",
     "2026-05-16"
@@ -1774,10 +1794,10 @@
     3
    ],
    "lambda_um": [
-    1.721,
-    1.898
+    1.645,
+    2.381
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v12-D3.f32",
    "flags": "frames/v12-D3.flags.u32",
    "shape": [
@@ -1795,7 +1815,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.18 of 0.78 µm"
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
     }
    ]
   },
@@ -1803,7 +1823,7 @@
    "id": "v12-D6",
    "kind": "visit_stack",
    "label": "2026-04 · D6",
-   "mjd_mid": 61164.0788,
+   "mjd_mid": 61163.4596,
    "date_range": [
     "2026-04-22",
     "2026-05-16"
@@ -1812,10 +1832,10 @@
     6
    ],
    "lambda_um": [
-    4.492,
-    4.632
+    4.429,
+    4.98
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v12-D6.f32",
    "flags": "frames/v12-D6.flags.u32",
    "shape": [
@@ -1830,10 +1850,6 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
-    },
-    {
-     "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.14 of 0.43 µm"
     }
    ]
   },
@@ -1841,7 +1857,7 @@
    "id": "v12-all",
    "kind": "visit_stack",
    "label": "2026-04 · all",
-   "mjd_mid": 61163.9322,
+   "mjd_mid": 61163.4595,
    "date_range": [
     "2026-04-22",
     "2026-05-16"
@@ -1851,10 +1867,10 @@
     6
    ],
    "lambda_um": [
-    1.721,
-    4.632
+    1.645,
+    4.98
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v12-all.f32",
    "flags": "frames/v12-all.flags.u32",
    "shape": [
@@ -1872,11 +1888,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 2.91 of 3.87 µm"
+     "message": "incomplete λ coverage: 27 of 102 LVF channels"
     }
    ]
   },
@@ -1884,7 +1900,7 @@
    "id": "v13-D3",
    "kind": "visit_stack",
    "label": "2026-05 · D3",
-   "mjd_mid": 61194.854,
+   "mjd_mid": 61192.5582,
    "date_range": [
     "2026-05-21",
     "2026-06-12"
@@ -1896,7 +1912,7 @@
     1.628,
     2.409
    ],
-   "n_exposures": 3,
+   "n_exposures": 17,
    "data": "frames/v13-D3.f32",
    "flags": "frames/v13-D3.flags.u32",
    "shape": [
@@ -1911,6 +1927,10 @@
     {
      "code": "saturated",
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 11 of 17 LVF channels"
     }
    ]
   },
@@ -1918,7 +1938,7 @@
    "id": "v13-D6",
    "kind": "visit_stack",
    "label": "2026-05 · D6",
-   "mjd_mid": 61189.6946,
+   "mjd_mid": 61192.0546,
    "date_range": [
     "2026-05-21",
     "2026-06-12"
@@ -1927,10 +1947,10 @@
     6
    ],
    "lambda_um": [
-    4.678,
+    4.415,
     5.0
    ],
-   "n_exposures": 3,
+   "n_exposures": 18,
    "data": "frames/v13-D6.f32",
    "flags": "frames/v13-D6.flags.u32",
    "shape": [
@@ -1948,7 +1968,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.32 of 0.43 µm"
+     "message": "incomplete λ coverage: 12 of 17 LVF channels"
     }
    ]
   },
@@ -1956,7 +1976,7 @@
    "id": "v13-all",
    "kind": "visit_stack",
    "label": "2026-05 · all",
-   "mjd_mid": 61192.2743,
+   "mjd_mid": 61192.2992,
    "date_range": [
     "2026-05-21",
     "2026-06-12"
@@ -1969,7 +1989,7 @@
     1.628,
     5.0
    ],
-   "n_exposures": 6,
+   "n_exposures": 35,
    "data": "frames/v13-all.f32",
    "flags": "frames/v13-all.flags.u32",
    "shape": [
@@ -1987,7 +2007,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 35 of up to 81"
+    },
+    {
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 23 of 102 LVF channels"
     }
    ]
   },
@@ -1995,7 +2019,7 @@
    "id": "v14-D1",
    "kind": "visit_stack",
    "label": "2026-07-06 · D1",
-   "mjd_mid": 61232.5785,
+   "mjd_mid": 61232.5237,
    "date_range": [
     "2026-07-06",
     "2026-07-16"
@@ -2004,10 +2028,10 @@
     1
    ],
    "lambda_um": [
-    0.78,
+    0.735,
     1.122
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v14-D1.f32",
    "flags": "frames/v14-D1.flags.u32",
    "shape": [
@@ -2029,7 +2053,7 @@
    "id": "v14-D2",
    "kind": "visit_stack",
    "label": "2026-06 · D2",
-   "mjd_mid": 61213.0951,
+   "mjd_mid": 61213.2099,
    "date_range": [
     "2026-06-21",
     "2026-06-23"
@@ -2038,10 +2062,10 @@
     2
    ],
    "lambda_um": [
-    1.201,
+    1.093,
     1.639
    ],
-   "n_exposures": 3,
+   "n_exposures": 19,
    "data": "frames/v14-D2.f32",
    "flags": "frames/v14-D2.flags.u32",
    "shape": [
@@ -2063,7 +2087,7 @@
    "id": "v14-D4",
    "kind": "visit_stack",
    "label": "2026-07-06 · D4",
-   "mjd_mid": 61232.578,
+   "mjd_mid": 61232.2488,
    "date_range": [
     "2026-07-06",
     "2026-07-16"
@@ -2072,10 +2096,10 @@
     4
    ],
    "lambda_um": [
-    2.547,
-    3.76
+    2.404,
+    3.802
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v14-D4.f32",
    "flags": "frames/v14-D4.flags.u32",
    "shape": [
@@ -2097,7 +2121,7 @@
    "id": "v14-D5",
    "kind": "visit_stack",
    "label": "2026-06 · D5",
-   "mjd_mid": 61213.0951,
+   "mjd_mid": 61213.2099,
    "date_range": [
     "2026-06-21",
     "2026-06-23"
@@ -2106,10 +2130,10 @@
     5
    ],
    "lambda_um": [
-    3.945,
+    3.811,
     4.417
    ],
-   "n_exposures": 3,
+   "n_exposures": 19,
    "data": "frames/v14-D5.f32",
    "flags": "frames/v14-D5.flags.u32",
    "shape": [
@@ -2131,7 +2155,7 @@
    "id": "v14-all",
    "kind": "visit_stack",
    "label": "2026-06 · all",
-   "mjd_mid": 61222.8367,
+   "mjd_mid": 61223.0439,
    "date_range": [
     "2026-06-21",
     "2026-07-16"
@@ -2143,10 +2167,10 @@
     5
    ],
    "lambda_um": [
-    0.78,
+    0.735,
     4.417
    ],
-   "n_exposures": 12,
+   "n_exposures": 78,
    "data": "frames/v14-all.f32",
    "flags": "frames/v14-all.flags.u32",
    "shape": [
@@ -2163,8 +2187,8 @@
      "message": "target pixel saturated (OVERFLOW/NONLINEAR)"
     },
     {
-     "code": "few_exposures",
-     "message": "few exposures: 12 of up to 18"
+     "code": "incomplete_lambda",
+     "message": "incomplete λ coverage: 62 of 102 LVF channels"
     }
    ]
   },
@@ -2172,7 +2196,7 @@
    "id": "v15-D1",
    "kind": "visit_stack",
    "label": "2026-07-19 · D1",
-   "mjd_mid": 61256.1319,
+   "mjd_mid": 61258.1003,
    "date_range": [
     "2026-07-19",
     "2026-08-17"
@@ -2182,9 +2206,9 @@
    ],
    "lambda_um": [
     0.741,
-    0.889
+    1.097
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v15-D1.f32",
    "flags": "frames/v15-D1.flags.u32",
    "shape": [
@@ -2202,7 +2226,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.15 of 0.34 µm"
+     "message": "incomplete λ coverage: 9 of 17 LVF channels"
     }
    ]
   },
@@ -2210,7 +2234,7 @@
    "id": "v15-D4",
    "kind": "visit_stack",
    "label": "2026-07-19 · D4",
-   "mjd_mid": 61256.1314,
+   "mjd_mid": 61257.9944,
    "date_range": [
     "2026-07-19",
     "2026-08-17"
@@ -2220,9 +2244,9 @@
    ],
    "lambda_um": [
     2.419,
-    2.957
+    3.762
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v15-D4.f32",
    "flags": "frames/v15-D4.flags.u32",
    "shape": [
@@ -2240,7 +2264,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.54 of 1.27 µm"
+     "message": "incomplete λ coverage: 9 of 17 LVF channels"
     }
    ]
   },
@@ -2248,7 +2272,7 @@
    "id": "v15-all",
    "kind": "visit_stack",
    "label": "2026-07 · all",
-   "mjd_mid": 61256.1316,
+   "mjd_mid": 61258.0473,
    "date_range": [
     "2026-07-19",
     "2026-08-17"
@@ -2259,9 +2283,9 @@
    ],
    "lambda_um": [
     0.741,
-    2.957
+    3.762
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v15-all.f32",
    "flags": "frames/v15-all.flags.u32",
    "shape": [
@@ -2279,11 +2303,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 2.22 of 3.87 µm"
+     "message": "incomplete λ coverage: 18 of 102 LVF channels"
     }
    ]
   },
@@ -2291,7 +2315,7 @@
    "id": "v16-D1",
    "kind": "visit_stack",
    "label": "2026-08 · D1",
-   "mjd_mid": 61284.3242,
+   "mjd_mid": 61283.0183,
    "date_range": [
     "2026-08-18",
     "2026-09-16"
@@ -2300,10 +2324,10 @@
     1
    ],
    "lambda_um": [
-    0.755,
-    0.985
+    0.741,
+    1.113
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v16-D1.f32",
    "flags": "frames/v16-D1.flags.u32",
    "shape": [
@@ -2321,7 +2345,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.23 of 0.34 µm"
+     "message": "incomplete λ coverage: 13 of 17 LVF channels"
     }
    ]
   },
@@ -2329,7 +2353,7 @@
    "id": "v16-D4",
    "kind": "visit_stack",
    "label": "2026-08 · D4",
-   "mjd_mid": 61284.3232,
+   "mjd_mid": 61282.9339,
    "date_range": [
     "2026-08-18",
     "2026-09-16"
@@ -2338,10 +2362,10 @@
     4
    ],
    "lambda_um": [
-    2.581,
-    3.326
+    2.432,
+    3.825
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v16-D4.f32",
    "flags": "frames/v16-D4.flags.u32",
    "shape": [
@@ -2359,7 +2383,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.75 of 1.27 µm"
+     "message": "incomplete λ coverage: 12 of 17 LVF channels"
     }
    ]
   },
@@ -2367,7 +2391,7 @@
    "id": "v16-all",
    "kind": "visit_stack",
    "label": "2026-08 · all",
-   "mjd_mid": 61284.3237,
+   "mjd_mid": 61282.9761,
    "date_range": [
     "2026-08-18",
     "2026-09-16"
@@ -2377,10 +2401,10 @@
     4
    ],
    "lambda_um": [
-    0.755,
-    3.326
+    0.741,
+    3.825
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v16-all.f32",
    "flags": "frames/v16-all.flags.u32",
    "shape": [
@@ -2398,11 +2422,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 2.57 of 3.87 µm"
+     "message": "incomplete λ coverage: 25 of 102 LVF channels"
     }
    ]
   },
@@ -2410,7 +2434,7 @@
    "id": "v17-D1",
    "kind": "visit_stack",
    "label": "2026-09 · D1",
-   "mjd_mid": 61305.1806,
+   "mjd_mid": 61305.0798,
    "date_range": [
     "2026-09-17",
     "2026-09-27"
@@ -2422,7 +2446,7 @@
     0.896,
     1.113
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v17-D1.f32",
    "flags": "frames/v17-D1.flags.u32",
    "shape": [
@@ -2440,7 +2464,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.22 of 0.34 µm"
+     "message": "incomplete λ coverage: 10 of 17 LVF channels"
     }
    ]
   },
@@ -2448,7 +2472,7 @@
    "id": "v17-D4",
    "kind": "visit_stack",
    "label": "2026-09 · D4",
-   "mjd_mid": 61304.5709,
+   "mjd_mid": 61304.7576,
    "date_range": [
     "2026-09-17",
     "2026-09-25"
@@ -2458,9 +2482,9 @@
    ],
    "lambda_um": [
     2.984,
-    3.784
+    3.785
    ],
-   "n_exposures": 3,
+   "n_exposures": 20,
    "data": "frames/v17-D4.f32",
    "flags": "frames/v17-D4.flags.u32",
    "shape": [
@@ -2478,7 +2502,7 @@
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 0.80 of 1.27 µm"
+     "message": "incomplete λ coverage: 10 of 17 LVF channels"
     }
    ]
   },
@@ -2486,7 +2510,7 @@
    "id": "v17-all",
    "kind": "visit_stack",
    "label": "2026-09 · all",
-   "mjd_mid": 61304.8757,
+   "mjd_mid": 61304.9187,
    "date_range": [
     "2026-09-17",
     "2026-09-27"
@@ -2497,9 +2521,9 @@
    ],
    "lambda_um": [
     0.896,
-    3.784
+    3.785
    ],
-   "n_exposures": 6,
+   "n_exposures": 40,
    "data": "frames/v17-all.f32",
    "flags": "frames/v17-all.flags.u32",
    "shape": [
@@ -2517,11 +2541,11 @@
     },
     {
      "code": "few_exposures",
-     "message": "few exposures: 6 of up to 18"
+     "message": "few exposures: 40 of up to 81"
     },
     {
      "code": "incomplete_lambda",
-     "message": "incomplete λ coverage: 2.89 of 3.87 µm"
+     "message": "incomplete λ coverage: 20 of 102 LVF channels"
     }
    ]
   }
@@ -2534,8 +2558,8 @@
    "spherex_qr3",
    "spherex_qr3_deep"
   ],
-  "n_exposures_total": 132,
-  "generated_at": "2026-11-14T15:57:30+00:00",
+  "n_exposures_total": 786,
+  "generated_at": "2026-11-15T12:43:03+00:00",
   "pipeline_tags": [
    "l2b-v27"
   ],

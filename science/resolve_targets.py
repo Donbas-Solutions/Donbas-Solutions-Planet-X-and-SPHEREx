@@ -58,7 +58,6 @@ TARGETS = [
         "name": "RW Aurigae",
         "simbad_query": "RW Aur",
         "test": "brightness",
-        "prebake_cap": 10,
         "doc_coords": ("05h07m49.46s", "+30d24m04.8s"),
         "notes": "T Tauri star with irregular dimming events: light-curve test.",
     },
@@ -67,7 +66,6 @@ TARGETS = [
         "name": "R Draconis",
         "simbad_query": "R Dra",
         "test": "brightness",
-        "prebake_cap": 3,
         "doc_coords": ("16h32m40.3s", "+66d45m18s"),
         "notes": "Mira variable (~246 d). In the SPHEREx deep field near the NEP (dense time sampling). "
         "Likely saturated: mark, don't measure.",

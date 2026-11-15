@@ -1,7 +1,7 @@
 {
  "grid": {
-  "ra": 76.95658697085734,
-  "dec": 30.40129032945519,
+  "ra": 76.95658696302941,
+  "dec": 30.40129034844001,
   "fov_arcmin": 10.0,
   "npix": 97,
   "pixscale_arcsec": 6.2,
@@ -15,10 +15,10 @@
    "CUNIT2": "deg",
    "CTYPE1": "RA---TAN",
    "CTYPE2": "DEC--TAN",
-   "CRVAL1": 76.956586970857,
-   "CRVAL2": 30.401290329455,
+   "CRVAL1": 76.956586963029,
+   "CRVAL2": 30.40129034844,
    "LONPOLE": 180.0,
-   "LATPOLE": 30.401290329455,
+   "LATPOLE": 30.40129034844,
    "MJDREF": 0.0,
    "RADESYS": "ICRS",
    "NAXIS1": 97,
@@ -27,8 +27,8 @@
  },
  "stretch": {
   "kind": "asinh",
-  "vmin": -0.0866,
-  "vmax": 13.0783,
+  "vmin": -0.088,
+  "vmax": 12.4874,
   "a": 0.1
  },
  "flag_bits": [
@@ -192,7 +192,7 @@
    "id": "v1-D1",
    "kind": "visit_stack",
    "label": "2025-09 · D1",
-   "mjd_mid": 60921.0625,
+   "mjd_mid": 60921.1343,
    "date_range": [
     "2025-09-01",
     "2025-09-04"
@@ -201,10 +201,10 @@
     1
    ],
    "lambda_um": [
-    0.764,
+    0.747,
     1.119
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v1-D1.f32",
    "flags": "frames/v1-D1.flags.u32",
    "shape": [
@@ -226,7 +226,7 @@
    "id": "v1-D2",
    "kind": "visit_stack",
    "label": "2025-09 · D2",
-   "mjd_mid": 60927.4468,
+   "mjd_mid": 60927.4224,
    "date_range": [
     "2025-09-08",
     "2025-09-10"
@@ -236,9 +236,9 @@
    ],
    "lambda_um": [
     1.105,
-    1.585
+    1.623
    ],
-   "n_exposures": 10,
+   "n_exposures": 18,
    "data": "frames/v1-D2.f32",
    "flags": "frames/v1-D2.flags.u32",
    "shape": [
@@ -260,7 +260,7 @@
    "id": "v1-D3",
    "kind": "visit_stack",
    "label": "2025-09 · D3",
-   "mjd_mid": 60935.7607,
+   "mjd_mid": 60935.9741,
    "date_range": [
     "2025-09-11",
     "2025-09-20"
@@ -269,10 +269,10 @@
     3
    ],
    "lambda_um": [
-    1.659,
+    1.621,
     2.406
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v1-D3.f32",
    "flags": "frames/v1-D3.flags.u32",
    "shape": [
@@ -294,7 +294,7 @@
    "id": "v1-D4",
    "kind": "visit_stack",
    "label": "2025-09 · D4",
-   "mjd_mid": 60921.0625,
+   "mjd_mid": 60921.1343,
    "date_range": [
     "2025-09-01",
     "2025-09-04"
@@ -303,10 +303,10 @@
     4
    ],
    "lambda_um": [
-    2.488,
+    2.435,
     3.848
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v1-D4.f32",
    "flags": "frames/v1-D4.flags.u32",
    "shape": [
@@ -328,7 +328,7 @@
    "id": "v1-D5",
    "kind": "visit_stack",
    "label": "2025-09 · D5",
-   "mjd_mid": 60927.4468,
+   "mjd_mid": 60927.4224,
    "date_range": [
     "2025-09-08",
     "2025-09-10"
@@ -338,9 +338,9 @@
    ],
    "lambda_um": [
     3.827,
-    4.364
+    4.402
    ],
-   "n_exposures": 10,
+   "n_exposures": 18,
    "data": "frames/v1-D5.f32",
    "flags": "frames/v1-D5.flags.u32",
    "shape": [
@@ -362,7 +362,7 @@
    "id": "v1-D6",
    "kind": "visit_stack",
    "label": "2025-09 · D6",
-   "mjd_mid": 60935.7607,
+   "mjd_mid": 60935.9741,
    "date_range": [
     "2025-09-11",
     "2025-09-20"
@@ -371,10 +371,10 @@
     6
    ],
    "lambda_um": [
-    4.441,
+    4.409,
     4.996
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v1-D6.f32",
    "flags": "frames/v1-D6.flags.u32",
    "shape": [
@@ -396,7 +396,7 @@
    "id": "v1-all",
    "kind": "visit_stack",
    "label": "2025-09 · all",
-   "mjd_mid": 60928.09,
+   "mjd_mid": 60928.1904,
    "date_range": [
     "2025-09-01",
     "2025-09-20"
@@ -410,10 +410,10 @@
     6
    ],
    "lambda_um": [
-    0.764,
+    0.747,
     4.996
    ],
-   "n_exposures": 60,
+   "n_exposures": 112,
    "data": "frames/v1-all.f32",
    "flags": "frames/v1-all.flags.u32",
    "shape": [
@@ -435,7 +435,7 @@
    "id": "v2-D1",
    "kind": "visit_stack",
    "label": "2026-03 · D1",
-   "mjd_mid": 61107.0451,
+   "mjd_mid": 61106.8375,
    "date_range": [
     "2026-03-04",
     "2026-03-12"
@@ -445,9 +445,9 @@
    ],
    "lambda_um": [
     0.741,
-    1.086
+    1.112
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v2-D1.f32",
    "flags": "frames/v2-D1.flags.u32",
    "shape": [
@@ -469,7 +469,7 @@
    "id": "v2-D2",
    "kind": "visit_stack",
    "label": "2026-03 · D2",
-   "mjd_mid": 61103.6975,
+   "mjd_mid": 61103.4603,
    "date_range": [
     "2026-03-01",
     "2026-03-09"
@@ -479,9 +479,9 @@
    ],
    "lambda_um": [
     1.094,
-    1.608
+    1.646
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v2-D2.f32",
    "flags": "frames/v2-D2.flags.u32",
    "shape": [
@@ -503,7 +503,7 @@
    "id": "v2-D3",
    "kind": "visit_stack",
    "label": "2026-02 · D3",
-   "mjd_mid": 61096.7047,
+   "mjd_mid": 61096.4673,
    "date_range": [
     "2026-02-20",
     "2026-03-02"
@@ -513,9 +513,9 @@
    ],
    "lambda_um": [
     1.64,
-    2.375
+    2.421
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v2-D3.f32",
    "flags": "frames/v2-D3.flags.u32",
    "shape": [
@@ -537,7 +537,7 @@
    "id": "v2-D4",
    "kind": "visit_stack",
    "label": "2026-03 · D4",
-   "mjd_mid": 61107.0451,
+   "mjd_mid": 61106.8375,
    "date_range": [
     "2026-03-04",
     "2026-03-12"
@@ -547,9 +547,9 @@
    ],
    "lambda_um": [
     2.419,
-    3.718
+    3.818
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v2-D4.f32",
    "flags": "frames/v2-D4.flags.u32",
    "shape": [
@@ -571,7 +571,7 @@
    "id": "v2-D5",
    "kind": "visit_stack",
    "label": "2026-03 · D5",
-   "mjd_mid": 61103.6975,
+   "mjd_mid": 61103.4603,
    "date_range": [
     "2026-03-01",
     "2026-03-09"
@@ -581,9 +581,9 @@
    ],
    "lambda_um": [
     3.813,
-    4.386
+    4.423
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v2-D5.f32",
    "flags": "frames/v2-D5.flags.u32",
    "shape": [
@@ -605,7 +605,7 @@
    "id": "v2-D6",
    "kind": "visit_stack",
    "label": "2026-02 · D6",
-   "mjd_mid": 61096.7047,
+   "mjd_mid": 61096.4673,
    "date_range": [
     "2026-02-20",
     "2026-03-02"
@@ -615,9 +615,9 @@
    ],
    "lambda_um": [
     4.425,
-    4.976
+    5.012
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v2-D6.f32",
    "flags": "frames/v2-D6.flags.u32",
    "shape": [
@@ -639,7 +639,7 @@
    "id": "v2-all",
    "kind": "visit_stack",
    "label": "2026-02 · all",
-   "mjd_mid": 61102.4824,
+   "mjd_mid": 61102.2551,
    "date_range": [
     "2026-02-20",
     "2026-03-12"
@@ -654,9 +654,9 @@
    ],
    "lambda_um": [
     0.741,
-    4.976
+    5.012
    ],
-   "n_exposures": 60,
+   "n_exposures": 114,
    "data": "frames/v2-all.f32",
    "flags": "frames/v2-all.flags.u32",
    "shape": [
@@ -678,7 +678,7 @@
    "id": "v3-D1",
    "kind": "visit_stack",
    "label": "2026-09 · D1",
-   "mjd_mid": 61289.8516,
+   "mjd_mid": 61289.607,
    "date_range": [
     "2026-09-02",
     "2026-09-09"
@@ -688,9 +688,9 @@
    ],
    "lambda_um": [
     0.754,
-    1.079
+    1.104
    ],
-   "n_exposures": 10,
+   "n_exposures": 18,
    "data": "frames/v3-D1.f32",
    "flags": "frames/v3-D1.flags.u32",
    "shape": [
@@ -712,7 +712,7 @@
    "id": "v3-D2",
    "kind": "visit_stack",
    "label": "2026-09 · D2",
-   "mjd_mid": 61296.1436,
+   "mjd_mid": 61296.0289,
    "date_range": [
     "2026-09-10",
     "2026-09-15"
@@ -721,10 +721,10 @@
     2
    ],
    "lambda_um": [
-    1.148,
-    1.608
+    1.122,
+    1.646
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v3-D2.f32",
    "flags": "frames/v3-D2.flags.u32",
    "shape": [
@@ -746,7 +746,7 @@
    "id": "v3-D3",
    "kind": "visit_stack",
    "label": "2026-09 · D3",
-   "mjd_mid": 61298.2671,
+   "mjd_mid": 61298.1848,
    "date_range": [
     "2026-09-13",
     "2026-09-16"
@@ -758,7 +758,7 @@
     1.644,
     2.385
    ],
-   "n_exposures": 10,
+   "n_exposures": 18,
    "data": "frames/v3-D3.f32",
    "flags": "frames/v3-D3.flags.u32",
    "shape": [
@@ -780,7 +780,7 @@
    "id": "v3-D4",
    "kind": "visit_stack",
    "label": "2026-09 · D4",
-   "mjd_mid": 61289.8516,
+   "mjd_mid": 61289.607,
    "date_range": [
     "2026-09-02",
     "2026-09-09"
@@ -790,9 +790,9 @@
    ],
    "lambda_um": [
     2.452,
-    3.689
+    3.789
    ],
-   "n_exposures": 10,
+   "n_exposures": 18,
    "data": "frames/v3-D4.f32",
    "flags": "frames/v3-D4.flags.u32",
    "shape": [
@@ -814,7 +814,7 @@
    "id": "v3-D5",
    "kind": "visit_stack",
    "label": "2026-09 · D5",
-   "mjd_mid": 61296.1436,
+   "mjd_mid": 61296.0289,
    "date_range": [
     "2026-09-10",
     "2026-09-15"
@@ -824,9 +824,9 @@
    ],
    "lambda_um": [
     3.815,
-    4.386
+    4.422
    ],
-   "n_exposures": 10,
+   "n_exposures": 19,
    "data": "frames/v3-D5.f32",
    "flags": "frames/v3-D5.flags.u32",
    "shape": [
@@ -848,7 +848,7 @@
    "id": "v3-D6",
    "kind": "visit_stack",
    "label": "2026-09 · D6",
-   "mjd_mid": 61298.2671,
+   "mjd_mid": 61298.1848,
    "date_range": [
     "2026-09-13",
     "2026-09-16"
@@ -860,7 +860,7 @@
     4.428,
     4.981
    ],
-   "n_exposures": 10,
+   "n_exposures": 18,
    "data": "frames/v3-D6.f32",
    "flags": "frames/v3-D6.flags.u32",
    "shape": [
@@ -882,7 +882,7 @@
    "id": "v3-all",
    "kind": "visit_stack",
    "label": "2026-09 · all",
-   "mjd_mid": 61294.7541,
+   "mjd_mid": 61294.6327,
    "date_range": [
     "2026-09-02",
     "2026-09-16"
@@ -899,7 +899,7 @@
     0.754,
     4.981
    ],
-   "n_exposures": 60,
+   "n_exposures": 110,
    "data": "frames/v3-all.f32",
    "flags": "frames/v3-all.flags.u32",
    "shape": [
@@ -924,8 +924,8 @@
    "spherex_dr1",
    "spherex_qr3"
   ],
-  "n_exposures_total": 180,
-  "generated_at": "2026-11-14T15:56:00+00:00",
+  "n_exposures_total": 336,
+  "generated_at": "2026-11-15T12:34:20+00:00",
   "pipeline_tags": [
    "l2b-v27"
   ],
