@@ -113,16 +113,8 @@ export interface GaiaStar {
   pmdec: number | null
 }
 
-export interface Asteroid {
-  name: string
-  ra: number
-  dec: number
-  v: number | null
-}
-
-/** `unavailable` names the sources without data (`gaia`, `skybot`): an empty list there does not mean "none". */
+/** `unavailable` names the sources without data (`gaia`): an empty list there does not mean "none". */
 export interface Overlays {
   gaia: GaiaStar[]
-  asteroids: Asteroid[]
   unavailable: string[]
 }

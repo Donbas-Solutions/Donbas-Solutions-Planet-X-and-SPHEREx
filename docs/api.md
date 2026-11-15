@@ -57,8 +57,7 @@ Errors: FastAPI default `{"detail": "..."}`. No endpoint answers `501` any more.
 {
   "gaia": [{"source_id": "4472832130942575872", "ra": 269.446237, "dec": 4.768603, "g": 8.19,
             "pmra": -801.55, "pmdec": 10362.39}],
-  "asteroids": [],
-  "unavailable": ["skybot"]
+  "unavailable": []
 }
 ```
 
@@ -69,8 +68,7 @@ Errors: FastAPI default `{"detail": "..."}`. No endpoint answers `501` any more.
   again (< 0.001″ off within a year).
 - `source_id` is a **string**: Gaia ids exceed 2^53 and would be rounded by JavaScript's JSON parser.
 - `unavailable` lists the sources that have no data in this answer: `gaia` when no Gaia server answered (the
-  response is still `200`, with `gaia: []`), `skybot` always for now (asteroids, FR-25, are not implemented), so
-  an empty list is never read as "nothing there".
+  response is still `200`, with `gaia: []`), so an empty list is never read as "nothing there".
 - Gaia servers, in order: MAST, GAVO, ESA (15 s each; the one that answered last is tried first). The stars of a
   field are cached, so the frames of one sequence cost one catalog query.
 

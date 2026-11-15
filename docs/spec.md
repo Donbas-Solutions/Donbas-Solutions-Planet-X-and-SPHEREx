@@ -102,9 +102,9 @@ shareable URLs and embedding; static bundles for the five test targets.
 |---|---|
 | FR-23 | RGB pseudo-colour from detector groups (D1+D2 → blue, D3+D4 → green, D5+D6 → red). |
 | FR-24 | Single-exposure mode with a λ-window filter (`api` `mode=exposures`). |
-| FR-25 | Known-asteroid overlay per frame epoch (SkyBoT), with cache and graceful failure. |
-| FR-26 | "I see a mover" check: click → automatic match against Gaia / SkyBoT → known star / known asteroid / unknown; a copyable report (nothing stored server-side). |
 | FR-27 | Export of the current sequence as GIF. |
+
+FR-25 (SkyBoT asteroid overlay) and FR-26 (click-to-identify a mover) were dropped on 2026-11-15; their IDs stay unused.
 
 ### 4.4 Traceability to the challenge's Potential Considerations
 
@@ -211,7 +211,7 @@ a verdict, caveats. Catalog values: `science/targets.json`.
 ## 8. Architecture (summary)
 
 Browser (React + canvas) ↔ FastAPI backend (resolve → query → fetch + cache → process → serve) ↔ IRSA / SIMBAD /
-Gaia / SkyBoT; static bundles served next to the frontend; Aladin Lite reads CDS HiPS directly. Frames travel as
+Gaia; static bundles served next to the frontend; Aladin Lite reads CDS HiPS directly. Frames travel as
 Float32 arrays and are stretched and differenced client-side. Details: `docs/agent-prompt.md` §2, `docs/api.md`.
 
 ## 9. Deliverables

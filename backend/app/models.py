@@ -149,14 +149,6 @@ class GaiaStar(BaseModel):
     pmdec: float | None = Field(description="mas/yr")
 
 
-class Asteroid(BaseModel):
-    name: str
-    ra: float
-    dec: float
-    v: float | None
-
-
 class Overlays(BaseModel):
     gaia: list[GaiaStar]
-    asteroids: list[Asteroid]
-    unavailable: list[str] = Field([], description="Overlay sources without data: 'gaia', 'skybot'")
+    unavailable: list[str] = Field([], description="Overlay sources without data: 'gaia'")

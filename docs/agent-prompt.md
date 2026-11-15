@@ -157,15 +157,16 @@ Still open, in order of importance:
 2. **IRSA SIA flapping:** a live search can fail once and succeed on "Retry"; an automatic second attempt in the
    backend would hide it. When IRSA is stable: M1 live numbers for Barnard and ε Indi B (A).
 3. **Announce the contract changes** if not done:
-   - from #18: `GaiaStar.source_id` is a string, `unavailable` always lists `skybot`, and the page has a new
-     parameter `gaia`;
+   - from #18: `GaiaStar.source_id` is a string, and the page has a new parameter `gaia`;
+   - FR-25/FR-26 dropped: `asteroids` is removed from `/api/overlays`, and `unavailable` no longer lists `skybot`;
    - the `allwise` parameter of `/api/sequence` and the `allwise` frame kind are removed.
 4. **Dropped for the submission (2026-11-15):**
    - FR-20: measured proper motion in the UI. It exists only in `VALIDATION.md`.
    - FR-22: AllWISE old-epoch frame. It needs CDS hips2fits, which is down. The unused `allwise` API parameter and
      frame kind are removed.
-   - P2 features FR-23 (RGB), FR-25 (SkyBoT, listed as `unavailable`), FR-26 (mover check; only Gaia movers are
-     marked) and FR-27 (GIF export; the README GIFs come from `scripts/prebake.py`).
+   - FR-25 (SkyBoT asteroids) and FR-26 (mover check): dropped from the spec, the asteroid overlay is removed from
+     the API. Gaia stars that move during a sequence are still marked.
+   - P2 features FR-23 (RGB) and FR-27 (GIF export; the README GIFs come from `scripts/prebake.py`).
    - "Copy embed code" for FR-21, the optional error `code` in `JobStatus`, and on-demand frame loading (NFR-2; the
      hosted R Dra bundle already loads in 1.4 s).
 5. Not checked: narrow screens (< 768 px), browsers other than Chrome, the "no SPHEREx coverage" state (FR-13; needs
@@ -273,5 +274,5 @@ If time runs short, drop in this order: FR-21 (embed) → FR-22 (AllWISE) → FR
 | Sub-pixel motion invisible | longest baseline (first vs last visit), diff mode, upsampled display, AllWISE old epoch |
 | Saturation on Barnard / R Dra | FLAGS overlay; "saturated" labels instead of numbers; ε Indi B for PM measurement |
 | WISE 0855 not detected | expected-position marker + honest S/N / upper limit |
-| External APIs (SkyBoT, Gaia, SIMBAD) fail | caches, short timeouts, UI shows "unavailable" instead of breaking |
+| External APIs (Gaia, SIMBAD) fail | caches, short timeouts, UI shows "unavailable" instead of breaking |
 | Integration breaks at a milestone | seam fixed in `domain.py` + contract tests; PR per milestone, not one big merge |
