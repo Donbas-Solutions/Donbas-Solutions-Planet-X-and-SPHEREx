@@ -98,6 +98,22 @@ def test_frames_per_visit_detector_and_all_in_time_order() -> None:
     assert result.sequence.meta.pipeline_tags == ["l2b-v27"]
 
 
+def test_bins_starting_in_one_month_are_named_by_the_day() -> None:
+    bins = [
+        make_cutout(60828.0, "v1", 3),
+        make_cutout(60851.0, "v2", 3),
+        make_cutout(60890.0, "v3", 3),
+    ]
+    result = build_sequence(bins, MOVER, SequenceParams(fov_arcmin=4.0))
+    labels = {f.id: f.label for f in result.sequence.frames}
+    assert (labels["v1-all"], labels["v2-all"], labels["v3-all"]) == (
+        "2025-06-02 · all",
+        "2025-06-25 · all",
+        "2025-08 · all",
+    )
+    assert len(set(labels.values())) == len(labels)
+
+
 def test_output_satisfies_the_contract(tmp_path: Path) -> None:
     manifest = write_bundle(build_sequence(two_visits(), MOVER, SequenceParams(fov_arcmin=4.0)), tmp_path)
     assert len(Sequence.model_validate_json(manifest.read_text(encoding="utf-8")).frames) == 6

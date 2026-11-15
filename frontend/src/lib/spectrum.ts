@@ -5,7 +5,7 @@ export type PointStatus = 'measured' | 'saturated' | 'flagged'
 
 export interface VisitInfo {
   id: string
-  /** UTC month of the visit's first point, e.g. "2025-04". */
+  /** UTC month of the visit's first point, e.g. "2025-04"; the day too when two visits start in one month. */
   label: string
   mjdStart: number
   count: number
@@ -37,8 +37,11 @@ export function visitsOf(points: readonly SpectrumPoint[]): VisitInfo[] {
       byId.set(p.visit, { mjdStart: p.mjd, count: 1 })
     }
   }
-  return [...byId]
-    .map(([id, v]) => ({ id, label: mjdToIsoDate(v.mjdStart).slice(0, 7), ...v }))
+  const visits = [...byId].map(([id, v]) => ({ id, date: mjdToIsoDate(v.mjdStart), ...v }))
+  const perMonth = new Map<string, number>()
+  for (const v of visits) perMonth.set(v.date.slice(0, 7), (perMonth.get(v.date.slice(0, 7)) ?? 0) + 1)
+  return visits
+    .map(({ date, ...v }) => ({ ...v, label: (perMonth.get(date.slice(0, 7)) ?? 0) > 1 ? date : date.slice(0, 7) }))
     .sort((a, b) => a.mjdStart - b.mjdStart)
 }
 

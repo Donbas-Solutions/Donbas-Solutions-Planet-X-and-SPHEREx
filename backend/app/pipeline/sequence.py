@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from statistics import fmean
@@ -29,6 +29,7 @@ from .stack import Stack, stack
 
 COVERAGE_WARNING_FRACTION: Final = 0.8
 LVF_CHANNELS: Final = 17
+MONTH_LENGTH: Final = len("2026-11")
 DETECTOR_BANDS_UM: Final = {
     1: (0.75, 1.11),
     2: (1.11, 1.64),
@@ -90,7 +91,7 @@ def _frame(
     frame = Frame(
         id=frame_id,
         kind="visit_stack" if len(stacked.exposures) > 1 or suffix == "all" else "exposure",
-        label=f"{first[:7]} · {suffix}",
+        label=f"{first[:MONTH_LENGTH]} · {suffix}",
         mjd_mid=round(mjd_mid, 4),
         date_range=(first, last),
         detectors=sorted({e.cutout.meta.detector for e in stacked.exposures}),
@@ -160,6 +161,14 @@ def _coverage_warnings(frames: list[Frame], stacks: dict[str, Stack], params: Se
                 frame.warnings.append(warning)
 
 
+def unique_labels(frames: Sequence[Frame]) -> None:
+    """Deep-field bins are 30 d long, so two of them can start in the same month: those are named by the day."""
+    counts = Counter(frame.label for frame in frames)
+    for frame in frames:
+        if counts[frame.label] > 1:
+            frame.label = frame.date_range[0] + frame.label[MONTH_LENGTH:]
+
+
 def _stretch(arrays: Sequence[FrameArrays]) -> Stretch:
     values = np.concatenate([a.data[np.isfinite(a.data)] for a in arrays])
     if values.size == 0:
@@ -218,6 +227,7 @@ def build_sequence(
                 display.append(frame_arrays)
 
     _coverage_warnings(frames, stacks, params)
+    unique_labels(frames)
     sequence = SequenceModel(
         grid=grid,
         stretch=_stretch(display or list(arrays.values())),
