@@ -5,8 +5,6 @@ sequence of SPHEREx images of that sky patch, so moving and variable objects sta
 
 Built for the NASA Space Apps Challenge 2026, challenge "Planet X and SPHEREx".
 
-**Live site: <https://spherex-blink-web.victoriousmeadow-02021db7.polandcentral.azurecontainerapps.io/>**
-
 <p align="center">
   <img src="frontend/public/prebaked/barnard/blink.gif" width="300" alt="Barnard's Star blinking between three SPHEREx visits, all detectors combined">
   &nbsp;
@@ -17,10 +15,36 @@ visit.</em></p>
 
 ![ε Indi B: four visit stacks and the last − first difference](science/figures/eps_ind_b_motion.png)
 
-*ε Indi B in four visits from 2025-04 to 2026-09, and the last − first difference: the blue/orange pair is the star
-moving 6.7″ toward the south-east.*
+_ε Indi B in four visits from 2025-04 to 2026-09, and the last − first difference: the blue/orange pair is the star
+moving 6.7″ toward the south-east._
 
 All images are rendered by our pipeline from real SPHEREx data. None of them is AI-generated.
+
+## Quick start
+
+Requirements: [uv](https://docs.astral.sh/uv/) and Node.js 24 with npm. uv installs the pinned Python 3.13
+(`backend/.python-version`) by itself.
+
+```sh
+cd backend && uv sync && uv run uvicorn app.main:app --reload --port 8000
+cd frontend && npm ci && npm run dev
+```
+
+Open <http://localhost:5173>. The five test targets open from prebaked real SPHEREx data, also without the
+backend; a search by name or coordinates asks the live archive through the backend.
+
+### With Docker
+
+Requirements: Docker with Compose v2.
+
+```sh
+docker compose up -d --build
+```
+
+Open <http://localhost:8080>. nginx serves the built frontend and the prebaked bundles and proxies `/api` and
+`/files` to the backend, which is not published on the host. Downloaded and processed data live in the `cache`
+volume (`docker compose down -v` removes it). Settings: copy `.env.example` to `.env`; no secrets are needed.
+The port is bound to `127.0.0.1` unless `BIND_ADDR` says otherwise.
 
 ## Features
 
@@ -59,46 +83,38 @@ All images are rendered by our pipeline from real SPHEREx data. None of them is 
 
 ## Test targets
 
-| Target | What it shows | Result (`science/VALIDATION.md`) |
-|---|---|---|
-| Barnard's Star | fastest proper motion | moves 1.65 px (10.3″) toward PA 359° in 1.1 yr |
-| ε Indi B | nearby brown-dwarf binary | moves 1.07 px (6.7″) toward PA 129°; spectrum within 2–23 % of 2MASS J/H/Ks |
+| Target         | What it shows                                     | Result (`science/VALIDATION.md`)                                                  |
+| -------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Barnard's Star | fastest proper motion                             | moves 1.65 px (10.3″) toward PA 359° in 1.1 yr                                    |
+| ε Indi B       | nearby brown-dwarf binary                         | moves 1.07 px (6.7″) toward PA 129°; spectrum within 2–23 % of 2MASS J/H/Ks       |
 | WISE 0855−0714 | coldest known brown dwarf, at the detection limit | motion seen in D5–D6; the flux is blended with a field star and is an upper bound |
-| RW Aurigae | T Tauri star, variable | 2.5× brightening at 0.75 µm (16.6σ); saturated in the other bands |
-| R Draconis | Mira variable in the deep field | saturated in every exposure: shown as "saturated", not as numbers |
+| RW Aurigae     | T Tauri star, variable                            | 2.5× brightening at 0.75 µm (16.6σ); saturated in the other bands                 |
+| R Draconis     | Mira variable in the deep field                   | saturated in every exposure: shown as "saturated", not as numbers                 |
 
 ## Links and embedding
 
 Every view is a URL: open a link and you get the same target, frames, mode and overlays. Parameters of the page:
 
-| Parameter | Values | Default |
-|---|---|---|
-| `target` | test target: `barnard`, `eps_ind_b`, `wise0855`, `rw_aur`, `r_dra` | — |
-| `name` | object name, resolved with SIMBAD | — |
-| `ra`, `dec` | ICRS, decimal degrees or URL-encoded sexagesimal (`17 57 48.5`) | — |
+| Parameter                | Values                                                                                                                | Default     |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `target`                 | test target: `barnard`, `eps_ind_b`, `wise0855`, `rw_aur`, `r_dra`                                                    | —           |
+| `name`                   | object name, resolved with SIMBAD                                                                                     | —           |
+| `ra`, `dec`              | ICRS, decimal degrees or URL-encoded sexagesimal (`17 57 48.5`)                                                       | —           |
 | `pmra`, `pmdec`, `epoch` | proper motion in mas/yr (`pmra` includes cos δ) and the Julian year of `ra`/`dec`; draws the expected-position marker | from SIMBAD |
-| `fov` | field of view, 2–30 arcmin | `10` |
-| `det` | `all`, or detectors `1`–`6` as a comma list | `all` |
-| `view` | `blink` or `diff` (difference B − A) | `blink` |
-| `a`, `b` | frame ids, `v<visit>-<D1…D6 or all>`, e.g. `v1-all` | first, last |
-| `fps` | 0.5–3 frames per second | `2` |
-| `stretch` | `asinh`, `linear`, `log` | `asinh` |
-| `flags` | overlay layers: `saturation`, `bad`, `artifact` (comma list) | none |
-| `gaia` | `1` draws Gaia DR3 stars at each frame's epoch | off |
+| `fov`                    | field of view, 2–30 arcmin                                                                                            | `10`        |
+| `det`                    | `all`, or detectors `1`–`6` as a comma list                                                                           | `all`       |
+| `view`                   | `blink` or `diff` (difference B − A)                                                                                  | `blink`     |
+| `a`, `b`                 | frame ids, `v<visit>-<D1…D6 or all>`, e.g. `v1-all`                                                                   | first, last |
+| `fps`                    | 0.5–3 frames per second                                                                                               | `2`         |
+| `stretch`                | `asinh`, `linear`, `log`                                                                                              | `asinh`     |
+| `flags`                  | overlay layers: `saturation`, `bad`, `artifact` (comma list)                                                          | none        |
+| `gaia`                   | `1` draws Gaia DR3 stars at each frame's epoch                                                                        | off         |
 
 `target` wins over `name`, and `name` over `ra`/`dec`. Unknown parameters are ignored; an invalid value falls back to
 the default with a notice on the page. Examples:
 
-- Barnard's Star, difference of the first and last visit: [`/?target=barnard&view=diff`](https://spherex-blink-web.victoriousmeadow-02021db7.polandcentral.azurecontainerapps.io/?target=barnard&view=diff)
-- ε Indi B in detector 3 only, with Gaia stars: [`/?target=eps_ind_b&det=3&gaia=1`](https://spherex-blink-web.victoriousmeadow-02021db7.polandcentral.azurecontainerapps.io/?target=eps_ind_b&det=3&gaia=1)
-
-**Embedding.** `/embed` takes the same parameters and shows only the player, with a link to the full tool and its
-limitations. Paste this into any HTML page:
-
-```html
-<iframe src="https://spherex-blink-web.victoriousmeadow-02021db7.polandcentral.azurecontainerapps.io/embed?target=eps_ind_b&view=diff&a=v1-all&b=v4-all"
-        width="480" height="560" style="border:0" title="SPHEREx Blink: ε Indi B, 2026-09 minus 2025-04"></iframe>
-```
+- Barnard's Star, difference of the first and last visit: `/?target=barnard&view=diff`
+- ε Indi B in detector 3 only, with Gaia stars: `/?target=eps_ind_b&det=3&gaia=1`
 
 ## How it works
 
@@ -111,45 +127,18 @@ limitations. Paste this into any HTML page:
 
 ## Repository layout
 
-| Path | Contents |
-|---|---|
-| `backend/` | Python 3.13 / FastAPI API: data discovery, cutouts, stacking |
-| `frontend/` | React + TypeScript + Vite viewer, Aladin Lite sky context |
-| `science/` | Test targets and validation scripts |
-| `scripts/` | Mock and prebaked data bundles |
-| `docs/` | API contract (`api.md`), challenge text, background research |
+| Path        | Contents                                                     |
+| ----------- | ------------------------------------------------------------ |
+| `backend/`  | Python 3.13 / FastAPI API: data discovery, cutouts, stacking |
+| `frontend/` | React + TypeScript + Vite viewer, Aladin Lite sky context    |
+| `science/`  | Test targets and validation scripts                          |
+| `scripts/`  | Mock and prebaked data bundles                               |
+| `docs/`     | API contract (`api.md`), challenge text, background research |
 
-## Quick start
-
-Requirements: [uv](https://docs.astral.sh/uv/) and Node.js 24 with npm. uv installs the pinned Python 3.13
-(`backend/.python-version`) by itself.
-
-```sh
-cd backend && uv sync && uv run uvicorn app.main:app --reload --port 8000
-cd frontend && npm ci && npm run dev
-```
-
-Open <http://localhost:5173>. The five test targets open from prebaked real SPHEREx data, also without the
-backend; a search by name or coordinates asks the live archive through the backend.
-
-### With Docker
-
-Requirements: Docker with Compose v2.
-
-```sh
-docker compose up -d --build
-```
-
-Open <http://localhost:8080>. nginx serves the built frontend and the prebaked bundles and proxies `/api` and
-`/files` to the backend, which is not published on the host. Downloaded and processed data live in the `cache`
-volume (`docker compose down -v` removes it). Settings: copy `.env.example` to `.env`; no secrets are needed.
-The port is bound to `127.0.0.1` unless `BIND_ADDR` says otherwise.
-
-### CI/CD
+### CI
 
 Every pull request runs lint, type checks, tests, a Docker smoke test and secret/vulnerability scans
-(`.github/workflows/ci.yml`). A green `main` is deployed to Azure Container Apps (`deploy.yml`, `infra/main.bicep`);
-one-time setup in [`docs/deploy.md`](docs/deploy.md).
+(`.github/workflows/ci.yml`).
 
 ## Limitations
 
@@ -174,7 +163,7 @@ one-time setup in [`docs/deploy.md`](docs/deploy.md).
 ## Use of AI
 
 - **Idea and decisions**: the team. The idea comes from the challenge statement. Scope, priorities, the science
-  rules, data choices and hosting were decided by the team, not by AI.
+  rules and data choices were decided by the team, not by AI.
 - **Code, tests and documentation**: written with [Claude Code](https://claude.com/claude-code) (Anthropic), an AI
   coding assistant. Each of the four team members ran their own session for their part of the project (archive and
   API, frontend, science pipeline, charts and context). Team members gave the tasks, reviewed every pull request
